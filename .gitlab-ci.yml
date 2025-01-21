@@ -4,6 +4,12 @@ stages:
 
 image: gumjoe/wacc-ci-scala:slim
 
+cache:
+  key: $CI_COMMIT_REF_SLUG
+  paths:
+    - .bsp/
+    - .scala-build/
+
 compile:
   stage: compile
   before_script:
