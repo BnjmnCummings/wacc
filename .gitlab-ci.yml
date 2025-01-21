@@ -1,5 +1,6 @@
 stages:
   - compile
+  - test
 
 image: gumjoe/wacc-ci-scala:slim
 
