@@ -1,0 +1,13 @@
+stages:
+  - compile
+
+image: gumjoe/wacc-ci-scala:slim
+
+compile:
+  stage: compile
+  before_script:
+    - echo "Compiling..."
+  script:
+    - scala compile .
+  after_script:
+    - echo "Compilation done."
