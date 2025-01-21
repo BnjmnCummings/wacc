@@ -11,3 +11,12 @@ compile:
     - scala compile .
   after_script:
     - echo "Compilation done."
+
+test:
+  stage: test
+  before_script:
+    - echo "Running Tests..."
+  script:
+    - scala test .
+  after_script:
+    - echo "Testing done."
