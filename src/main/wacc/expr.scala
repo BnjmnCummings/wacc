@@ -32,17 +32,10 @@ case class CharLiteral(v: Char) extends Expr
 case class StringLiteral(v: String) extends Expr
 object PairNullLiteral extends Expr
 case class Ident(v: String) extends Expr, LValue
-case class ArrayElem(v: Ident, is: List[Expr]) extends Expr, LValue
-
-/*
-  sealed abstract class CharLiteral extends Expr
-  case class EscapedCharLiteral(v: Char) extends CharLiteral
-  case class StandardCharLiteral(v: Char) extends CharLiteral
-  case class StringLiteral(v: List[Char]) extends Expr
-*/
+case class ArrayElem(v: String, is: List[Expr]) extends Expr, LValue
 
 // RValues
-case class FuncCall(v: Ident, args: List[Expr]) extends RValue
+case class FuncCall(v: String, args: List[Expr]) extends RValue
 case class ArrayLiteral(xs: List[Expr]) extends RValue
 case class PairElem(index: String, v: LValue) extends LValue, RValue
 case class NewPair(x1: Expr, x2: Expr) extends RValue
