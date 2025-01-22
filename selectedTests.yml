@@ -1,0 +1,24 @@
+parser:
+    syntax:
+        # - expr
+        # - atom
+        # - unary-oper
+        # - binary-oper
+        # - array-elem
+        # - base-type
+        # - array-type
+        # - pair-type
+        # - pair-elem-type
+        # - program
+        # - func
+        # - param-list
+        # - param
+        # - stmt
+        # - lvalue
+        # - rvalue
+        # - arg-list
+        # - pair-elem
+        # - array-liter
+    semantics:
+backend:
+    something:
