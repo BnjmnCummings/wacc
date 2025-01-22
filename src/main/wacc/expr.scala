@@ -24,9 +24,16 @@ case class Chr(x: Expr) extends Expr
 
 // Atoms
 case class IntLiteral(v: Int) extends Expr
-case class BoolLiteral(v: Bool) extends Expr
+case class BoolLiteral(v: Boolean) extends Expr
 case class CharLiteral(v: Char) extends Expr
 case class StringLiteral(v: String) extends Expr
-case class PairNullLiteral extends Expr
+object PairNullLiteral extends Expr
 case class Ident(v: String) extends Expr
 case class ArrayElem(v: Ident, is: List[Expr]) extends Expr
+
+/*
+  sealed abstract class CharLiteral extends Expr
+  case class EscapedCharLiteral(v: Char) extends CharLiteral
+  case class StandardCharLiteral(v: Char) extends CharLiteral
+  case class StringLiteral(v: List[Char]) extends Expr
+*/
