@@ -13,10 +13,10 @@ def main():
     tests = extract_tests(data)
 
     # Run each test
-    map(run_test, tests)
-    map(lambda p: p.returncode, tests)
+    processes = list(map(run_test, tests))
+    return_codes = list(map(lambda p: p.returncode, processes))
     # If any test fails (), exit with a failure
-    exit(any(tests))
+    exit(any(return_codes))
 
 # Function to recursively extract test names
 def extract_tests(data):
