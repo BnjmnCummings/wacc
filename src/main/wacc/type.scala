@@ -1,3 +1,5 @@
+package wacc
+
 sealed trait Type
 sealed trait PairElemType
 

@@ -1,5 +1,6 @@
-sealed trait Expr extends RValue
+package wacc
 
+sealed trait Expr extends RValue
 sealed trait LValue
 sealed trait RValue
 
@@ -26,7 +27,7 @@ case class Ord(x: Expr) extends Expr
 case class Chr(x: Expr) extends Expr
 
 // Atoms
-case class IntLiteral(v: Int) extends Expr
+case class IntLiteral(v: BigInt) extends Expr
 case class BoolLiteral(v: Boolean) extends Expr
 case class CharLiteral(v: Char) extends Expr
 case class StringLiteral(v: String) extends Expr
@@ -37,6 +38,10 @@ case class ArrayElem(v: String, is: List[Expr]) extends Expr, LValue
 // RValues
 case class FuncCall(v: String, args: List[Expr]) extends RValue
 case class ArrayLiteral(xs: List[Expr]) extends RValue
-case class PairElem(index: String, v: LValue) extends LValue, RValue
+case class PairElem(index: PairIndex, v: LValue) extends LValue, RValue
 case class NewPair(x1: Expr, x2: Expr) extends RValue
 
+enum PairIndex {
+  case First
+  case Second
+}

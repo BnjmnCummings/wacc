@@ -1,3 +1,5 @@
+package wacc
+
 case class Prog(funcs: List[Func], body: List[Stmt])
 
 case class Func(t: Type, v: String, args: List[Param], body: List[Stmt])
