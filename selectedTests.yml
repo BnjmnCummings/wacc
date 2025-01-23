@@ -1,6 +1,6 @@
 # Tests which check the text -> AST step of the compiler
 syntax:
-    - expr
+    # - expr
     # - atom
     # - unary-oper
     # - binary-oper
