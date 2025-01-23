@@ -1,24 +1,30 @@
-parser:
-    syntax:
-        - expr
-        # - atom
-        # - unary-oper
-        # - binary-oper
-        # - array-elem
-        # - base-type
-        # - array-type
-        # - pair-type
-        # - pair-elem-type
-        # - program
-        # - func
-        # - param-list
-        # - param
-        # - stmt
-        # - lvalue
-        # - rvalue
-        # - arg-list
-        # - pair-elem
-        # - array-liter
-    semantics:
-backend:
-    something:
+# Tests which check the text -> AST step of the compiler
+syntax:
+    - expr
+    # - atom
+    # - unary-oper
+    # - binary-oper
+    # - array-elem
+    # - base-type
+    # - array-type
+    # - pair-type
+    # - pair-elem-type
+    # - program
+    # - func
+    # - param-list
+    # - param
+    # - stmt
+    # - lvalue
+    # - rvalue
+    # - arg-list
+    # - pair-elem
+    # - array-liter
+
+# Tests which check the AST semantic checking step of the compiler
+semantic:
+
+# Tests which check the AST -> Machine Code step of the compiler
+generation:
+
+# Tests which check the end-to-end functionality of the compiler
+full:
