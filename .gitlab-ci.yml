@@ -29,6 +29,7 @@ test:
     - echo "Python Installed."
     - echo "Running Tests..."
   script:
-    - python3 runSelectedTests.py
+    #- python3 runSelectedTests.py
+    - scala test .
   after_script:
     - echo "Testing done."

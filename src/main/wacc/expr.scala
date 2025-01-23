@@ -31,9 +31,10 @@ case class IntLiteral(v: BigInt) extends Expr
 case class BoolLiteral(v: Boolean) extends Expr
 case class CharLiteral(v: Char) extends Expr
 case class StringLiteral(v: String) extends Expr
-object PairNullLiteral extends Expr
 case class Ident(v: String) extends Expr, LValue
 case class ArrayElem(v: String, is: List[Expr]) extends Expr, LValue
+
+object PairNullLiteral extends Expr
 
 // RValues
 case class FuncCall(v: String, args: List[Expr]) extends RValue

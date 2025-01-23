@@ -12,6 +12,6 @@ case class Print(x: Expr) extends Stmt
 case class Println(x: Expr) extends Stmt
 case class If(cond: Expr, body: List[Stmt], el: List[Stmt]) extends Stmt
 case class While(cond: Expr, body: List[Stmt]) extends Stmt
-case class CodeBlock(body: Stmt) extends Stmt
+case class CodeBlock(body: List[Stmt]) extends Stmt
 
 object Skip extends Stmt
