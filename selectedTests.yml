@@ -1,6 +1,6 @@
 parser:
     syntax:
-        # - expr
+        - expr
         # - atom
         # - unary-oper
         # - binary-oper
