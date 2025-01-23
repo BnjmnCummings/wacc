@@ -32,7 +32,7 @@ def extract_tests(data):
     return tests
 
 def run_test(test_name):
-    command = f'scala test . --test-only "{test_name}*"'
+    command = f'scala test . --test-only "*{test_name}*"'
     p = subprocess.run(command, shell=True)
     print(p.stdout)
     return p
