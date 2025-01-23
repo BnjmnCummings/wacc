@@ -4,7 +4,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 import parsley.{Success, Result}
 
-class parser_syntax_expr extends AnyFlatSpec {
+class syntax_expr extends AnyFlatSpec {
     
     "parse" should "be able to parse basic expressions" in {
         parser.expr.parse("13") shouldBe Success(IntLiteral(13))
