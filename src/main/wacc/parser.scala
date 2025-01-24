@@ -63,4 +63,6 @@ object parser {
     lazy val params: Parsley[List[Param]] = ??? // some((type <~ " ", string).zipped(Param(_,_)), ",")
 
     lazy val func: Parsley[Func] = ???
+
+    lazy val pairElem: Parsley[PairElem] = ???
 }

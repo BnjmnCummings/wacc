@@ -10,10 +10,6 @@ class expr_test extends AnyFlatSpec {
     "expr" should "be able to parse binary operators" in {
         parser.expr.parse("1 + 2") shouldBe Success(Add(IntLiteral(1),IntLiteral(2)))
     }
- 
-    it should "be able to parse binary operators" in {
-        parser.expr.parse("a + b") shouldBe Success(Add(Ident("a"),Ident("b")))
-    }
 
     it should "be able to parse unary operators" in {
         parser.expr.parse("!a") shouldBe Success(Not(Ident("a")))
@@ -297,6 +293,24 @@ class unary_oper_test extends AnyFlatSpec {
 }
 
 class pair_elem_test extends AnyFlatSpec {
+    "pairElem" should "be able to parse first elements" in {
+        parser.pairElem.parse("fst a") shouldBe Success(PairElem(PairIndex.First, Ident("a")))
+    }
 
+    it should "be able to parse second elements" in {
+        parser.pairElem.parse("snd a") shouldBe Success(PairElem(PairIndex.Second, Ident("a")))
+    }
+
+    it should "reject rvalues on the right" in {
+        parser.pairElem.parse("snd newpair(1,2)") shouldBe a [Failure[?]]
+    }
+
+    it should "reject invalid index keyword" in {
+        parser.pairElem.parse("first a") shouldBe a [Failure[?]]
+    }
+
+    it should "reject missing lvalue" in {
+        parser.pairElem.parse("fst") shouldBe a [Failure[?]]
+    }
 }
 
