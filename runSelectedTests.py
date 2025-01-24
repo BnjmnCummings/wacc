@@ -24,7 +24,7 @@ def extract_tests(data):
     for key, value in data.items():
         if isinstance(value, list):
             for name in value:
-                tests.append(f"{key}_{name}")
+                tests.append(f"{key}.{name}")
     return tests
 
 def run_test(test_name):

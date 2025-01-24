@@ -1,24 +1,22 @@
 # Tests which check the text -> AST step of the compiler
+# Match the names of the tests with syntax '<package>.<classname>'
 syntax:
-    - expr
+    # - expr
     # - atom
-    # - unary-oper
-    # - binary-oper
-    # - array-elem
-    # - base-type
-    # - array-type
-    # - pair-type
-    # - pair-elem-type
-    # - program
+    # - unary_oper
+    # - binary_oper
+    # - array_elem
+    # - type_base
+    # - type_array
+    # - type_pair
+    # - type_pair_elem
     # - func
-    # - param-list
     # - param
     # - stmt
     # - lvalue
     # - rvalue
-    # - arg-list
-    # - pair-elem
-    # - array-liter
+    # - pair_elem
+    # - array_literal
 
 # Tests which check the AST semantic checking step of the compiler
 semantic:

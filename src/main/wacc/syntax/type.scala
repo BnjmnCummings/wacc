@@ -1,4 +1,4 @@
-package wacc
+package wacc.syntax
 
 sealed trait Type
 sealed trait PairElemType
