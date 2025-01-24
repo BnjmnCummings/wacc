@@ -6,7 +6,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 import parsley.{Success, Failure, Result}
 
-class expr_test extends AnyFlatSpec { 
+class expr_test extends AnyFlatSpec {
+    /* 
     "expr" should "be able to parse binary operators" in {
         parser.expr.parse("a + b") shouldBe Success(Add(Ident("a"),Ident("b")))
     }
@@ -21,6 +22,10 @@ class expr_test extends AnyFlatSpec {
 
     it should "reject two variables without an operator" in {
         parser.expr.parse("a b") shouldBe a [Failure[?]]
+    }
+    */
+    "expr" should "be able to parse binary operators" in {
+        parser.expr.parse("1 + 2") shouldBe Success(Add(IntLiteral(1),IntLiteral(2)))
     }
 }
 

@@ -1,8 +1,8 @@
 # Tests which check the text -> AST step of the compiler
 # Match the names of the tests with syntax '<package>.<classname>'
 syntax:
-    # - expr
-    - atom
+    - expr
+    # - atom
     # - unary_oper
     # - binary_oper
     # - array_elem
