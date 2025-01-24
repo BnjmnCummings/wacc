@@ -1,4 +1,4 @@
-package wacc
+package wacc.syntax
 
 case class Prog(funcs: List[Func], body: List[Stmt])
 

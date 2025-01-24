@@ -1,10 +1,12 @@
-package wacc
+package wacc.syntax
+
+import wacc.parser
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 import parsley.{Success, Failure, Result}
 
-class syntax_expr extends AnyFlatSpec {    
+class expr_test extends AnyFlatSpec { 
     "expr" should "be able to parse binary operators" in {
         parser.expr.parse("a + b") shouldBe Success(Add(Ident("a"),Ident("b")))
     }
@@ -20,4 +22,36 @@ class syntax_expr extends AnyFlatSpec {
     it should "reject two variables without an operator" in {
         parser.expr.parse("a b") shouldBe a [Failure[?]]
     }
+}
+
+class lvalue extends AnyFlatSpec {
+
+}
+
+class rvalue extends AnyFlatSpec {
+
+}
+
+class array_elem extends AnyFlatSpec {
+
+}
+
+class array_literal extends AnyFlatSpec {
+
+}
+
+class atom extends AnyFlatSpec {
+
+}
+
+class binary_oper extends AnyFlatSpec {
+
+}
+
+class pair_elem extends AnyFlatSpec {
+
+}
+
+class unary_oper extends AnyFlatSpec {
+
 }

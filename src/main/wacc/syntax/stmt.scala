@@ -1,4 +1,4 @@
-package wacc
+package wacc.syntax
 
 sealed trait Stmt
 
