@@ -20,4 +20,12 @@ object parser {
             Ops(InfixL)("+" as (Add(_,_))),
             Ops(InfixL)("-" as (Sub(_,_)))
         )
+
+    lazy val lvalue: Parsley[LValue] = ???
+
+    lazy val rvalue: Parsley[RValue] = ???
+
+    lazy val arrayElem: Parsley[ArrayElem] = ???
+
+    lazy val arrayLiteral: Parsley[ArrayLiteral] = ???
 }
