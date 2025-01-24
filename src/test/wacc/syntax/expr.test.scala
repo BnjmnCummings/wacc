@@ -2,6 +2,8 @@ package wacc.syntax
 
 import wacc.parser
 
+import wacc.lexer.fully
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 import parsley.{Success, Failure, Result}
@@ -46,7 +48,7 @@ class lvalue_test extends AnyFlatSpec {
     }
 
     it should "reject multiple words" in {
-        parser.lvalue.parse("jamie willis") shouldBe a [Failure[?]]
+        fully(parser.lvalue).parse("jamie willis") shouldBe a [Failure[?]]
     }
 }
 
@@ -76,15 +78,15 @@ class rvalue_test extends AnyFlatSpec {
     }
 
     it should "reject variable declarations" in {
-        parser.rvalue.parse("int x") shouldBe a [Failure[?]]
+        fully(parser.rvalue).parse("int x") shouldBe a [Failure[?]]
     }
 
     it should "reject pair creation without using newpair" in {
-        parser.rvalue.parse("pair(a,b)") shouldBe a [Failure[?]]
+        fully(parser.rvalue).parse("pair(a,b)") shouldBe a [Failure[?]]
     }
 
     it should "reject function calls without the Call tag" in {
-        parser.rvalue.parse("foo(x)") shouldBe a [Failure[?]]
+        fully(parser.rvalue).parse("foo(x)") shouldBe a [Failure[?]]
     }
 }
 
@@ -152,11 +154,11 @@ class atom_test extends AnyFlatSpec {
     }
 
     it should "reject integers which are too big" in {
-        parser.intLiteral.parse("2147483648") shouldBe a [Failure[?]]
+        fully(parser.intLiteral).parse("2147483648") shouldBe a [Failure[?]]
     }
 
     it should "reject integers which are too small" in {
-        parser.intLiteral.parse("-2147483649") shouldBe a [Failure[?]]
+        fully(parser.intLiteral).parse("-2147483649") shouldBe a [Failure[?]]
     }
 
     "boolLiteral" should "be able to parse booleans" in {
@@ -180,7 +182,7 @@ class atom_test extends AnyFlatSpec {
     }
 
     it should "reject multiple characters" in {
-        parser.standardCharLiteral.parse("ab") shouldBe a [Failure[?]]
+        fully(parser.standardCharLiteral).parse("ab") shouldBe a [Failure[?]]
     }
 
     "ident" should "be able to parse strings" in {
@@ -288,7 +290,11 @@ class unary_oper_test extends AnyFlatSpec {
     }
 
     it should "reject missing argument" in {
-        parser.unaryOper.parse("Len") shouldBe a [Failure[?]]
+        parser.unaryOper.parse("len") shouldBe a [Failure[?]]
+    }
+
+    it should "reject invalid operator" in {
+        parser.unaryOper.parse("^a") shouldBe a [Failure[?]]
     }
 }
 
@@ -302,7 +308,7 @@ class pair_elem_test extends AnyFlatSpec {
     }
 
     it should "reject rvalues on the right" in {
-        parser.pairElem.parse("snd newpair(1,2)") shouldBe a [Failure[?]]
+        fully(parser.pairElem).parse("snd newpair(1,2)") shouldBe a [Failure[?]]
     }
 
     it should "reject invalid index keyword" in {
