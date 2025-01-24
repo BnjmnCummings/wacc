@@ -15,7 +15,7 @@ class type_array_test extends AnyFlatSpec {
     }
 
     it should "be able to parse nested array types" in {
-        parser.arrayType.parse("int[][]")    shouldBe Success(
+        parser.arrayType.parse("int[][]") shouldBe Success(
             ArrayType(
                 ArrayType(BaseType.Int)
             )
@@ -118,8 +118,6 @@ class type_base_test extends AnyFlatSpec {
         parser.baseType.parse("helpMe")       shouldBe a [Failure[?]]
         parser.baseType.parse("cheese")       shouldBe a [Failure[?]]
     }
-
-    
 }
 
 class type_parent_test extends AnyFlatSpec {

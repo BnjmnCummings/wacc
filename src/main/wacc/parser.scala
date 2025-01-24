@@ -59,4 +59,8 @@ object parser {
     lazy val baseType: Parsley[Type] = ??? // ("int" as BaseType.Int) |  ("bool" as BaseType.Bool) |  ("char" as BaseType.Char) | ("string" as BaseType.String)
 
     lazy val pairElemType: Parsley[Type] = ??? //"pair".as(ErasedPairType) | arrayType | baseType
+
+    lazy val params: Parsley[List[Param]] = ??? // some((type <~ " ", string).zipped(Param(_,_)), ",")
+
+    lazy val func: Parsley[Func] = ???
 }
