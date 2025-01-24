@@ -40,4 +40,8 @@ object parser {
     lazy val stringLiteral: Parsley[StringLiteral] = ???
 
     lazy val ident: Parsley[Ident] = ???
+
+    lazy val binaryOper: Parsley[BinaryOper] = ???
+
+    lazy val unaryOper: Parsley[UnaryOper] = ???
 }
