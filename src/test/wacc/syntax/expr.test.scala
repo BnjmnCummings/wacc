@@ -23,6 +23,10 @@ class expr_test extends AnyFlatSpec {
         parser.expr.parse("a") shouldBe Success(Ident("a"))
     }
 
+    it should "be able to parse pair null literals" in {
+        parser.expr.parse("null") shouldBe Success(PairNullLiteral)
+    }
+
     it should "reject two variables without an operator" in {
         parser.expr.parse("a b") shouldBe a [Failure[?]]
     }
@@ -139,20 +143,61 @@ class array_literal extends AnyFlatSpec {
 }
 
 class atom extends AnyFlatSpec {
-    // case class IntLiteral(v: BigInt) extends Expr
-    // case class BoolLiteral(v: Boolean) extends Expr
-    // sealed abstract class CharLiteral extends Expr
-    // case class EscapedCharLiteral(v: Char) extends CharLiteral
-    // case class StandardCharLiteral(v: Char) extends CharLiteral
-    // case class StringLiteral(v: List[CharLiteral]) extends Expr
-    // case class Ident(v: String) extends Expr, LValue
-    // case class ArrayElem(v: String, is: List[Expr]) extends Expr, LValue
-
-    // object PairNullLiteral extends Expr
-    "intiteral" should "be able to parse empty arrays" in {
-        parser.arrayLiteral.parse("[]") shouldBe Success(ArrayLiteral(List()))
+    "intLiteral" should "be able to parse positive integers" in {
+        parser.intLiteral.parse("67") shouldBe Success(IntLiteral(67))
     }
 
+    it should "be able to parse negative integers" in {
+        parser.intLiteral.parse("-67") shouldBe Success(IntLiteral(-67))
+    }
+
+    it should "reject non-integer characters" in {
+        parser.intLiteral.parse("a6") shouldBe a [Failure[?]]
+    }
+
+    it should "reject integers which are too big" in {
+        parser.intLiteral.parse("2147483648") shouldBe a [Failure[?]]
+    }
+
+    it should "reject integers which are too small" in {
+        parser.intLiteral.parse("-2147483649") shouldBe a [Failure[?]]
+    }
+
+    "boolLiteral" should "be able to parse booleans" in {
+        parser.boolLiteral.parse("true") shouldBe Success(BoolLiteral(true))
+    }
+
+    it should "reject non boolean strings" in {
+        parser.boolLiteral.parse("True") shouldBe a [Failure[?]]
+    }
+
+    "escapedCharLiteral" should "be able to parse escaped characters" in {
+        parser.escapedCharLiteral.parse("\\n") shouldBe Success(EscapedCharLiteral('n'))
+    }
+
+    it should "reject normal characters" in {
+        parser.escapedCharLiteral.parse("a") shouldBe a [Failure[?]]
+    }
+
+    "standardCharLiteral" should "be able to parse characters" in {
+        parser.standardCharLiteral.parse("n") shouldBe Success(StandardCharLiteral('n'))
+    }
+
+    it should "reject multiple characters" in {
+        parser.standardCharLiteral.parse("ab") shouldBe a [Failure[?]]
+    }
+
+    "ident" should "be able to parse strings" in {
+        parser.ident.parse("nickWu") shouldBe Success(Ident("nickWu"))
+    }
+
+    it should "be able to parse strings with numbers in them" in {
+        parser.ident.parse("nick2") shouldBe Success(Ident("nick2"))
+    }
+
+    it should "reject strings which begin with numbers" in {
+        parser.ident.parse("2nick") shouldBe a [Failure[?]]
+    }
 }
 
 class binary_oper extends AnyFlatSpec {

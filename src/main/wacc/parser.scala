@@ -28,4 +28,16 @@ object parser {
     lazy val arrayElem: Parsley[ArrayElem] = ???
 
     lazy val arrayLiteral: Parsley[ArrayLiteral] = ???
+
+    lazy val intLiteral: Parsley[IntLiteral] = ???
+
+    lazy val boolLiteral: Parsley[BoolLiteral] = ???
+
+    lazy val escapedCharLiteral: Parsley[EscapedCharLiteral] = ???
+
+    lazy val standardCharLiteral: Parsley[StandardCharLiteral] = ???
+
+    lazy val stringLiteral: Parsley[StringLiteral] = ???
+
+    lazy val ident: Parsley[Ident] = ???
 }
