@@ -32,7 +32,7 @@ class expr_test extends AnyFlatSpec {
     }
 }
 
-class lvalue extends AnyFlatSpec {
+class lvalue_test extends AnyFlatSpec {
     "lvalue" should "be able to parse single identifiers" in {
         parser.lvalue.parse("a") shouldBe Success(Ident("a"))
     }
@@ -54,7 +54,7 @@ class lvalue extends AnyFlatSpec {
     }
 }
 
-class rvalue extends AnyFlatSpec {
+class rvalue_test extends AnyFlatSpec {
     "rvalue" should "be able to parse single identifiers" in {
         parser.rvalue.parse("a") shouldBe Success(Ident("a"))
     }
@@ -92,7 +92,7 @@ class rvalue extends AnyFlatSpec {
     }
 }
 
-class array_elem extends AnyFlatSpec {
+class array_elem_test extends AnyFlatSpec {
     "arrayElem" should "be able to parse single dimensional array access" in {
         parser.arrayElem.parse("arr[a]") shouldBe Success(ArrayElem("arr", List(Ident("a"))))
     }
@@ -111,7 +111,7 @@ class array_elem extends AnyFlatSpec {
     }
 }
 
-class array_literal extends AnyFlatSpec {
+class array_literal_test extends AnyFlatSpec {
     "arrayLiteral" should "be able to parse empty arrays" in {
         parser.arrayLiteral.parse("[]") shouldBe Success(ArrayLiteral(List()))
     }
@@ -142,7 +142,7 @@ class array_literal extends AnyFlatSpec {
     }
 }
 
-class atom extends AnyFlatSpec {
+class atom_test extends AnyFlatSpec {
     "intLiteral" should "be able to parse positive integers" in {
         parser.intLiteral.parse("67") shouldBe Success(IntLiteral(67))
     }
@@ -200,7 +200,7 @@ class atom extends AnyFlatSpec {
     }
 }
 
-class binary_oper extends AnyFlatSpec {
+class binary_oper_test extends AnyFlatSpec {
     "binaryOper" should "be able to parse multiplications" in {
         parser.binaryOper.parse("a * b") shouldBe Success(Mul(Ident("a"), Ident("b")))
     }
@@ -266,7 +266,7 @@ class binary_oper extends AnyFlatSpec {
     }
 }
 
-class unary_oper extends AnyFlatSpec {
+class unary_oper_test extends AnyFlatSpec {
     "unaryOper" should "be able to parse nots" in {
         parser.unaryOper.parse("!a") shouldBe Success(Not(Ident("a")))
     }
@@ -296,7 +296,7 @@ class unary_oper extends AnyFlatSpec {
     }
 }
 
-class pair_elem extends AnyFlatSpec {
+class pair_elem_test extends AnyFlatSpec {
 
 }
 

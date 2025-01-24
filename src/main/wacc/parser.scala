@@ -9,6 +9,11 @@ import wacc.syntax.*
 import lexer.implicits.implicitSymbol
 import lexer.{integer, fully}
 import parsley.expr.precedence
+import parsley.quick.*
+import parsley.syntax.zipped.*
+import parsley.expr.{precedence, Ops, InfixL, chain}
+import parsley.errors.ErrorBuilder
+import parsley.debug.*
 import parsley.expr.{Ops, InfixL}
 
 object parser {
@@ -44,4 +49,14 @@ object parser {
     lazy val binaryOper: Parsley[BinaryOper] = ???
 
     lazy val unaryOper: Parsley[UnaryOper] = ???
+
+    lazy val _type: Parsley[Type] =  ??? // arrayType | pairType | baseType 
+
+    lazy val arrayType: Parsley[Type] = ??? // atomic(_type <~ "[]") 
+
+    lazy val pairType: Parsley[Type] = ??? // atomic(("pair(" ~> pairElemType, "," ~> pairElemType <~ ")").zipped(PairType(_, _))).debug("pear")
+
+    lazy val baseType: Parsley[Type] = ??? // ("int" as BaseType.Int) |  ("bool" as BaseType.Bool) |  ("char" as BaseType.Char) | ("string" as BaseType.String)
+
+    lazy val pairElemType: Parsley[Type] = ??? //"pair".as(ErasedPairType) | arrayType | baseType
 }

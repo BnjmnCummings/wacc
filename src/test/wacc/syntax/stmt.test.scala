@@ -6,6 +6,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 import parsley.{Success, Failure, Result}
 
-class stmt extends AnyFlatSpec {
+class stmt_test extends AnyFlatSpec {
 
 }

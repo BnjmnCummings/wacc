@@ -1,17 +1,16 @@
 package wacc.syntax
 
 sealed trait Type
-sealed trait PairElemType
 
-enum BaseType extends Type, PairElemType {
-    case IntType
-    case BoolType
-    case CharType
-    case StringType
+enum BaseType extends Type {
+    case Int
+    case Bool
+    case Char
+    case String
 }
 
-case class ArrayType(t: Type) extends Type, PairElemType
+case class ArrayType(t: Type) extends Type
 
-case class PairType(t1: PairElemType, t2: PairElemType) extends Type
+case class PairType(t1: Type, t2: Type) extends Type
 
-object ErasedPairType extends PairElemType
+object ErasedPairType extends Type

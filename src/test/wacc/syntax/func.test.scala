@@ -5,10 +5,10 @@ import org.scalatest.matchers.should.Matchers.*
 import parsley.{Success, Failure, Result}
 
 
-class func extends AnyFlatSpec {
+class func_test extends AnyFlatSpec {
 
 }
 
-class param extends AnyFlatSpec {
+class param_test extends AnyFlatSpec {
 
 }
