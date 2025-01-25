@@ -30,6 +30,5 @@ test:
     - echo "Running Tests..."
   script:
     - python3 runSelectedTests.py
-    #- scala test .
   after_script:
     - echo "Testing done."
