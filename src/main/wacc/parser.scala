@@ -65,4 +65,28 @@ object parser {
     lazy val func: Parsley[Func] = ???
 
     lazy val pairElem: Parsley[PairElem] = ???
+
+    lazy val decl: Parsley[Stmt] = ???
+    
+    lazy val asgn: Parsley[Stmt] = ???
+
+    lazy val read: Parsley[Stmt] = ???
+
+    lazy val free: Parsley[Stmt] = ???
+
+    lazy val _return: Parsley[Stmt] = ???
+
+    lazy val exit: Parsley[Stmt] = ???
+
+    lazy val print: Parsley[Stmt] = ???
+
+    lazy val println: Parsley[Stmt] = ???
+    
+    lazy val _if: Parsley[Stmt] = ???
+
+    lazy val _while: Parsley[Stmt] = ???
+
+    lazy val codeblock: Parsley[Stmt] = ???
+
+    lazy val stmts: Parsley[List[Stmt]] = ???
 }

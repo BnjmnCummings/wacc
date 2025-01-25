@@ -36,14 +36,14 @@ case class EscapedCharLiteral(v: Char) extends CharLiteral
 case class StandardCharLiteral(v: Char) extends CharLiteral
 case class StringLiteral(v: List[CharLiteral]) extends Expr
 case class Ident(v: String) extends Expr, LValue
-case class ArrayElem(v: String, is: List[Expr]) extends Expr, LValue
+case class ArrayElem(v: String, indicies: List[Expr]) extends Expr, LValue
 
 object PairNullLiteral extends Expr
 
 // RValues
 case class FuncCall(v: String, args: List[Expr]) extends RValue
 case class ArrayLiteral(xs: List[Expr]) extends RValue
-case class PairElem(index: PairIndex, v: LValue) extends LValue, RValue
+case class PairElem(index: PairIndex, v: LValue) extends Expr, LValue
 case class NewPair(x1: Expr, x2: Expr) extends RValue
 
 enum PairIndex {

@@ -2,7 +2,7 @@ package wacc.syntax
 
 sealed trait Stmt
 
-case class Decl(t: Type, v: Ident, r: RValue) extends Stmt
+case class Decl(t: Type, v: String, r: RValue) extends Stmt
 case class Asgn(l: LValue, r: RValue) extends Stmt
 case class Read(l: LValue) extends Stmt
 case class Free(x: Expr) extends Stmt

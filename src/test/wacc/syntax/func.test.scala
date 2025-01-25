@@ -32,45 +32,52 @@ class func_test extends AnyFlatSpec {
         )
     }
 
-    it should "fail missing keywords " in {
+    it should "fail missing keywords" in {
         parser.func.parse("int fun() is return 0 ") shouldBe a [Failure[?]]
         parser.func.parse("int fun() return 0 end") shouldBe a [Failure[?]]
         parser.func.parse("fun() is return 0 end")  shouldBe a [Failure[?]]
         parser.func.parse("int () is return 0 end") shouldBe a [Failure[?]]
     }
 
-    it should "fail missing return keywords " in {
+    it should "fail missing return keywords" in {
         parser.func.parse("int fun() is skip end") shouldBe a [Failure[?]]
-        parser.func.parse("""
-            int fun() is
-                if(true) then 
-                    return 0 
-                else 
-                    skip
-                fi
-            end
-        """") shouldBe a [Failure[?]]
 
-        parser.func.parse("""
-            int fun() is
+        parser.func.parse{
+            """
+                int fun() is
+                    if(true) then 
+                        return 0 
+                    else 
+                        skip
+                    fi
+                end
+            """.trim.replaceAll("\\s+", " ")
+        } shouldBe a [Failure[?]]
+
+        parser.func.parse{
+            """
+                int fun() is
                 if(true) then 
                     skip 
                 else 
                     return 0 
                 fi
-            end
-        """") shouldBe a [Failure[?]]
+                end
+            """.trim.replaceAll("\\s+", " ")
+        } shouldBe a [Failure[?]]
 
-        parser.func.parse("""
-            int fun() is
-                if(true) then 
+        parser.func.parse {
+            """
+                int fun() is
+                    if(true) then 
                     return 0 
-                else 
+                    else 
                     return 0 
-                fi;
-                skip
-            end
-        """") shouldBe a [Failure[?]]
+                    fi;
+                    skip
+                end
+            """.trim.replaceAll("\\s+", " ")
+        } shouldBe a [Failure[?]]
 
         parser.func.parse("fun() is return 0; skip end")  shouldBe a [Failure[?]]
         parser.func.parse("fun() is exit 0; skip end")  shouldBe a [Failure[?]]
@@ -85,15 +92,18 @@ class func_test extends AnyFlatSpec {
                 List(Exit(IntLiteral(0)))
             )
         )
-        parser.func.parse("""
-            int fun() is
-                if(true) then 
-                    return 0 
-                else 
-                    return 0
-                fi
-            end
-        """") shouldBe Success(
+
+        parser.func.parse {
+            """
+                int fun() is
+                    if(true) then 
+                        return 0 
+                    else 
+                        exit 0
+                    fi
+                end
+            """.trim.replaceAll("\\s+", " ")
+        } shouldBe Success(
             Func(
                 BaseType.Int,
                 "fun",
