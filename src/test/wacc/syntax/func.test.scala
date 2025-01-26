@@ -57,11 +57,11 @@ class func_test extends AnyFlatSpec {
         parser.func.parse{
             """
                 int fun() is
-                if(true) then 
-                    skip 
-                else 
-                    return 0 
-                fi
+                    if(true) then 
+                        skip 
+                    else 
+                        return 0 
+                    fi
                 end
             """.trim.replaceAll("\\s+", " ")
         } shouldBe a [Failure[?]]
@@ -70,9 +70,9 @@ class func_test extends AnyFlatSpec {
             """
                 int fun() is
                     if(true) then 
-                    return 0 
+                        return 0 
                     else 
-                    return 0 
+                        return 0 
                     fi;
                     skip
                 end

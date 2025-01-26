@@ -319,4 +319,3 @@ class pair_elem_test extends AnyFlatSpec {
         parser.pairElem.parse("fst") shouldBe a [Failure[?]]
     }
 }
-
