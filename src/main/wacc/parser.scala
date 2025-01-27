@@ -14,7 +14,7 @@ import parsley.syntax.zipped.*
 import parsley.expr.{precedence, Ops, InfixL, chain}
 import parsley.errors.ErrorBuilder
 import parsley.debug.*
-import parsley.expr.{Ops, InfixL}
+import parsley.expr.{Ops,InfixN, InfixR, InfixL, Prefix}
 import parsley.character.{letter, digit, stringOfSome}
 import parsley.syntax.character.stringLift
 import parsley.character
@@ -34,8 +34,38 @@ object parser {
             ident,
             "(" ~> expr <~ ")"
         )(
-            Ops(InfixL)(Mul from "*"),
-            Ops(InfixL)(Add from "+", Sub from "-"),
+            Ops(Prefix)(
+                Not from "!", 
+                Neg from "-", 
+                Len from "len", 
+                Ord from "ord", 
+                Chr from "chr"
+            ),
+            Ops(InfixL)(
+                Mul from "*",
+                Mod from "%", 
+                Div from "/"
+            ),
+            Ops(InfixL)(
+                Add from "+", 
+                Sub from "-"
+            ),
+            Ops(InfixN)(
+                GreaterThanEq from ">=",
+                GreaterThan from ">",
+                LessThanEq from "<=",
+                LessThan from "<"
+            ),
+            Ops(InfixN)(
+                Eq from "==",
+                NotEq from "!="
+            ),
+            Ops(InfixR)(
+                And from "&&"
+            ),
+            Ops(InfixR)(
+                Or from "||"
+            ),
         )
     ).debug("expr")
 
@@ -55,7 +85,7 @@ object parser {
         BoolLiteral(("true" as true) | ("false" as false))
     ).debug("boolLiteral")
 
-        lazy val stringLiteral: Parsley[StringLiteral] = atomic(
+    lazy val stringLiteral: Parsley[StringLiteral] = atomic(
         StringLiteral("\"" ~> many(char) <~ "\"")
     ).debug("stringLiteral")
 

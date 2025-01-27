@@ -16,6 +16,6 @@ object lexer {
 
     val _int: Parsley[BigInt] = lexer.lexeme.integer.decimal
     val _ident: Parsley[String] = lexer.lexeme.names.identifier
-    // val implicits = lexer.lexeme.symbol.implicits
+    val implicits = lexer.lexeme.symbol.implicits
     def fully[A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
 }
