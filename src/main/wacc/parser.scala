@@ -50,15 +50,37 @@ object parser {
 
     lazy val unaryOper: Parsley[UnaryOper] = ???
 
-    lazy val _type: Parsley[Type] =  ??? // arrayType | pairType | baseType 
+    lazy val _type: Parsley[Type] = atomic(
+        arrayType | 
+        pairType  |
+        baseType 
+    ).debug("type")
 
-    lazy val arrayType: Parsley[Type] = ??? // atomic(_type <~ "[]") 
+    lazy val arrayType: Parsley[Type] = atomic(
+        ((pairType | baseType),  some("[]")).zipped(
+            (t, bs) => bs.foldLeft(t)((acc, _) => ArrayType(acc)
+        ))
+    ).debug("arrayType")
 
-    lazy val pairType: Parsley[Type] = ??? // atomic(("pair(" ~> pairElemType, "," ~> pairElemType <~ ")").zipped(PairType(_, _))).debug("pear")
+    lazy val pairType: Parsley[Type] = atomic(
+        PairType(
+            "pair(" ~> pairElemType <~ ",", 
+            pairElemType <~ ")"
+        )
+    ).debug("pairType")
 
-    lazy val baseType: Parsley[Type] = ??? // ("int" as BaseType.Int) |  ("bool" as BaseType.Bool) |  ("char" as BaseType.Char) | ("string" as BaseType.String)
+    lazy val baseType: Parsley[Type] = (
+        ("int" as BaseType.Int)   |  
+        ("bool" as BaseType.Bool) | 
+        ("char" as BaseType.Char) | 
+        ("string" as BaseType.String)
+    ).debug("baseType")
 
-    lazy val pairElemType: Parsley[Type] = ??? //"pair".as(ErasedPairType) | arrayType | baseType
+    lazy val pairElemType: Parsley[Type] = atomic(
+        arrayType | 
+        baseType  | 
+        "pair".as(ErasedPairType)
+    ).debug("pairElemType")
 
     lazy val params: Parsley[List[Param]] = ??? // some((type <~ " ", string).zipped(Param(_,_)), ",")
 
