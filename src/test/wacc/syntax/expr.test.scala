@@ -169,32 +169,90 @@ class atom_test extends AnyFlatSpec {
         parser.bool.parse("True") shouldBe a [Failure[?]]
     }
 
-    "escapedCharLiteral" should "be able to parse escaped characters" in {
-        parser.escapedCharLiteral.parse("\\n") shouldBe Success(EscCharLiteral.Newline)
+    "charLiteral" should "be able to parse characters" in {
+        parser.charLiteral.parse("'a'") shouldBe Success(StandardCharLiteral('a'))
     }
 
-    it should "reject normal characters" in {
-        parser.escapedCharLiteral.parse("a") shouldBe a [Failure[?]]
-    }
-
-    "standardCharLiteral" should "be able to parse characters" in {
-        parser.standardCharLiteral.parse("n") shouldBe Success(StandardCharLiteral('n'))
+    it should "reject empty characters" in {
+        parser.charLiteral.parse("''") shouldBe a [Failure[?]]
     }
 
     it should "reject multiple characters" in {
-        fully(parser.standardCharLiteral).parse("ab") shouldBe a [Failure[?]]
+        parser.charLiteral.parse("'ab'") shouldBe a [Failure[?]]
+    }
+
+    it should "accept escaped characters" in {
+        parser.charLiteral.parse("'\\n'") shouldBe Success(EscCharLiteral.Newline)
+    }
+
+    "escapedChar" should "be able to parse escaped characters" in {
+        parser.escapedChar.parse("\\n") shouldBe Success(EscCharLiteral.Newline)
+    }
+
+    it should "reject normal characters" in {
+        parser.escapedChar.parse("a") shouldBe a [Failure[?]]
+    }
+
+    "standardChar" should "be able to parse characters" in {
+        parser.standardChar.parse("n") shouldBe Success(StandardCharLiteral('n'))
+    }
+
+    it should "reject multiple characters" in {
+        fully(parser.standardChar).parse("ab") shouldBe a [Failure[?]]
     }
 
     "ident" should "be able to parse strings" in {
-        fully(parser.expr).parse("nickWu") shouldBe Success(Ident("nickWu"))
+        fully(parser.ident).parse("nickWu") shouldBe Success(Ident("nickWu"))
     }
 
     it should "be able to parse strings with numbers in them" in {
-        fully(parser.expr).parse("nick2") shouldBe Success(Ident("nick2"))
+        fully(parser.ident).parse("nick2") shouldBe Success(Ident("nick2"))
     }
 
-    it should "reject strings which begin with numbers" in {
+    it should "reject idents which begin with numbers" in {
+        fully(parser.ident).parse("2nick") shouldBe a [Failure[?]]
+    }
+
+    "expr" should "be able to parse brackets" in {
+        parser.expr.parse("(a)") shouldBe Success(Ident("a"))
+    }
+
+    it should "be able to parse into the correct atom" in {
+        parser.expr.parse("-67") shouldBe Success(IntLiteral(-67))
+        parser.expr.parse("'\\n'") shouldBe Success(EscCharLiteral.Newline)
+        fully(parser.expr).parse("nickWu") shouldBe Success(Ident("nickWu"))
+        fully(parser.expr).parse("nick2") shouldBe Success(Ident("nick2"))
         fully(parser.expr).parse("2nick") shouldBe a [Failure[?]]
+        parser.expr.parse("true") shouldBe Success(BoolLiteral(true))
+    }
+
+    "stringLiteral" should "be able to parse empty strings" in {
+        parser.stringLiteral.parse("\"\"") shouldBe Success(StringLiteral(List()))
+    }
+
+    it should "be able to parse strings with characters" in {
+        parser.stringLiteral.parse("\"abc\"") shouldBe Success(
+            StringLiteral(
+                List(
+                    StandardCharLiteral('a'), 
+                    StandardCharLiteral('b'), 
+                    StandardCharLiteral('c')
+                )
+            )
+        )
+    }
+
+    it should "be able to parse strings with escaped" in {
+        parser.stringLiteral.parse("\"abc\\n\"") shouldBe Success(
+            StringLiteral(
+                List(
+                    StandardCharLiteral('a'), 
+                    StandardCharLiteral('b'), 
+                    StandardCharLiteral('c'),
+                    EscCharLiteral.Newline
+                )
+            )
+        )
     }
 }
 

@@ -55,19 +55,21 @@ object parser {
         BoolLiteral(("true" as true) | ("false" as false))
     ).debug("boolLiteral")
 
-    lazy val charLiteral: Parsley[StandardCharLiteral] = atomic(
-       "'" ~> standardCharLiteral <~ "'"
+        lazy val stringLiteral: Parsley[StringLiteral] = atomic(
+        StringLiteral("\"" ~> many(char) <~ "\"")
+    ).debug("stringLiteral")
+
+    lazy val charLiteral: Parsley[CharLiteral] = atomic(
+       "'" ~> char <~ "'"
     ).debug("standardCharLiteral")
 
-    lazy val standardCharLiteral: Parsley[StandardCharLiteral] = atomic(
+    lazy val char = (escapedChar |standardChar)
+
+    lazy val standardChar: Parsley[CharLiteral] = atomic(
        StandardCharLiteral(letterOrDigit)
     ).debug("standardCharLiteral")
 
-    lazy val stringLiteral: Parsley[StringLiteral] = atomic(
-        StringLiteral("\"" ~> many(charLiteral) <~ "\"")
-    ).debug("stringLiteral")
-
-    lazy val escapedCharLiteral: Parsley[EscCharLiteral] = (
+    lazy val escapedChar: Parsley[CharLiteral] = (
         atomic("\\0"    as EscCharLiteral.Null)
         | atomic("\\b"  as EscCharLiteral.Backspace)    
         | atomic("\\n"   as EscCharLiteral.Newline)  
