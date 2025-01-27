@@ -26,7 +26,7 @@ class expr_test extends AnyFlatSpec {
     }
 
     it should "reject two variables without an operator" in {
-        parser.expr.parse("a b") shouldBe a [Failure[?]]
+        fully(parser.expr).parse("a b") shouldBe a [Failure[?]]
     }
 }
 
@@ -142,35 +142,35 @@ class array_literal_test extends AnyFlatSpec {
 
 class atom_test extends AnyFlatSpec {
     "intLiteral" should "be able to parse positive integers" in {
-        parser.intLiteral.parse("67") shouldBe Success(IntLiteral(67))
+        parser.int.parse("67") shouldBe Success(IntLiteral(67))
     }
 
     it should "be able to parse negative integers" in {
-        parser.intLiteral.parse("-67") shouldBe Success(IntLiteral(-67))
+        parser.int.parse("-67") shouldBe Success(IntLiteral(-67))
     }
 
     it should "reject non-integer characters" in {
-        parser.intLiteral.parse("a6") shouldBe a [Failure[?]]
+        parser.int.parse("a6") shouldBe a [Failure[?]]
     }
 
     it should "reject integers which are too big" in {
-        fully(parser.intLiteral).parse("2147483648") shouldBe a [Failure[?]]
+        fully(parser.int).parse("2147483648") shouldBe a [Failure[?]]
     }
 
     it should "reject integers which are too small" in {
-        fully(parser.intLiteral).parse("-2147483649") shouldBe a [Failure[?]]
+        fully(parser.int).parse("-2147483649") shouldBe a [Failure[?]]
     }
 
     "boolLiteral" should "be able to parse booleans" in {
-        parser.boolLiteral.parse("true") shouldBe Success(BoolLiteral(true))
+        parser.bool.parse("true") shouldBe Success(BoolLiteral(true))
     }
 
     it should "reject non boolean strings" in {
-        parser.boolLiteral.parse("True") shouldBe a [Failure[?]]
+        parser.bool.parse("True") shouldBe a [Failure[?]]
     }
 
     "escapedCharLiteral" should "be able to parse escaped characters" in {
-        parser.escapedCharLiteral.parse("\\n") shouldBe Success(EscapedCharLiteral('n'))
+        parser.escapedCharLiteral.parse("\\n") shouldBe Success(EscCharLiteral.Newline)
     }
 
     it should "reject normal characters" in {
@@ -186,15 +186,15 @@ class atom_test extends AnyFlatSpec {
     }
 
     "ident" should "be able to parse strings" in {
-        parser.ident.parse("nickWu") shouldBe Success(Ident("nickWu"))
+        fully(parser.expr).parse("nickWu") shouldBe Success(Ident("nickWu"))
     }
 
     it should "be able to parse strings with numbers in them" in {
-        parser.ident.parse("nick2") shouldBe Success(Ident("nick2"))
+        fully(parser.expr).parse("nick2") shouldBe Success(Ident("nick2"))
     }
 
     it should "reject strings which begin with numbers" in {
-        parser.ident.parse("2nick") shouldBe a [Failure[?]]
+        fully(parser.expr).parse("2nick") shouldBe a [Failure[?]]
     }
 }
 

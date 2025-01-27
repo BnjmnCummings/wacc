@@ -36,7 +36,6 @@ object NotEq extends generic.ParserBridge2[Expr, Expr, NotEq]
 object And extends generic.ParserBridge2[Expr, Expr, And]
 object Or extends generic.ParserBridge2[Expr, Expr, Or]
 
-
 // Unary operators
 sealed trait UnaryOper extends Expr
 case class Not(x: Expr) extends UnaryOper
@@ -51,27 +50,42 @@ object Len extends generic.ParserBridge1[Expr, Len]
 object Ord extends generic.ParserBridge1[Expr, Ord]
 object Chr extends generic.ParserBridge1[Expr, Chr]
 
-
 // Atoms
 case class IntLiteral(v: BigInt) extends Expr
 case class BoolLiteral(v: Boolean) extends Expr
 sealed abstract class CharLiteral extends Expr
-case class EscapedCharLiteral(v: Char) extends CharLiteral
 case class StandardCharLiteral(v: Char) extends CharLiteral
 case class StringLiteral(v: List[CharLiteral]) extends Expr
 case class Ident(v: String) extends Expr, LValue
 case class ArrayElem(v: String, indicies: List[Expr]) extends Expr, LValue
-
 object PairNullLiteral extends Expr
 
-object IntLiteral extends generic.ParserBridge1[BigInt, IntLiteral]
+enum EscCharLiteral extends CharLiteral{
+  case Null
+  case Backspace
+  case Tab
+  case Newline
+  case Formfeed
+  case CarriageReturn
+  case DoubleQuote
+  case Backslash
+  case SingleQuote
+}
+
+object IntLiteral extends generic.ParserBridge1[BigInt, IntLiteral] {
+  override def apply(v: BigInt): IntLiteral = {
+    if (v <= -2147483648 || v >= 2147483647) {
+      throw new IllegalArgumentException("Int out of range")
+    }
+    new IntLiteral(v)
+  }
+}
+
 object BoolLiteral extends generic.ParserBridge1[Boolean, BoolLiteral]
-object EscapedCharLiteral extends generic.ParserBridge1[Char, EscapedCharLiteral]
 object StandardCharLiteral extends generic.ParserBridge1[Char, StandardCharLiteral]
 object StringLiteral extends generic.ParserBridge1[List[CharLiteral], StringLiteral]
 object Ident extends generic.ParserBridge1[String, Ident]
 object ArrayElem extends generic.ParserBridge2[String, List[Expr], ArrayElem]
-
 
 // RValues
 case class FuncCall(v: String, args: List[Expr]) extends RValue
