@@ -6,10 +6,10 @@ syntax:
     # - unary_oper
     # - binary_oper
     # - array_elem
+    # - type_parent
     # - type_base
     # - type_array
     # - type_pair
-    # - type_pair_elem
     # - func
     # - param
     # - stmt
