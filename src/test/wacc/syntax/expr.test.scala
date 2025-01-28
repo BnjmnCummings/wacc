@@ -10,7 +10,7 @@ import parsley.{Success, Failure, Result}
 
 class expr_test extends AnyFlatSpec {
     "expr" should "be able to parse binary operators" in {
-        parser.expr.parse("1+2") shouldBe Success(Add(IntLiteral(1),IntLiteral(2)))
+        parser.expr.parse("1 + 2") shouldBe Success(Add(IntLiteral(1),IntLiteral(2)))
     }
 
     it should "be able to parse unary operators" in {
@@ -258,63 +258,63 @@ class atom_test extends AnyFlatSpec {
 
 class binary_oper_test extends AnyFlatSpec {
     "binaryOper" should "be able to parse multiplications" in {
-        parser.expr.parse("a*b") shouldBe Success(Mul(Ident("a"), Ident("b")))
+        parser.expr.parse("a * b") shouldBe Success(Mul(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse divisions" in {
-        parser.expr.parse("a/b") shouldBe Success(Div(Ident("a"), Ident("b")))
+        parser.expr.parse("a / b") shouldBe Success(Div(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse modulos" in {
-        parser.expr.parse("a%b") shouldBe Success(Mod(Ident("a"), Ident("b")))
+        parser.expr.parse("a % b") shouldBe Success(Mod(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse additions" in {
-        parser.expr.parse("a+b") shouldBe Success(Add(Ident("a"), Ident("b")))
+        parser.expr.parse("a + b") shouldBe Success(Add(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse subtractions" in {
-        parser.expr.parse("a-b") shouldBe Success(Sub(Ident("a"), Ident("b")))
+        parser.expr.parse("a - b") shouldBe Success(Sub(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse greater thans" in {
-        parser.expr.parse("a>b") shouldBe Success(GreaterThan(Ident("a"), Ident("b")))
+        parser.expr.parse("a > b") shouldBe Success(GreaterThan(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse greater than or equals" in {
-        parser.expr.parse("a>=b") shouldBe Success(GreaterThanEq(Ident("a"), Ident("b")))
+        parser.expr.parse("a >= b") shouldBe Success(GreaterThanEq(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse less thans" in {
-        parser.expr.parse("a<b") shouldBe Success(LessThan(Ident("a"), Ident("b")))
+        parser.expr.parse("a < b") shouldBe Success(LessThan(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse less than or equals" in {
-        parser.expr.parse("a<=b") shouldBe Success(LessThanEq(Ident("a"), Ident("b")))
+        parser.expr.parse("a <= b") shouldBe Success(LessThanEq(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse equals" in {
-        parser.expr.parse("a==b") shouldBe Success(Eq(Ident("a"), Ident("b")))
+        parser.expr.parse("a == b") shouldBe Success(Eq(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse not equals" in {
-        parser.expr.parse("a!=b") shouldBe Success(NotEq(Ident("a"), Ident("b")))
+        parser.expr.parse("a != b") shouldBe Success(NotEq(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse ands" in {
-        parser.expr.parse("a&&b") shouldBe Success(And(Ident("a"), Ident("b")))
+        parser.expr.parse("a && b") shouldBe Success(And(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse ors" in {
-        parser.expr.parse("a||b") shouldBe Success(Or(Ident("a"), Ident("b")))
+        parser.expr.parse("a || b") shouldBe Success(Or(Ident("a"), Ident("b")))
     }
 
     it should "reject two variables without an operator" in {
-        parser.expr.parse("a b") shouldBe a [Failure[?]]
+        fully(parser.expr).parse("a b") shouldBe a [Failure[?]]
     }
 
     it should "reject illegal operators" in {
-        parser.expr.parse("a ^ b") shouldBe a [Failure[?]]
+        fully(parser.expr).parse("a ^ b") shouldBe a [Failure[?]]
     }
 
     it should "reject missing variable" in {

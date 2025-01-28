@@ -1,23 +1,15 @@
 package wacc
 
-import parsley.{Parsley, Result}
-import parsley.token.names
-// import parsley.expr.chain
-// import parsley.debug.*
-
 import wacc.syntax.*
 
-import lexer.{_int, _ident, fully}
-import parsley.expr.precedence
+import parsley.{Parsley, Result}
 import parsley.quick.*
 import parsley.syntax.zipped.*
-import parsley.expr.{precedence, Ops, InfixL, chain}
 import parsley.errors.ErrorBuilder
 import parsley.debug.*
-import parsley.expr.{Ops,InfixN, InfixR, InfixL, Prefix}
-import parsley.character.{letter, digit, stringOfSome}
-import parsley.syntax.character.stringLift
-import parsley.character
+import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix}
+import lexer.{_int, _ident, fully}
+import lexer.implicits.implicitSymbol
 
 object parser {
     def parse(input: String): Result[String, Expr] = parser.parse(input)
