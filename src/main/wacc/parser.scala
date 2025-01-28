@@ -107,11 +107,9 @@ object parser {
 
     lazy val rvalue: Parsley[RValue] = ???
 
-    lazy val arrayLiteral: Parsley[ArrayLiteral] = ???
-
-    lazy val binaryOper: Parsley[BinaryOper] = ???
-
-    lazy val unaryOper: Parsley[UnaryOper] = ???
+    lazy val arrayLiteral: Parsley[ArrayLiteral] = (
+        ArrayLiteral("[" ~> sepBy(expr, ",") <~ "]")
+    ).debug("arrayLiteral")
 
     lazy val _type: Parsley[Type] = atomic(
         arrayType 
