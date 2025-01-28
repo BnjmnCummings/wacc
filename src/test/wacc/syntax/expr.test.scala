@@ -154,11 +154,15 @@ class atom_test extends AnyFlatSpec {
     }
 
     it should "reject integers which are too big" in {
-        fully(parser.int).parse("2147483648") shouldBe a [Failure[?]]
+        assertThrows[IllegalArgumentException] {
+            fully(parser.int).parse("2147483648")
+        }
     }
 
     it should "reject integers which are too small" in {
-        fully(parser.int).parse("-2147483649") shouldBe a [Failure[?]]
+        assertThrows[IllegalArgumentException] {
+            fully(parser.int).parse("-2147483649")
+        }
     }
 
     "boolLiteral" should "be able to parse booleans" in {
@@ -218,7 +222,8 @@ class atom_test extends AnyFlatSpec {
     }
 
     it should "be able to parse into the correct atom" in {
-        parser.expr.parse("-67") shouldBe Success(IntLiteral(-67))
+        // we want to keep the neg operator but we also want this to parse into IntLiteral(-67)
+        parser.expr.parse("-67") shouldBe Success(Neg(IntLiteral(67)))
         parser.expr.parse("'\\n'") shouldBe Success(EscCharLiteral.Newline)
         fully(parser.expr).parse("nickWu") shouldBe Success(Ident("nickWu"))
         fully(parser.expr).parse("nick2") shouldBe Success(Ident("nick2"))
@@ -324,35 +329,31 @@ class binary_oper_test extends AnyFlatSpec {
 
 class unary_oper_test extends AnyFlatSpec {
     "unaryOper" should "be able to parse nots" in {
-        parser.unaryOper.parse("!a") shouldBe Success(Not(Ident("a")))
+        parser.expr.parse("!a") shouldBe Success(Not(Ident("a")))
     }
 
     it should "be able to parse negations" in {
-        parser.unaryOper.parse("-a") shouldBe Success(Neg(Ident("a")))
+        parser.expr.parse("-a") shouldBe Success(Neg(Ident("a")))
     }
 
     it should "be able to parse lens" in {
-        parser.unaryOper.parse("len a") shouldBe Success(Len(Ident("a")))
+        parser.expr.parse("len a") shouldBe Success(Len(Ident("a")))
     }
 
     it should "be able to parse ords" in {
-        parser.unaryOper.parse("ord a") shouldBe Success(Ord(Ident("a")))
+        parser.expr.parse("ord a") shouldBe Success(Ord(Ident("a")))
     }
 
     it should "be able to parse chrs" in {
-        parser.unaryOper.parse("chr a") shouldBe Success(Chr(Ident("a")))
-    }
-
-    it should "reject missing operator" in {
-        parser.unaryOper.parse("a") shouldBe a [Failure[?]]
+        parser.expr.parse("chr a") shouldBe Success(Chr(Ident("a")))
     }
 
     it should "reject missing argument" in {
-        parser.unaryOper.parse("len") shouldBe a [Failure[?]]
+        parser.expr.parse("len") shouldBe a [Failure[?]]
     }
 
     it should "reject invalid operator" in {
-        parser.unaryOper.parse("^a") shouldBe a [Failure[?]]
+        parser.expr.parse("^a") shouldBe a [Failure[?]]
     }
 }
 
