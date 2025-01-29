@@ -162,15 +162,11 @@ class atom_test extends AnyFlatSpec {
     }
 
     it should "reject integers which are too big" in {
-        assertThrows[IllegalArgumentException] {
-            fully(parser.int).parse("2147483648")
-        }
+        fully(parser.int).parse("2147483648") shouldBe a [Failure[?]]
     }
 
     it should "reject integers which are too small" in {
-        assertThrows[IllegalArgumentException] {
-            fully(parser.int).parse("-2147483649")
-        }
+        fully(parser.int).parse("-2147483649") shouldBe a [Failure[?]]
     }
 
     "boolLiteral" should "be able to parse booleans" in {

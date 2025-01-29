@@ -72,15 +72,7 @@ enum EscCharLiteral extends CharLiteral{
   case SingleQuote
 }
 
-object IntLiteral extends generic.ParserBridge1[BigInt, IntLiteral] {
-  override def apply(v: BigInt): IntLiteral = {
-    if (v <= -2147483648 || v >= 2147483647) {
-      throw new IllegalArgumentException("Int out of range")
-    }
-    new IntLiteral(v)
-  }
-}
-
+object IntLiteral extends generic.ParserBridge1[BigInt, IntLiteral]
 object BoolLiteral extends generic.ParserBridge1[Boolean, BoolLiteral]
 object StandardCharLiteral extends generic.ParserBridge1[Char, StandardCharLiteral]
 object StringLiteral extends generic.ParserBridge1[List[CharLiteral], StringLiteral]
