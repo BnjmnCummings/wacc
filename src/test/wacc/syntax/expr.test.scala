@@ -54,27 +54,27 @@ class lvalue_test extends AnyFlatSpec {
 
 class rvalue_test extends AnyFlatSpec {
     "rvalue" should "be able to parse single identifiers" in {
-        parser.rvalue.parse("a") shouldBe Success(Ident("a"))
+        fully(parser.rvalue).parse("a") shouldBe Success(Ident("a"))
     }
 
     it should "be able to parse array literals" in {
-        parser.rvalue.parse("[a]") shouldBe Success(ArrayLiteral(List(Ident("a"))))
+        fully(parser.rvalue).parse("[a]") shouldBe Success(ArrayLiteral(List(Ident("a"))))
     }
 
     it should "be able to parse newpairs" in {
-        parser.rvalue.parse("newpair(a,a)") shouldBe Success(NewPair(Ident("a"), Ident("a")))
+        fully(parser.rvalue).parse("newpair(a,a)") shouldBe Success(NewPair(Ident("a"), Ident("a")))
     }
 
     it should "be able to parse pair elements" in {
-        parser.rvalue.parse("fst a") shouldBe Success(PairElem(PairIndex.First, Ident("a")))
+        fully(parser.rvalue).parse("fst a") shouldBe Success(PairElem(PairIndex.First, Ident("a")))
     }
 
     it should "be able to parse empty function calls" in {
-        parser.rvalue.parse("call a()") shouldBe Success(FuncCall("a", Nil))
+        fully(parser.rvalue).parse("call a()") shouldBe Success(FuncCall("a", Nil))
     }
 
     it should "be able to parse function calls with arguments" in {
-        parser.rvalue.parse("call a(x)") shouldBe Success(FuncCall("a", List(Ident("x"))))
+        fully(parser.rvalue).parse("call a(x)") shouldBe Success(FuncCall("a", List(Ident("x"))))
     }
 
     it should "reject variable declarations" in {
@@ -87,6 +87,14 @@ class rvalue_test extends AnyFlatSpec {
 
     it should "reject function calls without the Call tag" in {
         fully(parser.rvalue).parse("foo(x)") shouldBe a [Failure[?]]
+    }
+
+    "argList" should "be able to parse a single argument list" in {
+        parser.argList.parse("a") shouldBe Success(List(Ident("a")))
+    }
+
+    it should "be able to parse multiple arguments" in {
+        parser.argList.parse("a, b, c") shouldBe Success(List(Ident("a"), Ident("b"), Ident("c")))
     }
 }
 

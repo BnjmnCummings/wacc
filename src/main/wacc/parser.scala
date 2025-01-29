@@ -15,7 +15,7 @@ object parser {
     def parse(input: String): Result[String, Expr] = parser.parse(input)
     private val parser = fully(expr)
 
-    lazy val expr: Parsley[Expr] = (
+    lazy val expr: Parsley[Expr] = atomic(
         precedence(
             atomic("null" as PairNullLiteral),
             bool,
@@ -148,7 +148,31 @@ object parser {
         (_ident,  some("[" ~> expr <~"]")) zipped (ArrayElem(_, _)) 
     ).debug("arrayElem")
 
-    lazy val rvalue: Parsley[RValue] = ???
+    lazy val rvalue: Parsley[RValue] = (
+        funcCall
+        | expr
+        | arrayLiteral
+        | newPair
+        | pairElem
+    ).debug("rvalue")
+
+    lazy val newPair: Parsley[NewPair] = atomic(
+        NewPair(
+            "newpair" ~> "(" ~> expr,
+            "," ~> expr <~ ")"
+        )
+    ).debug("newPair")
+
+    lazy val funcCall: Parsley[FuncCall] = atomic(
+        FuncCall(
+            "call" ~> _ident, 
+            "(" ~> argList <~ ")"
+        )
+    ).debug("funcCall")
+
+    lazy val argList: Parsley[List[Expr]] = (
+        sepBy(expr, ",")
+    ).debug("argList")
 
     lazy val params: Parsley[List[Param]] = ???
 
