@@ -11,8 +11,8 @@ syntax:
     - type_array
     - type_pair
     # - func
-    # - param
-    # - stmt
+     - param
+    - stmt
     - lvalue
     - rvalue
     - pair_elem
