@@ -198,7 +198,7 @@ class stmt_test extends AnyFlatSpec {
     it should "parse a print for a literal expression" in {
         parser.print.parse("print \"Hello World!\"") shouldBe Success(
             Print(
-                StringLiteral("Hello World!".toList.map(StandardCharLiteral(_)))
+                StringLiteral("Hello World!")
             )
         )
     }
@@ -230,7 +230,7 @@ class stmt_test extends AnyFlatSpec {
     it should "parse a println for a literal expression" in {
         parser.println.parse("println \"Hello World!\"") shouldBe Success(
             Println(
-                StringLiteral("Hello World!".toList.map(StandardCharLiteral(_)))
+                StringLiteral("Hello World!")
             )
         )
     }
@@ -453,7 +453,7 @@ class stmt_test extends AnyFlatSpec {
             CodeBlock(
                 List(
                     Println(
-                        StringLiteral("Hello World!".toList.map(StandardCharLiteral(_)))
+                        StringLiteral("Hello World!")
                     )
                 )
             )   

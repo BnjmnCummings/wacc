@@ -178,7 +178,7 @@ class atom_test extends AnyFlatSpec {
     }
 
     "charLiteral" should "be able to parse characters" in {
-        parser.charLiteral.parse("'a'") shouldBe Success(StandardCharLiteral('a'))
+        parser.charLiteral.parse("'a'") shouldBe Success(CharLiteral('a'))
     }
 
     it should "reject empty characters" in {
@@ -190,23 +190,7 @@ class atom_test extends AnyFlatSpec {
     }
 
     it should "accept escaped characters" in {
-        parser.charLiteral.parse("'\\n'") shouldBe Success(EscCharLiteral.Newline)
-    }
-
-    "escapedChar" should "be able to parse escaped characters" in {
-        parser.escapedChar.parse("\\n") shouldBe Success(EscCharLiteral.Newline)
-    }
-
-    it should "reject normal characters" in {
-        parser.escapedChar.parse("a") shouldBe a [Failure[?]]
-    }
-
-    "standardChar" should "be able to parse characters" in {
-        parser.standardChar.parse("n") shouldBe Success(StandardCharLiteral('n'))
-    }
-
-    it should "reject multiple characters" in {
-        fully(parser.standardChar).parse("ab") shouldBe a [Failure[?]]
+        parser.charLiteral.parse("'\\n'") shouldBe Success(CharLiteral('\n'))
     }
 
     "ident" should "be able to parse strings" in {
@@ -228,7 +212,7 @@ class atom_test extends AnyFlatSpec {
     it should "be able to parse into the correct atom" in {
         // we want to keep the neg operator but we also want this to parse into IntLiteral(-67)
         parser.expr.parse("-67") shouldBe Success(Neg(IntLiteral(67)))
-        parser.expr.parse("'\\n'") shouldBe Success(EscCharLiteral.Newline)
+        parser.expr.parse("'\\n'") shouldBe Success(CharLiteral('\n'))
         fully(parser.expr).parse("nickWu") shouldBe Success(Ident("nickWu"))
         fully(parser.expr).parse("nick2") shouldBe Success(Ident("nick2"))
         fully(parser.expr).parse("2nick") shouldBe a [Failure[?]]
@@ -236,32 +220,15 @@ class atom_test extends AnyFlatSpec {
     }
 
     "stringLiteral" should "be able to parse empty strings" in {
-        parser.stringLiteral.parse("\"\"") shouldBe Success(StringLiteral(List()))
+        parser.stringLiteral.parse("\"\"") shouldBe Success(StringLiteral(""))
     }
 
     it should "be able to parse strings with characters" in {
-        parser.stringLiteral.parse("\"abc\"") shouldBe Success(
-            StringLiteral(
-                List(
-                    StandardCharLiteral('a'), 
-                    StandardCharLiteral('b'), 
-                    StandardCharLiteral('c')
-                )
-            )
-        )
+        parser.stringLiteral.parse("\"abc\"") shouldBe Success(StringLiteral("abc"))
     }
 
     it should "be able to parse strings with escaped" in {
-        parser.stringLiteral.parse("\"abc\\n\"") shouldBe Success(
-            StringLiteral(
-                List(
-                    StandardCharLiteral('a'), 
-                    StandardCharLiteral('b'), 
-                    StandardCharLiteral('c'),
-                    EscCharLiteral.Newline
-                )
-            )
-        )
+        parser.stringLiteral.parse("\"abc\\n\"") shouldBe Success(StringLiteral("abc\n"))
     }
 }
 

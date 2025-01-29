@@ -1,13 +1,8 @@
 package wacc
 
 import parsley.Parsley
-import parsley.token.{Lexer, Basic, Unicode}
+import parsley.token.{Lexer, Basic}
 import parsley.token.descriptions.*
-
-import scala.collection.immutable.NumericRange
-
-val FIRST_GRAPHIC_ASCII = '!'
-val LAST_GRAPHIC_ASCII = '~'
 
 object lexer {
     private val desc = LexicalDesc.plain.copy(
@@ -42,15 +37,15 @@ object lexer {
                     "r" -> 0x0d,
                 ),
             ),
-            graphicCharacter = 
-                // Not sure if \ " and ' should be included or excluded here
-                Basic(NumericRange.inclusive[Char](FIRST_GRAPHIC_ASCII,LAST_GRAPHIC_ASCII,1)),
+            graphicCharacter = Basic(c => !(Set('\"', '\'', '\\').contains(c))),
         )
     )
     private val lexer = Lexer(desc)
 
     val _int: Parsley[BigInt] = lexer.lexeme.integer.decimal32
     val _ident: Parsley[String] = lexer.lexeme.names.identifier
+    val _char: Parsley[Char] = lexer.lexeme.character.ascii
+    val _string: Parsley[String] = lexer.lexeme.string.ascii
     val implicits = lexer.lexeme.symbol.implicits
     def fully[A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
 }

@@ -8,7 +8,7 @@ import parsley.syntax.zipped.*
 import parsley.errors.ErrorBuilder
 import parsley.debug.*
 import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix}
-import lexer.{_int, _ident, fully}
+import lexer.{_int, _ident, _char, _string, fully}
 import lexer.implicits.implicitSymbol
 
 object parser {
@@ -74,30 +74,12 @@ object parser {
     ).debug("boolLiteral")
 
     lazy val stringLiteral: Parsley[StringLiteral] = atomic(
-        StringLiteral("\"" ~> many(char) <~ "\"")
+        StringLiteral(_string)
     ).debug("stringLiteral")
 
     lazy val charLiteral: Parsley[CharLiteral] = atomic(
-       "'" ~> char <~ "'"
-    ).debug("standardCharLiteral")
-
-    lazy val char = (escapedChar |standardChar)
-
-    lazy val standardChar: Parsley[CharLiteral] = atomic(
-       StandardCharLiteral(letterOrDigit)
-    ).debug("standardCharLiteral")
-
-    lazy val escapedChar: Parsley[CharLiteral] = (
-        atomic("\\0"    as EscCharLiteral.Null)
-        | atomic("\\b"  as EscCharLiteral.Backspace)    
-        | atomic("\\n"   as EscCharLiteral.Newline)  
-        | atomic("\\t"  as EscCharLiteral.Tab)                
-        | atomic("\\f"  as EscCharLiteral.Formfeed)       
-        | atomic("\\r"  as EscCharLiteral.CarriageReturn) 
-        | atomic("\\\"" as EscCharLiteral.DoubleQuote)    
-        | atomic("\\\\" as EscCharLiteral.Backslash)      
-        | atomic("\\'"  as EscCharLiteral.SingleQuote) 
-    ).debug("escapedCharLiteral")
+       CharLiteral(_char)
+    ).debug("charLiteral")
 
     lazy val arrayLiteral: Parsley[ArrayLiteral] = (
         ArrayLiteral("[" ~> sepBy(expr, ",") <~ "]")
