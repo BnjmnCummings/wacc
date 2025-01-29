@@ -61,10 +61,6 @@ object parser {
         )
     ).debug("expr")
 
-    lazy val arrayElem: Parsley[ArrayElem] = atomic(
-        (_ident,  some("[" ~> expr <~"]")) zipped (ArrayElem(_, _)) 
-    ).debug("arrayElem")
-
     lazy val int: Parsley[IntLiteral] = atomic(
         IntLiteral(_int)
     ).debug("int")
@@ -103,10 +99,6 @@ object parser {
         | atomic("\\'"  as EscCharLiteral.SingleQuote) 
     ).debug("escapedCharLiteral")
 
-    lazy val lvalue: Parsley[LValue] = ???
-
-    lazy val rvalue: Parsley[RValue] = ???
-
     lazy val arrayLiteral: Parsley[ArrayLiteral] = (
         ArrayLiteral("[" ~> sepBy(expr, ",") <~ "]")
     ).debug("arrayLiteral")
@@ -143,11 +135,24 @@ object parser {
         | ("pair" as ErasedPairType)
     ).debug("pairElemType")
 
+    lazy val lvalue: Parsley[LValue] = pairElem | arrayElem | ident
+
+    lazy val pairElem: Parsley[PairElem] = atomic(
+        PairElem(
+            ("fst" as PairIndex.First) | ("snd" as PairIndex.Second), 
+            lvalue
+        )  
+    ).debug("pairElem")
+
+    lazy val arrayElem: Parsley[ArrayElem] = atomic(
+        (_ident,  some("[" ~> expr <~"]")) zipped (ArrayElem(_, _)) 
+    ).debug("arrayElem")
+
+    lazy val rvalue: Parsley[RValue] = ???
+
     lazy val params: Parsley[List[Param]] = ???
 
     lazy val func: Parsley[Func] = ???
-
-    lazy val pairElem: Parsley[PairElem] = ???
 
     lazy val decl: Parsley[Stmt] = ???
     
