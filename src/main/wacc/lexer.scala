@@ -9,7 +9,6 @@ import parsley.character.{string}
 // import lexer.implicits.implicitSymbol
 
 object lexer {
-
     private val desc = LexicalDesc.plain.copy(
         nameDesc = NameDesc.plain.copy(
             identifierStart = Basic(idStart),
@@ -24,10 +23,10 @@ object lexer {
             caseSensitive = true,
         ),
         textDesc = TextDesc.plain.copy(
-            characterLiteralEnd = '\'',
+            characterLiteralEnd = charEnd,
             stringEnds = sEnds,
             escapeSequences = EscapeDesc.plain.copy(
-                escBegin = '\\',
+                escBegin = escChar,
                 literals = escapedLiterals,
                 mapping = escapedMapping
             ),

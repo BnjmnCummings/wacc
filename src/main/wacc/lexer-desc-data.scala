@@ -19,4 +19,8 @@ val escapedLiterals = Set('\"','\'','\\')
 
 val commentStart = "#"
 
+val charEnd = '\''
+
+val escChar = '\\'
+
 val sEnds = Set(("\"", "\""))

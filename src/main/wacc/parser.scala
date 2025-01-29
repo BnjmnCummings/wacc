@@ -8,7 +8,7 @@ import parsley.syntax.zipped.*
 import parsley.errors.ErrorBuilder
 import parsley.debug.*
 import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix}
-import lexer.{_int, _ident, _char, _string, fully}
+import lexer.{_int, _ident, _char, _string, _bool, fully}
 import lexer.implicits.implicitSymbol
 
 object parser {
@@ -70,7 +70,7 @@ object parser {
     ).debug("identity")
 
     lazy val bool: Parsley[BoolLiteral] = atomic(
-        BoolLiteral(("true" as true) | ("false" as false))
+        BoolLiteral(_bool)
     ).debug("boolLiteral")
 
     lazy val stringLiteral: Parsley[StringLiteral] = atomic(
