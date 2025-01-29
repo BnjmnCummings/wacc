@@ -143,7 +143,7 @@ object parser {
         | ("pair" as ErasedPairType)
     ).debug("pairElemType")
 
-    lazy val params: Parsley[List[Param]] = ??? // some((type <~ " ", string).zipped(Param(_,_)), ",")
+    lazy val params: Parsley[List[Param]] = ???
 
     lazy val func: Parsley[Func] = ???
 

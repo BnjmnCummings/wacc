@@ -11,6 +11,9 @@ object lexer {
             identifierLetter = Basic(_.isLetterOrDigit),
         ),
         spaceDesc = SpaceDesc.plain,
+        symbolDesc = SymbolDesc.plain.copy(
+            hardKeywords = Set("null", "if", "then", "else", "fi", "while", "do", "done", "for", "newpair", "fst", "snd", "read", "free", "return", "exit", "print", "println", "int", "bool", "char", "string", "pair", "array", "begin", "end", "isnull", "skip", "len", "ord", "chr"),
+        ),
     )
     private val lexer = Lexer(desc)
 
