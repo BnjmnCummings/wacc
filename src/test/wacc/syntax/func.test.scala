@@ -113,7 +113,7 @@ class func_test extends AnyFlatSpec {
                     If(
                         BoolLiteral(true), 
                         List(Return(IntLiteral(0))),
-                        List(Return(IntLiteral(0))),
+                        List(Exit(IntLiteral(0))),
                     )
                 )
             )
