@@ -163,7 +163,12 @@ object parser {
         )
     )//.debug("params")
 
-    lazy val func: Parsley[Func] = ???
+    lazy val func: Parsley[Func] = 
+        Func(_type, 
+            _ident,
+            "(" ~> params <~ ")", 
+            "is" ~> stmts.mapFilter(returningBody) <~ "end"
+        ).debug("func")
 
     lazy val skip: Parsley[Skip.type] = atomic(
         "skip" as Skip
@@ -226,4 +231,6 @@ object parser {
             ";"
         )
     )//.debug("stmts")
+
+    def returningBody(sts: List[Stmt]): Option[List[Stmt]] = Some(sts)
 }
