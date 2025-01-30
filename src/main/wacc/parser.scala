@@ -167,7 +167,7 @@ object parser {
         Func(_type, 
             _ident,
             "(" ~> params <~ ")", 
-            "is" ~> stmts.mapFilter(returningBody) <~ "end"
+            "is" ~> stmts.map(Some(_)).mapFilter(returningBody) <~ "end"
         ).debug("func")
 
     lazy val skip: Parsley[Skip.type] = atomic(
@@ -232,5 +232,26 @@ object parser {
         )
     )//.debug("stmts")
 
-    def returningBody(sts: List[Stmt]): Option[List[Stmt]] = Some(sts)
+    /* 
+    This function checks a list of statements wrapped in an Option to see if they are a returning body
+    It returns the result as an Some if they are and a None if not
+    */
+    def returningBody(st_opt: Option[List[Stmt]]): Option[List[Stmt]] = st_opt match
+        case None => None
+        case Some(sts) => {
+            sts.last match 
+                // if it ends with exit or return we're good
+                case Exit(_) => Some(sts) 
+                case Return(_) => Some(sts)
+                // recursive call if the last statement is an if
+                case If(p, q, r) => {
+                    val qs: Option[List[Stmt]] = returningBody(Some(q)) 
+                    val rs: Option[List[Stmt]] = returningBody(Some(r))
+                    (qs, rs) match 
+                        case (Some(_), Some(_)) => Some(sts)
+                        case _ => None
+                }
+                // if it ends with anything else its not a returning body
+                case _ => None
+        }
 }

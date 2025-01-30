@@ -12,7 +12,7 @@ object lexer {
     private val desc = LexicalDesc.plain.copy(
         nameDesc = NameDesc.plain.copy(
             identifierStart = Basic(idStart),
-            identifierLetter = Basic(idEnd),
+            identifierLetter = Basic(idRest),
         ),
         spaceDesc = SpaceDesc.plain.copy(
             lineCommentAllowsEOF = true,
@@ -45,5 +45,5 @@ object lexer {
     def fully[A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
 
     def idStart(c: Char): Boolean = c.isLetter
-    def idEnd(c: Char): Boolean = c.isLetterOrDigit
+    def idRest(c: Char): Boolean = c.isLetterOrDigit
 }
