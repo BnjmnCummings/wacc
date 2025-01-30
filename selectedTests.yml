@@ -10,8 +10,8 @@ syntax:
     - type_base
     - type_array
     - type_pair
-    # - func
-     - param
+    - func
+    - param
     - stmt
     - lvalue
     - rvalue
