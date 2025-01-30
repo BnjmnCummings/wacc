@@ -5,6 +5,7 @@ import wacc.parser
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 import parsley.{Success, Failure, Result}
+import wacc.lexer.fully
 
 
 class func_test extends AnyFlatSpec {
@@ -112,7 +113,7 @@ class func_test extends AnyFlatSpec {
                     If(
                         BoolLiteral(true), 
                         List(Return(IntLiteral(0))),
-                        List(Return(IntLiteral(0))),
+                        List(Exit(IntLiteral(0))),
                     )
                 )
             )
@@ -155,14 +156,14 @@ class param_test extends AnyFlatSpec {
     }
 
     it should "fail invalid types" in {
-        parser.params.parse("fakeType param1")  shouldBe a [Failure[?]]
-        parser.params.parse("intint param1")    shouldBe a [Failure[?]]
-        parser.params.parse("stringint param1") shouldBe a [Failure[?]]
+        fully(parser.params).parse("fakeType param1")  shouldBe a [Failure[?]]
+        fully(parser.params).parse("intint param1")    shouldBe a [Failure[?]]
+        fully(parser.params).parse("stringint param1") shouldBe a [Failure[?]]
     }
 
     it should "fail missing commas" in {
-        parser.params.parse("int param1 int param2") shouldBe a [Failure[?]]
-        parser.params.parse("int param param2")      shouldBe a [Failure[?]]
-        parser.params.parse("param1")                shouldBe a [Failure[?]]
+        fully(parser.params).parse("int param1 int param2") shouldBe a [Failure[?]]
+        fully(parser.params).parse("int param param2")      shouldBe a [Failure[?]]
+        fully(parser.params).parse("param1")                shouldBe a [Failure[?]]
     }
 }

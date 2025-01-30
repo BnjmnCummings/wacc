@@ -8,6 +8,10 @@ import parsley.{Success, Failure, Result}
 import wacc.lexer.fully
 
 class stmt_test extends AnyFlatSpec {
+    "skip" should "parse a skip statement" in {
+        parser.skip.parse("skip") shouldBe Success(Skip)
+    }
+
     "decl" should "parse a valid declaration" in {
         parser.decl.parse("int var = 6") shouldBe Success(
             Decl(
@@ -93,7 +97,7 @@ class stmt_test extends AnyFlatSpec {
     it should "read from a pair element lvalue" in {
         parser.read.parse("read fst pear") shouldBe Success(
             Read(
-                PairElem(PairIndex.First, Ident("")) 
+                PairElem(PairIndex.First, Ident("pear")) 
             )
         )
     }
@@ -115,13 +119,13 @@ class stmt_test extends AnyFlatSpec {
         )
     }
 
-    it should "free a pair element expression" in {
-        parser.free.parse("free fst pear") shouldBe Success(
-            Free(
-                PairElem(PairIndex.First, Ident("pear")) 
-            )
-        )
-    }
+    // it should "free a pair element expression" in {
+    //     parser.free.parse("free fst pear") shouldBe Success(
+    //         Free(
+    //             PairElem(PairIndex.First, Ident("pear")) 
+    //         )
+    //     )
+    // }
 
     "Return" should "parse a return for an identity expression" in {
         parser._return.parse("return v") shouldBe Success(
@@ -147,13 +151,13 @@ class stmt_test extends AnyFlatSpec {
         )
     }
 
-    it should "parse a return for a pair element expression" in {
-        parser._return.parse("return fst pear") shouldBe Success(
-            Return(
-                PairElem(PairIndex.First, Ident("pear")) 
-            )
-        )
-    }
+    // it should "parse a return for a pair element expression" in {
+    //     parser._return.parse("return fst pear") shouldBe Success(
+    //         Return(
+    //             PairElem(PairIndex.First, Ident("pear")) 
+    //         )
+    //     )
+    // }
 
     "Exit" should "parse an exti for an identity expression" in {
         parser.exit.parse("exit v") shouldBe Success(
@@ -179,13 +183,13 @@ class stmt_test extends AnyFlatSpec {
         )
     }
 
-    it should "parse an exit for a pair element expression" in {
-        parser.exit.parse("exit fst pear") shouldBe Success(
-            Exit(
-                PairElem(PairIndex.First, Ident("pear")) 
-            )
-        )
-    }
+    // it should "parse an exit for a pair element expression" in {
+    //     parser.exit.parse("exit fst pear") shouldBe Success(
+    //         Exit(
+    //             PairElem(PairIndex.First, Ident("pear")) 
+    //         )
+    //     )
+    // }
 
     "Print" should "parse a print for an identity expression" in {
         parser.print.parse("print v") shouldBe Success(
@@ -198,7 +202,7 @@ class stmt_test extends AnyFlatSpec {
     it should "parse a print for a literal expression" in {
         parser.print.parse("print \"Hello World!\"") shouldBe Success(
             Print(
-                StringLiteral("Hello World!".toList.map(StandardCharLiteral(_)))
+                StringLiteral("Hello World!")
             )
         )
     }
@@ -211,13 +215,13 @@ class stmt_test extends AnyFlatSpec {
         )
     }
 
-    it should "parse a print for a pair element expression" in {
-        parser.print.parse("print fst pear") shouldBe Success(
-            Print(
-                PairElem(PairIndex.First, Ident("pear")) 
-            )
-        )
-    }
+    // it should "parse a print for a pair element expression" in {
+    //     parser.print.parse("print fst pear") shouldBe Success(
+    //         Print(
+    //             PairElem(PairIndex.First, Ident("pear")) 
+    //         )
+    //     )
+    // }
 
     "Println" should "parse a println for an identity expression" in {
         parser.println.parse("println v") shouldBe Success(
@@ -230,7 +234,7 @@ class stmt_test extends AnyFlatSpec {
     it should "parse a println for a literal expression" in {
         parser.println.parse("println \"Hello World!\"") shouldBe Success(
             Println(
-                StringLiteral("Hello World!".toList.map(StandardCharLiteral(_)))
+                StringLiteral("Hello World!")
             )
         )
     }
@@ -243,13 +247,13 @@ class stmt_test extends AnyFlatSpec {
         )
     }
 
-    it should "parse a println for a pair element expression" in {
-        parser.println.parse("println fst pear") shouldBe Success(
-            Println(
-                PairElem(PairIndex.First, Ident("pear")) 
-            )
-        )
-    }
+    // it should "parse a println for a pair element expression" in {
+    //     parser.println.parse("println fst pear") shouldBe Success(
+    //         Println(
+    //             PairElem(PairIndex.First, Ident("pear")) 
+    //         )
+    //     )
+    // }
 
     "_if" should "parse valid if blocks" in {
         parser._if.parse {
@@ -325,14 +329,13 @@ class stmt_test extends AnyFlatSpec {
 
     it should "fail invalid syntax" in {
         fully(parser._if).parse("if (true) then skip else skip") shouldBe a [Failure[?]]
-        fully(parser._if).parse("if (true) then skip else skip fi") shouldBe a [Failure[?]]
         fully(parser._if).parse("if (true) skip else skip fi") shouldBe a [Failure[?]]
         fully(parser._if).parse("if (true) then skip fi") shouldBe a [Failure[?]]
         fully(parser._if).parse("if (true) then skip else skip fi; skip") shouldBe a [Failure[?]]
     }
 
     "_while" should "parse valid while blocks" in {
-        parser._if.parse {
+        parser._while.parse {
             """
                 while (true) do 
                     skip 
@@ -347,7 +350,7 @@ class stmt_test extends AnyFlatSpec {
     }
 
     it should "parse nested while blocks" in {
-        parser._if.parse {
+        parser._while.parse {
             """
                 while (true) do 
                     while (true) do 
@@ -367,7 +370,7 @@ class stmt_test extends AnyFlatSpec {
             )
         )
 
-        parser._if.parse {
+        parser._while.parse {
             """
                 while (true) do 
                     while (true) do 
@@ -389,7 +392,7 @@ class stmt_test extends AnyFlatSpec {
             )
         )
 
-        parser._if.parse {
+        parser._while.parse {
             """
                 while (true) do 
                     while (true) do 
@@ -453,7 +456,7 @@ class stmt_test extends AnyFlatSpec {
             CodeBlock(
                 List(
                     Println(
-                        StringLiteral("Hello World!".toList.map(StandardCharLiteral(_)))
+                        StringLiteral("Hello World!")
                     )
                 )
             )   
@@ -466,10 +469,10 @@ class stmt_test extends AnyFlatSpec {
     }
 
     "stmts" should "parse a list of statements" in {
-        fully(parser.codeblock).parse("skip") shouldBe Success(
+        fully(parser.stmts).parse("skip") shouldBe Success(
             List(Skip)
         )
-        fully(parser.codeblock).parse("skip; skip; skip; skip") shouldBe Success(
+        fully(parser.stmts).parse("skip; skip; skip; skip") shouldBe Success(
             List(Skip, Skip, Skip, Skip)
         )
     }

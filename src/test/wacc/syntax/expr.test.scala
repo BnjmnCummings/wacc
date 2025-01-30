@@ -26,7 +26,7 @@ class expr_test extends AnyFlatSpec {
     }
 
     it should "reject two variables without an operator" in {
-        parser.expr.parse("a b") shouldBe a [Failure[?]]
+        fully(parser.expr).parse("a b") shouldBe a [Failure[?]]
     }
 }
 
@@ -54,27 +54,27 @@ class lvalue_test extends AnyFlatSpec {
 
 class rvalue_test extends AnyFlatSpec {
     "rvalue" should "be able to parse single identifiers" in {
-        parser.rvalue.parse("a") shouldBe Success(Ident("a"))
+        fully(parser.rvalue).parse("a") shouldBe Success(Ident("a"))
     }
 
     it should "be able to parse array literals" in {
-        parser.rvalue.parse("[a]") shouldBe Success(ArrayLiteral(List(Ident("a"))))
+        fully(parser.rvalue).parse("[a]") shouldBe Success(ArrayLiteral(List(Ident("a"))))
     }
 
     it should "be able to parse newpairs" in {
-        parser.rvalue.parse("newpair(a,a)") shouldBe Success(NewPair(Ident("a"), Ident("a")))
+        fully(parser.rvalue).parse("newpair(a,a)") shouldBe Success(NewPair(Ident("a"), Ident("a")))
     }
 
     it should "be able to parse pair elements" in {
-        parser.rvalue.parse("fst a") shouldBe Success(PairElem(PairIndex.First, Ident("a")))
+        fully(parser.rvalue).parse("fst a") shouldBe Success(PairElem(PairIndex.First, Ident("a")))
     }
 
     it should "be able to parse empty function calls" in {
-        parser.rvalue.parse("call a()") shouldBe Success(FuncCall("a", Nil))
+        fully(parser.rvalue).parse("call a()") shouldBe Success(FuncCall("a", Nil))
     }
 
     it should "be able to parse function calls with arguments" in {
-        parser.rvalue.parse("call a(x)") shouldBe Success(FuncCall("a", List(Ident("x"))))
+        fully(parser.rvalue).parse("call a(x)") shouldBe Success(FuncCall("a", List(Ident("x"))))
     }
 
     it should "reject variable declarations" in {
@@ -87,6 +87,14 @@ class rvalue_test extends AnyFlatSpec {
 
     it should "reject function calls without the Call tag" in {
         fully(parser.rvalue).parse("foo(x)") shouldBe a [Failure[?]]
+    }
+
+    "argList" should "be able to parse a single argument list" in {
+        parser.argList.parse("a") shouldBe Success(List(Ident("a")))
+    }
+
+    it should "be able to parse multiple arguments" in {
+        parser.argList.parse("a, b, c") shouldBe Success(List(Ident("a"), Ident("b"), Ident("c")))
     }
 }
 
@@ -142,159 +150,181 @@ class array_literal_test extends AnyFlatSpec {
 
 class atom_test extends AnyFlatSpec {
     "intLiteral" should "be able to parse positive integers" in {
-        parser.intLiteral.parse("67") shouldBe Success(IntLiteral(67))
+        parser.int.parse("67") shouldBe Success(IntLiteral(67))
     }
 
     it should "be able to parse negative integers" in {
-        parser.intLiteral.parse("-67") shouldBe Success(IntLiteral(-67))
+        parser.int.parse("-67") shouldBe Success(IntLiteral(-67))
     }
 
     it should "reject non-integer characters" in {
-        parser.intLiteral.parse("a6") shouldBe a [Failure[?]]
+        parser.int.parse("a6") shouldBe a [Failure[?]]
     }
 
     it should "reject integers which are too big" in {
-        fully(parser.intLiteral).parse("2147483648") shouldBe a [Failure[?]]
+        fully(parser.int).parse("2147483648") shouldBe a [Failure[?]]
     }
 
     it should "reject integers which are too small" in {
-        fully(parser.intLiteral).parse("-2147483649") shouldBe a [Failure[?]]
+        fully(parser.int).parse("-2147483649") shouldBe a [Failure[?]]
     }
 
     "boolLiteral" should "be able to parse booleans" in {
-        parser.boolLiteral.parse("true") shouldBe Success(BoolLiteral(true))
+        parser.bool.parse("true") shouldBe Success(BoolLiteral(true))
     }
 
     it should "reject non boolean strings" in {
-        parser.boolLiteral.parse("True") shouldBe a [Failure[?]]
+        parser.bool.parse("True") shouldBe a [Failure[?]]
     }
 
-    "escapedCharLiteral" should "be able to parse escaped characters" in {
-        parser.escapedCharLiteral.parse("\\n") shouldBe Success(EscapedCharLiteral('n'))
+    "charLiteral" should "be able to parse characters" in {
+        parser.charLiteral.parse("'a'") shouldBe Success(CharLiteral('a'))
     }
 
-    it should "reject normal characters" in {
-        parser.escapedCharLiteral.parse("a") shouldBe a [Failure[?]]
-    }
-
-    "standardCharLiteral" should "be able to parse characters" in {
-        parser.standardCharLiteral.parse("n") shouldBe Success(StandardCharLiteral('n'))
+    it should "reject empty characters" in {
+        parser.charLiteral.parse("''") shouldBe a [Failure[?]]
     }
 
     it should "reject multiple characters" in {
-        fully(parser.standardCharLiteral).parse("ab") shouldBe a [Failure[?]]
+        parser.charLiteral.parse("'ab'") shouldBe a [Failure[?]]
+    }
+
+    it should "accept escaped characters" in {
+        parser.charLiteral.parse("'\\n'") shouldBe Success(CharLiteral('\n'))
     }
 
     "ident" should "be able to parse strings" in {
-        parser.ident.parse("nickWu") shouldBe Success(Ident("nickWu"))
+        fully(parser.ident).parse("nickWu") shouldBe Success(Ident("nickWu"))
     }
 
     it should "be able to parse strings with numbers in them" in {
-        parser.ident.parse("nick2") shouldBe Success(Ident("nick2"))
+        fully(parser.ident).parse("nick2") shouldBe Success(Ident("nick2"))
     }
 
-    it should "reject strings which begin with numbers" in {
-        parser.ident.parse("2nick") shouldBe a [Failure[?]]
+    it should "reject idents which begin with numbers" in {
+        fully(parser.ident).parse("2nick") shouldBe a [Failure[?]]
+    }
+
+    "expr" should "be able to parse brackets" in {
+        parser.expr.parse("(a)") shouldBe Success(Ident("a"))
+    }
+
+    it should "be able to parse into the correct atom" in {
+        // we want to keep the neg operator but we also want this to parse into IntLiteral(-67)
+        parser.expr.parse("-67") shouldBe Success(Neg(IntLiteral(67)))
+        parser.expr.parse("'\\n'") shouldBe Success(CharLiteral('\n'))
+        fully(parser.expr).parse("nickWu") shouldBe Success(Ident("nickWu"))
+        fully(parser.expr).parse("nick2") shouldBe Success(Ident("nick2"))
+        fully(parser.expr).parse("2nick") shouldBe a [Failure[?]]
+        parser.expr.parse("true") shouldBe Success(BoolLiteral(true))
+    }
+
+    "stringLiteral" should "be able to parse empty strings" in {
+        parser.stringLiteral.parse("\"\"") shouldBe Success(StringLiteral(""))
+    }
+
+    it should "be able to parse strings with characters" in {
+        parser.stringLiteral.parse("\"abc\"") shouldBe Success(StringLiteral("abc"))
+    }
+
+    it should "be able to parse strings with escaped" in {
+        parser.stringLiteral.parse("\"abc\\n\"") shouldBe Success(StringLiteral("abc\n"))
     }
 }
 
 class binary_oper_test extends AnyFlatSpec {
     "binaryOper" should "be able to parse multiplications" in {
-        parser.binaryOper.parse("a * b") shouldBe Success(Mul(Ident("a"), Ident("b")))
+        parser.expr.parse("a * b") shouldBe Success(Mul(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse divisions" in {
-        parser.binaryOper.parse("a / b") shouldBe Success(Div(Ident("a"), Ident("b")))
+        parser.expr.parse("a / b") shouldBe Success(Div(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse modulos" in {
-        parser.binaryOper.parse("a % b") shouldBe Success(Mod(Ident("a"), Ident("b")))
+        parser.expr.parse("a % b") shouldBe Success(Mod(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse additions" in {
-        parser.binaryOper.parse("a + b") shouldBe Success(Add(Ident("a"), Ident("b")))
+        parser.expr.parse("a + b") shouldBe Success(Add(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse subtractions" in {
-        parser.binaryOper.parse("a - b") shouldBe Success(Sub(Ident("a"), Ident("b")))
+        parser.expr.parse("a - b") shouldBe Success(Sub(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse greater thans" in {
-        parser.binaryOper.parse("a > b") shouldBe Success(GreaterThan(Ident("a"), Ident("b")))
+        parser.expr.parse("a > b") shouldBe Success(GreaterThan(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse greater than or equals" in {
-        parser.binaryOper.parse("a >= b") shouldBe Success(GreaterThanEq(Ident("a"), Ident("b")))
+        parser.expr.parse("a >= b") shouldBe Success(GreaterThanEq(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse less thans" in {
-        parser.binaryOper.parse("a < b") shouldBe Success(LessThan(Ident("a"), Ident("b")))
+        parser.expr.parse("a < b") shouldBe Success(LessThan(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse less than or equals" in {
-        parser.binaryOper.parse("a <= b") shouldBe Success(LessThanEq(Ident("a"), Ident("b")))
+        parser.expr.parse("a <= b") shouldBe Success(LessThanEq(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse equals" in {
-        parser.binaryOper.parse("a == b") shouldBe Success(Eq(Ident("a"), Ident("b")))
+        parser.expr.parse("a == b") shouldBe Success(Eq(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse not equals" in {
-        parser.binaryOper.parse("a != b") shouldBe Success(NotEq(Ident("a"), Ident("b")))
+        parser.expr.parse("a != b") shouldBe Success(NotEq(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse ands" in {
-        parser.binaryOper.parse("a && b") shouldBe Success(And(Ident("a"), Ident("b")))
+        parser.expr.parse("a && b") shouldBe Success(And(Ident("a"), Ident("b")))
     }
 
     it should "be able to parse ors" in {
-        parser.binaryOper.parse("a || b") shouldBe Success(Or(Ident("a"), Ident("b")))
+        parser.expr.parse("a || b") shouldBe Success(Or(Ident("a"), Ident("b")))
     }
 
     it should "reject two variables without an operator" in {
-        parser.binaryOper.parse("a b") shouldBe a [Failure[?]]
+        fully(parser.expr).parse("a b") shouldBe a [Failure[?]]
     }
 
     it should "reject illegal operators" in {
-        parser.binaryOper.parse("a ^ b") shouldBe a [Failure[?]]
+        fully(parser.expr).parse("a ^ b") shouldBe a [Failure[?]]
     }
 
     it should "reject missing variable" in {
-        parser.binaryOper.parse("a +") shouldBe a [Failure[?]]
+        parser.expr.parse("a +") shouldBe a [Failure[?]]
     }
 }
 
 class unary_oper_test extends AnyFlatSpec {
     "unaryOper" should "be able to parse nots" in {
-        parser.unaryOper.parse("!a") shouldBe Success(Not(Ident("a")))
+        parser.expr.parse("!a") shouldBe Success(Not(Ident("a")))
     }
 
     it should "be able to parse negations" in {
-        parser.unaryOper.parse("-a") shouldBe Success(Neg(Ident("a")))
+        parser.expr.parse("-a") shouldBe Success(Neg(Ident("a")))
     }
 
     it should "be able to parse lens" in {
-        parser.unaryOper.parse("len a") shouldBe Success(Len(Ident("a")))
+        parser.expr.parse("len a") shouldBe Success(Len(Ident("a")))
     }
 
     it should "be able to parse ords" in {
-        parser.unaryOper.parse("ord a") shouldBe Success(Ord(Ident("a")))
+        parser.expr.parse("ord a") shouldBe Success(Ord(Ident("a")))
     }
 
     it should "be able to parse chrs" in {
-        parser.unaryOper.parse("chr a") shouldBe Success(Chr(Ident("a")))
-    }
-
-    it should "reject missing operator" in {
-        parser.unaryOper.parse("a") shouldBe a [Failure[?]]
+        parser.expr.parse("chr a") shouldBe Success(Chr(Ident("a")))
     }
 
     it should "reject missing argument" in {
-        parser.unaryOper.parse("len") shouldBe a [Failure[?]]
+        parser.expr.parse("len") shouldBe a [Failure[?]]
     }
 
     it should "reject invalid operator" in {
-        parser.unaryOper.parse("^a") shouldBe a [Failure[?]]
+        parser.expr.parse("^a") shouldBe a [Failure[?]]
     }
 }
 
