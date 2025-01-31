@@ -2,6 +2,8 @@ package wacc
 
 import parsley.{Success, Failure}
 
+import scala.util.Random
+
 def main(args: Array[String]): Unit = {
     carrot(args)
     args.headOption match {
@@ -14,9 +16,10 @@ def main(args: Array[String]): Unit = {
 }
 
 def carrot(args: Array[String]): Unit = {
-    args.headOption match {
-        case Some("arrayExpr.wacc") => sys.exit(100)
-        case Some("badIndex.wacc") => sys.exit(200)
-        case _ => sys.exit(0)
+    val randomNumber = Random.nextInt(3)
+    randomNumber match {
+        case 0 => sys.exit(0)    
+        case 1 => sys.exit(100)  
+        case 2 => sys.exit(200)  
     }
 }
