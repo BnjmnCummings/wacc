@@ -7,6 +7,50 @@ import org.scalatest.matchers.should.Matchers.*
 import parsley.{Success, Failure, Result}
 import wacc.lexer.fully
 
+class prog_test extends AnyFlatSpec {
+    "prog" should "be able to parse a program with no functions" in {
+        parser.parse("begin skip end") shouldBe Success(
+            Prog(
+                Nil,
+                List(Skip)
+            )
+        )
+    }
+
+    it should "be able to parse a program with one function" in {
+        parser.parse("begin int fun() is return 0 end skip end") shouldBe Success(
+            Prog(
+                List(Func(BaseType.Int, "fun", List(), List(Return(IntLiteral(0))))),
+                List(Skip)
+            )
+        )
+    }
+
+    it should "be able to parse a program with more than one function" in {
+        parser.parse("begin int fun() is return 0 end int fun() is return 0 end skip end") shouldBe Success(
+            Prog(
+                List(
+                    Func(BaseType.Int, "fun", List(), List(Return(IntLiteral(0)))),
+                    Func(BaseType.Int, "fun", List(), List(Return(IntLiteral(0))))
+                ),
+                List(Skip)
+            )
+        )
+    }
+
+    it should "reject a program with no statements" in {
+        parser.parse("begin int fun() is return 0 end end") shouldBe a [Failure[?]]
+    }
+    
+    it should "reject a program with no begin end" in {
+        parser.parse("skip") shouldBe a [Failure[?]]
+    }
+
+    it should "reject a program with no statements or functions" in {
+        parser.parse("begin end") shouldBe a [Failure[?]]
+    }
+}
+
 
 class func_test extends AnyFlatSpec {
     "func" should "be able to parse a function with no parameters" in {
