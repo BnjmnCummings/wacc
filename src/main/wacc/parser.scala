@@ -12,8 +12,8 @@ import lexer.{_int, _ident, _char, _string, _bool, fully}
 import lexer.implicits.implicitSymbol
 
 object parser {
-    def parse(input: String): Result[String, Expr] = parser.parse(input)
-    private val parser = fully(expr)
+    def parse(input: String): Result[String, Prog] = parser.parse(input)
+    private val parser: Parsley[Prog] = fully("begin" ~> Prog(many(func), stmts) <~ "end")
 
     lazy val expr: Parsley[Expr] = atomic(
         precedence(
