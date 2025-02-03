@@ -70,29 +70,3 @@ class integration_test extends AnyFlatSpec {
         }
     }
 }
-
-/* 
-List(
-            "/homes/zl4323/WACC_16/wacc-examples/valid/advanced/binarySortTree.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/advanced/hashTable.wacc",
-            "wacc-examples/valid/advanced/ticTacToe.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/array.wacc",
-            "wacc-examples/valid/array/arrayBasic.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayEmpty.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayIndexMayBeArrayIndex.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayLength.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayLookup.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayNested.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayOnHeap.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayPrint.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arraySimple.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/charArrayInStringArray.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/emptyArrayAloneIsFine.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/emptyArrayNextLine.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/emptyArrayPrint.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/free.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/lenArrayIndex.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/modifyString.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/printRef.wacc",
-            "/homes/zl4323/WACC_16/wacc-examples/valid/array/stringFromArray.wacc"
-        ) */
