@@ -12,9 +12,11 @@ def main(args: Array[String]): Unit = {
         case Some(fname) => {
             val f = new File(fname)
             parser.parseF(f) match
-                case Success(x) => {
-                    println(x)
-                    // check semantics here 
+                case Success(t) => {
+                    println(t)
+                    val q_t = renamer.rename(t)
+                    typeChecker.check(q_t)
+                    println(q_t)
                     sys.exit(0)
                 }
                 case Failure(msg) => {
