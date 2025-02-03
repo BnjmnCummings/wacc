@@ -2,17 +2,16 @@ package wacc
 
 import parsley.{Success, Failure}
 
-import os._
-
 import scala.util.Random
+
+import java.io.File
 
 def main(args: Array[String]): Unit = {
     args.headOption match {
         // change parse to parseFile if you can figure out how to use it
-        case Some(_) => {
-            val fname = "arrayBasic.wacc"
-            val fileContents: String = os.read(os.pwd / fname)
-            parser.parse(fileContents) match
+        case Some(fname) => {
+            val f = new File(fname)
+            parser.parseF(f) match
                 case Success(x) => {
                     println(x)
                     // check semantics here 
@@ -35,3 +34,4 @@ def carrot(args: Array[String]): Unit = {
         case 2 => sys.exit(200)  
     }
 }
+

@@ -10,9 +10,19 @@ import parsley.debug.*
 import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix}
 import lexer.{_int, _ident, _char, _string, _bool, fully}
 import lexer.implicits.implicitSymbol
+import java.io.File
+
+import scala.util.Success
 
 object parser {
+    def parseF(input: File): Result[String, Prog] = parser.parseFile(input) match
+        case Success(res) => res
+        case _ => 
+            printf("this shouldn't have happened - probably a file error")
+            sys.exit(-1)
+
     def parse(input: String): Result[String, Prog] = parser.parse(input)
+
     private val parser: Parsley[Prog] = fully("begin" ~> Prog(many(func), stmts) <~ "end")
 
     lazy val expr: Parsley[Expr] = atomic(
@@ -163,12 +173,13 @@ object parser {
         )
     )//.debug("params")
 
-    lazy val func: Parsley[Func] = 
+    lazy val func: Parsley[Func] = atomic(
         Func(_type, 
             _ident,
             "(" ~> params <~ ")", 
             "is" ~> stmts.map(Some(_)).mapFilter(returningBody) <~ "end"
-        ).debug("func")
+        )
+    )//.debug("func")
 
     lazy val skip: Parsley[Skip.type] = atomic(
         "skip" as Skip
