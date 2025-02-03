@@ -1,5 +1,6 @@
 package wacc.q_ast
 
+import wacc.ast.PairIndex
 import parsley.generic
 
 sealed trait Q_Expr extends Q_RValue
@@ -69,15 +70,10 @@ object Q_ArrayElem extends generic.ParserBridge2[String, List[Q_Expr], Q_ArrayEl
 // RValues
 case class Q_FuncCall(v: String, args: List[Q_Expr]) extends Q_RValue
 case class Q_ArrayLiteral(xs: List[Q_Expr]) extends Q_RValue
-case class Q_PairElem(index: Q_PairIndex, v: Q_LValue) extends Q_Expr, Q_LValue
+case class Q_PairElem(index: PairIndex, v: Q_LValue) extends Q_Expr, Q_LValue
 case class Q_NewPair(x1: Q_Expr, x2: Q_Expr) extends Q_RValue
-
-enum Q_PairIndex {
-  case First
-  case Second
-}
 
 object Q_FuncCall extends generic.ParserBridge2[String, List[Q_Expr], Q_FuncCall]
 object Q_ArrayLiteral extends generic.ParserBridge1[List[Q_Expr], Q_ArrayLiteral]
-object Q_PairElem extends generic.ParserBridge2[Q_PairIndex, Q_LValue, Q_PairElem]
+object Q_PairElem extends generic.ParserBridge2[PairIndex, Q_LValue, Q_PairElem]
 object Q_NewPair extends generic.ParserBridge2[Q_Expr, Q_Expr, Q_NewPair]
