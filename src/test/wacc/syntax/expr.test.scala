@@ -10,15 +10,15 @@ import parsley.{Success, Failure, Result}
 
 class expr_test extends AnyFlatSpec {
     "expr" should "be able to parse binary operators" in {
-        parser.expr.parse("1 + 2") shouldBe Success(Add(IntLiteral(1),IntLiteral(2)))
+        parser.expr.parse("1 + 2") shouldBe Success(Add(IntLiteral(1)(0,0),IntLiteral(2)(0,0))(0,0))
     }
 
     it should "be able to parse unary operators" in {
-        parser.expr.parse("!a") shouldBe Success(Not(Ident("a")))
+        parser.expr.parse("!a") should equal (Success(Not(Ident("a")(0,0))(0,0)))
     }
     
     it should "be able to parse single identifiers" in {
-        parser.expr.parse("a") shouldBe Success(Ident("a"))
+        parser.expr.parse("a") shouldBe Success(Ident("a")(0,0))
     }
 
     it should "be able to parse pair null literals" in {
@@ -123,7 +123,7 @@ class array_literal_test extends AnyFlatSpec {
     }
 
     it should "be able to parse singleton arrays" in {
-        parser.arrayLiteral.parse("[a]") shouldBe Success(ArrayLiteral(List(Ident("a"))))
+        parser.arrayLiteral.parse("[a]") shouldBe Success(ArrayLiteral(List(Ident("a")(0,0)))(0,0))
     }
 
     it should "be able to parse arrays with multiple items" in {

@@ -6,8 +6,6 @@ import parsley.ap.{ap1, ap2, ap3, ap4}
 import parsley.position.pos
 
 
-// From the parsley wiki
-
 trait ParserSingletonBridgePos[+A] extends generic.ErrorBridge {
     protected def con(pos: (Int, Int)): A
     def from(op: Parsley[?]): Parsley[A] = error(pos.map(this.con(_)) <* op)
@@ -58,34 +56,3 @@ trait ParserBridgePos4[-A, -B, -C, -D, +E] extends ParserSingletonBridgePos[(A, 
 
     override final def con(pos: (Int, Int)): (A, B, C, D) => E = this.apply(_, _, _, _)(pos)
 }
-
-// trait ParserBridgePos1[-A, +B] {
-//     def apply(x: A)(pos: (Int, Int)): B
-//     private def con(pos: (Int, Int)): A => B = this.apply(_)(pos)
-
-//     def from(op: Parsley[_]): Parsley[A => B] = pos.map(con) <* op
-//     final def <#(op: Parsley[_]): Parsley[A => B] = this from op
-
-// }
-// trait ParserBridgePos2[-A, -B, +C] {
-//     def apply(x: A, y: B)(pos: (Int, Int)): C
-//     def apply(x: Parsley[A], y: Parsley[B]): Parsley[C] =
-//         pos <**> (x, y).zipped(this.apply(_, _) _)
-//     def from[T](op: Parsley[T]): Parsley[(A, B) => C] =
-//         pos.map[(A, B) => C](p => this.apply(_, _)(p)) <* op
-//     final def <#[T](op: Parsley[T]): Parsley[(A, B) => C] = this from op
-// }
-
-// trait ParserBridgePos3[-A, -B, -C, +D] {
-//     def apply(x: A, y: B, z: C)(pos: (Int, Int)): D
-//     def from[T](op: Parsley[T]): Parsley[(A, B, C) => D] =
-//         pos.map[(A, B, C) => D](p => this.apply(_, _, _)(p)) <* op
-//     final def <#[T](op: Parsley[T]): Parsley[(A, B, C) => D] = this from op
-// }
-
-// trait ParserBridgePos4[-A, -B, -C, -D, +E] {
-//     def apply(x: A, y: B, z: C, w: D)(pos: (Int, Int)): E
-//     def from[T](op: Parsley[T]): Parsley[(A, B, C, D) => E] =
-//         pos.map[(A, B, C, D) => E](p => this.apply(_, _, _, _)(p)) <* op
-//     final def <#[T](op: Parsley[T]): Parsley[(A, B, C, D) => E] = this from op
-// }
