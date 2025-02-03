@@ -59,7 +59,7 @@ case class Q_BoolLiteral(v: Boolean) extends Q_Expr
 case class Q_CharLiteral(v: Char) extends Q_Expr
 case class Q_StringLiteral(v: String) extends Q_Expr
 case class Q_Ident(v: Q_Name) extends Q_Expr, Q_LValue
-case class Q_ArrayElem(v: String, indicies: List[Q_Expr]) extends Q_Expr, Q_LValue
+case class Q_ArrayElem(v: Q_Name, indicies: List[Q_Expr]) extends Q_Expr, Q_LValue
 object Q_PairNullLiteral extends Q_Expr
 
 object Q_IntLiteral extends generic.ParserBridge1[BigInt, Q_IntLiteral]
@@ -67,7 +67,7 @@ object Q_BoolLiteral extends generic.ParserBridge1[Boolean, Q_BoolLiteral]
 object Q_CharLiteral extends generic.ParserBridge1[Char, Q_CharLiteral]
 object Q_StringLiteral extends generic.ParserBridge1[String, Q_StringLiteral]
 object Q_Ident extends generic.ParserBridge1[Q_Name, Q_Ident]
-object Q_ArrayElem extends generic.ParserBridge2[String, List[Q_Expr], Q_ArrayElem]
+object Q_ArrayElem extends generic.ParserBridge2[Q_Name, List[Q_Expr], Q_ArrayElem]
 
 // RValues
 case class Q_FuncCall(v: Q_Name, args: List[Q_Expr]) extends Q_RValue

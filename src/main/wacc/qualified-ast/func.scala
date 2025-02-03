@@ -10,4 +10,4 @@ case class Q_Param(t: Type, v: Q_Name)
 
 object Q_Prog extends generic.ParserBridge2[List[Q_Func], List[Q_Stmt], Q_Prog]
 object Q_Param extends generic.ParserBridge2[Type, Q_Name, Q_Param]
-object Q_Func extends generic.ParserBridge4[Type, String, List[Q_Param], List[Q_Stmt], Q_Func]
+object Q_Func extends generic.ParserBridge4[Type, Q_Name, List[Q_Param], List[Q_Stmt], Q_Func]
