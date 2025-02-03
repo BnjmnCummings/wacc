@@ -210,8 +210,7 @@ class atom_test extends AnyFlatSpec {
     }
 
     it should "be able to parse into the correct atom" in {
-        // we want to keep the neg operator but we also want this to parse into IntLiteral(-67)
-        parser.expr.parse("-67") shouldBe Success(Neg(IntLiteral(67)))
+        parser.expr.parse("-67") shouldBe Success((IntLiteral(-67)))
         parser.expr.parse("'\\n'") shouldBe Success(CharLiteral('\n'))
         fully(parser.expr).parse("nickWu") shouldBe Success(Ident("nickWu"))
         fully(parser.expr).parse("nick2") shouldBe Success(Ident("nick2"))
