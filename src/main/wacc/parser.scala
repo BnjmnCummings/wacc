@@ -18,7 +18,7 @@ object parser {
     def parseF(input: File): Result[String, Prog] = parser.parseFile(input) match
         case Success(res) => res
         case _ => 
-            printf("this shouldn't have happened - probably a file error")
+            printf(s"can't find $input file to parseF")
             sys.exit(-1)
 
     def parse(input: String): Result[String, Prog] = parser.parse(input)
@@ -38,7 +38,7 @@ object parser {
         )(
             Ops(Prefix)(
                 Not from "!", 
-                Neg from "-", 
+                (notFollowedBy(int) ~> (Neg from "-")), 
                 Len from "len", 
                 Ord from "ord", 
                 Chr from "chr"
