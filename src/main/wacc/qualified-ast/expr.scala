@@ -7,6 +7,8 @@ sealed trait Q_Expr extends Q_RValue
 sealed trait Q_LValue
 sealed trait Q_RValue
 
+case class Q_Name(old_name: String, new_name: String)
+
 // Binary operators
 sealed trait Q_BinaryOper extends Q_Expr
 case class Q_Mul(x: Q_Expr, y: Q_Expr) extends Q_BinaryOper
@@ -56,7 +58,7 @@ case class Q_IntLiteral(v: BigInt) extends Q_Expr
 case class Q_BoolLiteral(v: Boolean) extends Q_Expr
 case class Q_CharLiteral(v: Char) extends Q_Expr
 case class Q_StringLiteral(v: String) extends Q_Expr
-case class Q_Ident(v: String) extends Q_Expr, Q_LValue
+case class Q_Ident(v: Q_Name) extends Q_Expr, Q_LValue
 case class Q_ArrayElem(v: String, indicies: List[Q_Expr]) extends Q_Expr, Q_LValue
 object Q_PairNullLiteral extends Q_Expr
 
@@ -64,16 +66,16 @@ object Q_IntLiteral extends generic.ParserBridge1[BigInt, Q_IntLiteral]
 object Q_BoolLiteral extends generic.ParserBridge1[Boolean, Q_BoolLiteral]
 object Q_CharLiteral extends generic.ParserBridge1[Char, Q_CharLiteral]
 object Q_StringLiteral extends generic.ParserBridge1[String, Q_StringLiteral]
-object Q_Ident extends generic.ParserBridge1[String, Q_Ident]
+object Q_Ident extends generic.ParserBridge1[Q_Name, Q_Ident]
 object Q_ArrayElem extends generic.ParserBridge2[String, List[Q_Expr], Q_ArrayElem]
 
 // RValues
-case class Q_FuncCall(v: String, args: List[Q_Expr]) extends Q_RValue
+case class Q_FuncCall(v: Q_Name, args: List[Q_Expr]) extends Q_RValue
 case class Q_ArrayLiteral(xs: List[Q_Expr]) extends Q_RValue
 case class Q_PairElem(index: PairIndex, v: Q_LValue) extends Q_Expr, Q_LValue
 case class Q_NewPair(x1: Q_Expr, x2: Q_Expr) extends Q_RValue
 
-object Q_FuncCall extends generic.ParserBridge2[String, List[Q_Expr], Q_FuncCall]
+object Q_FuncCall extends generic.ParserBridge2[Q_Name, List[Q_Expr], Q_FuncCall]
 object Q_ArrayLiteral extends generic.ParserBridge1[List[Q_Expr], Q_ArrayLiteral]
 object Q_PairElem extends generic.ParserBridge2[PairIndex, Q_LValue, Q_PairElem]
 object Q_NewPair extends generic.ParserBridge2[Q_Expr, Q_Expr, Q_NewPair]
