@@ -12,9 +12,9 @@ import collection.mutable.ListBuffer
 import java.io.File
 
 class integration_test extends AnyFlatSpec {
-    val validPaths: List[String] = List("/homes/zl4323/WACC_16/wacc-examples/valid/array/array.wacc")
+    val validPaths: List[String] = getValidPaths()
 
-    val invalidPaths: List[String] = List("/homes/zl4323/WACC_16/wacc-examples/invalid/syntaxErr/array/arrayExpr.wacc")
+    val invalidPaths: List[String] = getInvalidPaths()
 
     "parser" should "successfully parse valid wacc programs" in {
         val failures: ListBuffer[String] = new ListBuffer()
@@ -41,4 +41,58 @@ class integration_test extends AnyFlatSpec {
             fail("some of the paths succeeded (they are invalid and should fail):\n" + successList.map(s => s + "\n"))
         }
     }
+
+    def getValidPaths(): List[String] = {
+        val fPathStart: String = "/homes/zl4323/WACC_16/wacc-examples/valid/"
+        searchFiles(File(fPathStart))
+    }
+
+    def getInvalidPaths(): List[String] = {
+        val fPathStart: String = "/homes/zl4323/WACC_16/wacc-examples/invalid/syntax/"
+        searchFiles(File(fPathStart))
+    }
+
+
+    // Function to recursively search for files in the given directory
+    // Chatgpt wrote this one
+    def searchFiles(dir: File): List[String] = {
+        if (dir.exists && dir.isDirectory) {
+            // List to collect all file paths
+            val filePaths = dir.listFiles.filter(_.isFile).map(_.getAbsolutePath).toList
+
+            // Recursively search in subdirectories
+            val subDirFiles = dir.listFiles.filter(_.isDirectory).flatMap(searchFiles).toList
+
+            // Combine files from current directory and subdirectories
+            filePaths ++ subDirFiles
+        } else {
+            List()  // Return empty list if the path is not a valid directory
+        }
+    }
 }
+
+/* 
+List(
+            "/homes/zl4323/WACC_16/wacc-examples/valid/advanced/binarySortTree.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/advanced/hashTable.wacc",
+            "wacc-examples/valid/advanced/ticTacToe.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/array.wacc",
+            "wacc-examples/valid/array/arrayBasic.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayEmpty.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayIndexMayBeArrayIndex.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayLength.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayLookup.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayNested.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayOnHeap.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arrayPrint.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/arraySimple.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/charArrayInStringArray.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/emptyArrayAloneIsFine.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/emptyArrayNextLine.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/emptyArrayPrint.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/free.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/lenArrayIndex.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/modifyString.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/printRef.wacc",
+            "/homes/zl4323/WACC_16/wacc-examples/valid/array/stringFromArray.wacc"
+        ) */
