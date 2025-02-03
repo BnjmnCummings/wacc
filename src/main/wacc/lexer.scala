@@ -44,6 +44,6 @@ object lexer {
     val implicits = lexer.lexeme.symbol.implicits
     def fully[A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
 
-    def idStart(c: Char): Boolean = c.isLetter
-    def idRest(c: Char): Boolean = c.isLetterOrDigit
+    def idStart(c: Char): Boolean = c.isLetter || c == '_'
+    def idRest(c: Char): Boolean = c.isLetterOrDigit || c == '_'
 }
