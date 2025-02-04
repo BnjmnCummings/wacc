@@ -43,12 +43,12 @@ class integration_test extends AnyFlatSpec {
     }
 
     def getValidPaths(): List[String] = {
-        val fPathStart: String = "/homes/zl4323/WACC_16/wacc-examples/valid/"
+        val fPathStart: String = "wacc-examples/valid/"
         searchFiles(File(fPathStart))
     }
 
     def getInvalidPaths(): List[String] = {
-        val fPathStart: String = "/homes/zl4323/WACC_16/wacc-examples/invalid/syntax/"
+        val fPathStart: String = "wacc-examples/invalid/syntaxErr"
         searchFiles(File(fPathStart))
     }
 
