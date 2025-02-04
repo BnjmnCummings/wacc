@@ -13,9 +13,9 @@ case class Q_Return(x: Q_Expr) extends Q_Stmt
 case class Q_Exit(x: Q_Expr) extends Q_Stmt
 case class Q_Print(x: Q_Expr) extends Q_Stmt
 case class Q_Println(x: Q_Expr) extends Q_Stmt
-case class Q_If(cond: Q_Expr, body: List[Q_Stmt], scoped_body: List[Q_Name], el: List[Q_Stmt], scoped_el: List[Q_Name]) extends Q_Stmt
-case class Q_While(cond: Q_Expr, body: List[Q_Stmt], scoped: List[Q_Name]) extends Q_Stmt
-case class Q_CodeBlock(body: List[Q_Stmt], scoped: List[Q_Name]) extends Q_Stmt
+case class Q_If(cond: Q_Expr, body: List[Q_Stmt], scopedBody: Set[Q_Name], el: List[Q_Stmt], scopedEl: Set[Q_Name]) extends Q_Stmt
+case class Q_While(cond: Q_Expr, body: List[Q_Stmt], scoped: Set[Q_Name]) extends Q_Stmt
+case class Q_CodeBlock(body: List[Q_Stmt], scoped: Set[Q_Name]) extends Q_Stmt
 
 object Q_Decl extends generic.ParserBridge3[Type, Q_Name, Q_RValue, Q_Decl]
 object Q_Asgn extends generic.ParserBridge2[Q_LValue, Q_RValue, Q_Asgn]

@@ -16,8 +16,10 @@ object renamer {
 
             // it is important this occurs first as it adds functions to globalScope
             val _funcs = rename(funcs)
+            
+            val (_body, scoped) = rename(body, collection.immutable.Set(), collection.immutable.Set())
 
-            Q_Prog(_funcs, rename(body, collection.immutable.Set(), collection.immutable.Set()))
+            Q_Prog(_funcs, _body, scoped ++ globalScope)
         }
 
     private def rename(funcs: List[Func]): List[Q_Func] =
@@ -37,13 +39,15 @@ object renamer {
             val _args = args.map(rename)
             localScope ++= _args.map(_.v)
 
-            Q_Func(t, _v, _args, rename(body, collection.immutable.Set(), localScope.toSet))
+            val (_body, scoped) = rename(body, collection.immutable.Set(), localScope.toSet)
+
+            Q_Func(t, _v, _args, _body, scoped)
         }
     
     private def rename(param: Param): Q_Param = param match
         case Param(t, v) => Q_Param(t, genName(v))
     
-    private def rename(stmts: List[Stmt], parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): List[Q_Stmt] =
+    private def rename(stmts: List[Stmt], parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): (List[Q_Stmt], collection.immutable.Set[Q_Name]) =
         val _localScope: collection.mutable.Set[Q_Name] = collection.mutable.Set()
         _localScope ++= localScope
 
@@ -59,7 +63,7 @@ object renamer {
                     else
                         _localScope += v
                 case _ => ()
-        _stmts.toList
+        (_stmts.toList, _localScope.toSet)
     
     private def rename(stmt: Stmt, parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): Q_Stmt = stmt match
         case Decl(t, v, r) => {
@@ -76,11 +80,18 @@ object renamer {
         case Print(x) => Q_Print(rename(x, parScope ++ localScope))
         case Println(x) => Q_Println(rename(x, parScope ++ localScope))
         // heyo
-        case If(cond, body, el) => Q_If(rename(cond, parScope ++ localScope), rename(body, parScope ++ localScope, collection.immutable.Set()), rename(el, parScope ++ localScope, collection.immutable.Set()))
+        case If(cond, body, el) => 
+            val (_body, scopedBody) = rename(body, parScope ++ localScope, collection.immutable.Set())
+            val (_el, scopedEl) = rename(el, parScope ++ localScope, collection.immutable.Set())
+            Q_If(rename(cond, parScope ++ localScope), _body, scopedBody, _el, scopedEl)
         // heyo
-        case While(cond, body) => Q_While(rename(cond, parScope ++ localScope), rename(body, parScope ++ localScope, collection.immutable.Set()))
+        case While(cond, body) => 
+            val (_body, scoped) = rename(body, parScope ++ localScope, collection.immutable.Set())
+            Q_While(rename(cond, parScope ++ localScope), _body, scoped)
         // heyo
-        case CodeBlock(body) => Q_CodeBlock(rename(body, parScope ++ localScope, collection.immutable.Set()))
+        case CodeBlock(body) => 
+            val (_body, scoped) = rename(body, parScope ++ localScope, collection.immutable.Set())
+            Q_CodeBlock(_body, scoped)
         case Skip => Q_Skip
 
     private def rename(lvalue: LValue, scope: collection.immutable.Set[Q_Name]): Q_LValue = lvalue match
