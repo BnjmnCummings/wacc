@@ -83,9 +83,16 @@ object renamer {
         case CodeBlock(body) => Q_CodeBlock(rename(body, parScope ++ localScope, collection.immutable.Set()))
         case Skip => Q_Skip
 
-    private def rename(lvalue: LValue, scope: collection.immutable.Set[Q_Name]): Q_LValue = ???
+    private def rename(lvalue: LValue, scope: collection.immutable.Set[Q_Name]): Q_LValue = lvalue match
+        case Ident(v) => Q_Ident(updateName(v, scope))
+        case ArrayElem(v, indicies) => Q_ArrayElem(updateName(v, scope), indicies.map(rename(_, scope)))
+        case PairElem(index, v) => Q_PairElem(index, rename(v, scope))
     
-    private def rename(rvalue: RValue, scope: collection.immutable.Set[Q_Name]): Q_RValue = ???
+    private def rename(rvalue: RValue, scope: collection.immutable.Set[Q_Name]): Q_RValue = rvalue match
+        case expr: Expr => rename(expr, scope)
+        case FuncCall(v, args) => Q_FuncCall(updateName(v, scope), args.map(rename(_, scope)))
+        case ArrayLiteral(xs) => Q_ArrayLiteral(xs.map(rename(_, scope)))
+        case NewPair(x1, x2) => Q_NewPair(rename(x1, scope), rename(x2, scope))
 
     private def rename(expr: Expr, scope: collection.immutable.Set[Q_Name]): Q_Expr = ???
     
