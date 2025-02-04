@@ -94,7 +94,33 @@ object renamer {
         case ArrayLiteral(xs) => Q_ArrayLiteral(xs.map(rename(_, scope)))
         case NewPair(x1, x2) => Q_NewPair(rename(x1, scope), rename(x2, scope))
 
-    private def rename(expr: Expr, scope: collection.immutable.Set[Q_Name]): Q_Expr = ???
+    private def rename(expr: Expr, scope: collection.immutable.Set[Q_Name]): Q_Expr = expr match
+        case Mul(x, y) => Q_Mul(rename(x, scope), rename(y, scope))
+        case Mod(x, y) => Q_Mod(rename(x, scope), rename(y, scope))
+        case Add(x, y) => Q_Add(rename(x, scope), rename(y, scope))
+        case Div(x, y) => Q_Div(rename(x, scope), rename(y, scope))
+        case Sub(x, y) => Q_Sub(rename(x, scope), rename(y, scope))
+        case GreaterThan(x, y) => Q_GreaterThan(rename(x, scope), rename(y, scope))
+        case GreaterThanEq(x, y) => Q_GreaterThanEq(rename(x, scope), rename(y, scope))
+        case LessThan(x, y) => Q_LessThan(rename(x, scope), rename(y, scope))
+        case LessThanEq(x, y) => Q_LessThanEq(rename(x, scope), rename(y, scope))
+        case Eq(x, y) => Q_Eq(rename(x, scope), rename(y, scope))
+        case NotEq(x, y) => Q_NotEq(rename(x, scope), rename(y, scope))
+        case And(x, y) => Q_And(rename(x, scope), rename(y, scope))
+        case Or(x, y) => Q_Or(rename(x, scope), rename(y, scope))
+        case Not(x) => Q_Not(rename(x, scope))
+        case Neg(x) => Q_Neg(rename(x, scope))
+        case Len(x) => Q_Len(rename(x, scope))
+        case Ord(x) => Q_Ord(rename(x, scope))
+        case Chr(x) => Q_Chr(rename(x, scope))
+        case IntLiteral(v) => Q_IntLiteral(v)
+        case BoolLiteral(v) => Q_BoolLiteral(v)
+        case CharLiteral(v) => Q_CharLiteral(v)
+        case StringLiteral(v) => Q_StringLiteral(v)
+        case Ident(v) => Q_Ident(updateName(v, scope))
+        case ArrayElem(v, indicies) => Q_ArrayElem(updateName(v, scope), indicies.map(rename(_, scope)))
+        case PairElem(index, v) => Q_PairElem(index, rename(v, scope))
+        case PairNullLiteral => Q_PairNullLiteral
     
     
     private def genName(name: String): Q_Name = {
