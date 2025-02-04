@@ -20,9 +20,25 @@ object renamer {
             Q_Prog(_funcs, rename(body, collection.immutable.Set(), collection.immutable.Set()))
         }
 
-    private def rename(funcs: List[Func]): List[Q_Func] = ???
+    private def rename(funcs: List[Func]): List[Q_Func] =
+        val _funcs: ListBuffer[Q_Func] = ListBuffer()
+        for func <- funcs do
+            val _func = rename(func)
+            globalScope += _func.v
+            _funcs += _func
+        _funcs.toList
     
-    private def rename(func: Func): Q_Func = ???
+    private def rename(func: Func): Q_Func = func match
+        case Func(t, v, args, body) => {
+            val localScope: collection.mutable.Set[Q_Name] = collection.mutable.Set()
+
+            val _v: Q_Name = genName(v)
+
+            val _args = args.map(rename)
+            localScope ++= _args.map(_.v)
+
+            Q_Func(t, _v, _args, rename(body, collection.immutable.Set(), localScope.toSet))
+        }
     
     private def rename(param: Param): Q_Param = ???
     
