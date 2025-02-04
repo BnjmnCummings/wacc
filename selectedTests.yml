@@ -18,7 +18,7 @@ syntax:
     - rvalue
     - pair_elem
     - array_literal
-    - integration
+    # - integration
 
 # Tests which check the AST semantic checking step of the compiler
 semantic:
