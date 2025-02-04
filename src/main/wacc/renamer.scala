@@ -40,7 +40,8 @@ object renamer {
             Q_Func(t, _v, _args, rename(body, collection.immutable.Set(), localScope.toSet))
         }
     
-    private def rename(param: Param): Q_Param = ???
+    private def rename(param: Param): Q_Param = param match
+        case Param(t, v) => Q_Param(t, genName(v))
     
     private def rename(stmts: List[Stmt], parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): List[Q_Stmt] = ???
     
