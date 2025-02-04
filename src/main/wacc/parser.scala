@@ -25,7 +25,7 @@ object parser {
 
     private val parser: Parsley[Prog] = fully("begin" ~> Prog(many(func), stmts) <~ "end")
 
-    lazy val expr: Parsley[Expr] = atomic(
+    lazy val expr: Parsley[Expr] = 
         precedence(
             atomic("null" as PairNullLiteral),
             bool,
@@ -69,7 +69,7 @@ object parser {
                 Or from "||"
             ),
         )
-    )//.debug("expr")
+    //.debug("expr")
 
     lazy val int: Parsley[IntLiteral] = atomic(
         IntLiteral(_int)
