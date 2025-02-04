@@ -7,7 +7,6 @@ import parsley.token.descriptions.*
 import parsley.token.errors.*
 
 import parsley.character.{string}
-// import lexer.implicits.implicitSymbol
 
 object lexer {
     private val desc = LexicalDesc.plain.copy(
@@ -24,14 +23,14 @@ object lexer {
             caseSensitive = true,
         ),
         textDesc = TextDesc.plain.copy(
-            // characterLiteralEnd = charEnd,
-            // stringEnds = sEnds,
+            characterLiteralEnd = charEnd,
+            stringEnds = sEnds,
             escapeSequences = EscapeDesc.plain.copy(
                 escBegin = escChar,
                 literals = escapedLiterals,
                 mapping = escapedMapping
             ),
-            graphicCharacter = Basic(c => !(escapedLiterals.contains(c)) && c >= ' '.toInt),
+            graphicCharacter = Basic(c => !(escapedLiterals.contains(c)) && asciiRange(c)),
         )
     )
 

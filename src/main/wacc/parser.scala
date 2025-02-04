@@ -7,12 +7,12 @@ import parsley.quick.*
 import parsley.syntax.zipped.*
 import parsley.errors.ErrorBuilder
 import parsley.debug.*
-import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix}
+import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix, chain}
 import lexer.{_int, _ident, _char, _string, _bool, fully}
 import lexer.implicits.implicitSymbol
 import java.io.File
-
 import scala.util.Success
+import parsley.expr.Postfix
 
 object parser {
     def parseF(input: File): Result[String, Prog] = parser.parseFile(input) match
@@ -102,10 +102,9 @@ object parser {
     )//.debug("type")
 
     lazy val arrayType: Parsley[Type] = atomic(
-        pos <**>
-        ((pairType | baseType),  some("[]")).zipped(
-            (t, bs) => bs.tail.foldLeft(t)((acc, _) => ArrayType(acc))
-        ).map(ArrayType.apply)
+        // must match at least one
+        chain.postfix1(pairType | baseType)(ArrayType from "[]")
+
     )//.debug("arrayType")
 
     lazy val pairType: Parsley[Type] = atomic(
@@ -124,8 +123,8 @@ object parser {
 
     lazy val pairElemType: Parsley[Type] = atomic(
         arrayType 
-        | baseType  
-        | ("pair" as ErasedPairType)
+        | baseType 
+        | atomic("pair" as ErasedPairType)
     )//.debug("pairElemType")
 
     lazy val lvalue: Parsley[LValue] = pairElem | arrayElem | ident
