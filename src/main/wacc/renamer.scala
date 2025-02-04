@@ -9,7 +9,16 @@ object renamer {
 
     private var name_gen_table: Map[String, Int] = Map[String, Int]()
 
-    def rename(prog: Prog): Q_Prog = ???
+    def rename(prog: Prog): Q_Prog = prog match
+        case Prog(funcs, body) => {
+            globalScope = collection.mutable.Set()
+            name_gen_table = Map[String, Int]()
+
+            // it is important this occurs first as it adds functions to globalScope
+            val _funcs = rename(funcs)
+
+            Q_Prog(_funcs, rename(body, collection.immutable.Set(), collection.immutable.Set()))
+        }
 
     private def rename(funcs: List[Func]): List[Q_Func] = ???
     
