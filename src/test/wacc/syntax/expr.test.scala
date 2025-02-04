@@ -14,7 +14,7 @@ class expr_test extends AnyFlatSpec {
     }
 
     it should "be able to parse unary operators" in {
-        parser.expr.parse("!a") shouldBe Success(Not(Ident("a")))
+        parser.expr.parse("!a") should equal (Success(Not(Ident("a"))))
     }
     
     it should "be able to parse single identifiers" in {

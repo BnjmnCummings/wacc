@@ -151,14 +151,6 @@ class stmt_test extends AnyFlatSpec {
         )
     }
 
-    // it should "parse a return for a pair element expression" in {
-    //     parser._return.parse("return fst pear") shouldBe Success(
-    //         Return(
-    //             PairElem(PairIndex.First, Ident("pear")) 
-    //         )
-    //     )
-    // }
-
     "Exit" should "parse an exti for an identity expression" in {
         parser.exit.parse("exit v") shouldBe Success(
             Exit(
@@ -182,14 +174,6 @@ class stmt_test extends AnyFlatSpec {
             )
         )
     }
-
-    // it should "parse an exit for a pair element expression" in {
-    //     parser.exit.parse("exit fst pear") shouldBe Success(
-    //         Exit(
-    //             PairElem(PairIndex.First, Ident("pear")) 
-    //         )
-    //     )
-    // }
 
     "Print" should "parse a print for an identity expression" in {
         parser.print.parse("print v") shouldBe Success(
@@ -215,14 +199,6 @@ class stmt_test extends AnyFlatSpec {
         )
     }
 
-    // it should "parse a print for a pair element expression" in {
-    //     parser.print.parse("print fst pear") shouldBe Success(
-    //         Print(
-    //             PairElem(PairIndex.First, Ident("pear")) 
-    //         )
-    //     )
-    // }
-
     "Println" should "parse a println for an identity expression" in {
         parser.println.parse("println v") shouldBe Success(
             Println(
@@ -246,14 +222,6 @@ class stmt_test extends AnyFlatSpec {
             )
         )
     }
-
-    // it should "parse a println for a pair element expression" in {
-    //     parser.println.parse("println fst pear") shouldBe Success(
-    //         Println(
-    //             PairElem(PairIndex.First, Ident("pear")) 
-    //         )
-    //     )
-    // }
 
     "_if" should "parse valid if blocks" in {
         parser._if.parse {

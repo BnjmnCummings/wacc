@@ -7,12 +7,12 @@ import parsley.quick.*
 import parsley.syntax.zipped.*
 import parsley.errors.ErrorBuilder
 import parsley.debug.*
-import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix}
+import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix, chain}
 import lexer.{_int, _ident, _char, _string, _bool, fully}
 import lexer.implicits.implicitSymbol
 import java.io.File
-
 import scala.util.Success
+import parsley.expr.Postfix
 
 object parser {
     def parseF(input: File): Result[String, Prog] = parser.parseFile(input) match
@@ -25,7 +25,7 @@ object parser {
 
     private val parser: Parsley[Prog] = fully("begin" ~> Prog(many(func), stmts) <~ "end")
 
-    lazy val expr: Parsley[Expr] = atomic(
+    lazy val expr: Parsley[Expr] = 
         precedence(
             atomic("null" as PairNullLiteral),
             bool,
@@ -69,7 +69,7 @@ object parser {
                 Or from "||"
             ),
         )
-    )//.debug("expr")
+    //.debug("expr")
 
     lazy val int: Parsley[IntLiteral] = atomic(
         IntLiteral(_int)
@@ -102,9 +102,9 @@ object parser {
     )//.debug("type")
 
     lazy val arrayType: Parsley[Type] = atomic(
-        ((pairType | baseType),  some("[]")) zipped (
-            (t, bs) => bs.foldLeft(t)((acc, _) => ArrayType(acc))
-        )    
+        // must match at least one
+        chain.postfix1(pairType | baseType)(ArrayType from "[]")
+
     )//.debug("arrayType")
 
     lazy val pairType: Parsley[Type] = atomic(
@@ -123,8 +123,8 @@ object parser {
 
     lazy val pairElemType: Parsley[Type] = atomic(
         arrayType 
-        | baseType  
-        | ("pair" as ErasedPairType)
+        | baseType 
+        | atomic("pair" as ErasedPairType)
     )//.debug("pairElemType")
 
     lazy val lvalue: Parsley[LValue] = pairElem | arrayElem | ident
@@ -137,7 +137,8 @@ object parser {
     )//.debug("pairElem")
 
     lazy val arrayElem: Parsley[ArrayElem] = atomic(
-        (_ident,  some("[" ~> expr <~"]")) zipped (ArrayElem(_, _)) 
+        //(_ident,  some("[" ~> expr <~"]")) zipped (ArrayElem(_, _)) 
+        ArrayElem(_ident, some("[" ~> expr <~ "]"))
     )//.debug("arrayElem")
 
     lazy val rvalue: Parsley[RValue] = (
