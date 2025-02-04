@@ -24,30 +24,30 @@ object lexer {
             caseSensitive = true,
         ),
         textDesc = TextDesc.plain.copy(
-            characterLiteralEnd = charEnd,
-            stringEnds = sEnds,
+            // characterLiteralEnd = charEnd,
+            // stringEnds = sEnds,
             escapeSequences = EscapeDesc.plain.copy(
                 escBegin = escChar,
                 literals = escapedLiterals,
                 mapping = escapedMapping
             ),
-            graphicCharacter = Basic(c => !(escapedLiterals.contains(c))),
+            graphicCharacter = Basic(c => !(escapedLiterals.contains(c)) && c >= ' '.toInt),
         )
     )
 
     private val errConfig = new ErrorConfig {
         // name errors
-        override def filterNameIllFormedIdentifier: FilterConfig[String] = ???
-        override def labelNameIdentifier: String = ???
-        override def unexpectedNameIllegalIdentifier(v: String): String = ???
+        // override def filterNameIllFormedIdentifier: FilterConfig[String] = ???
+        // override def labelNameIdentifier: String = ???
+        // override def unexpectedNameIllegalIdentifier(v: String): String = ???
 
-        // numeric errors
-        override def filterIntegerOutOfBounds(min: BigInt, max: BigInt, nativeRadix: Int): FilterConfig[BigInt] = ???
-        override def labelIntegerSignedNumber: LabelWithExplainConfig = ???
-        override def labelIntegerUnsignedNumber: LabelWithExplainConfig = ???
+        // // numeric errors
+        // override def filterIntegerOutOfBounds(min: BigInt, max: BigInt, nativeRadix: Int): FilterConfig[BigInt] = ???
+        // override def labelIntegerSignedNumber: LabelWithExplainConfig = ???
+        // override def labelIntegerUnsignedNumber: LabelWithExplainConfig = ???
 
-        // space errors
-        override def labelSpaceEndOfLineComment: LabelWithExplainConfig = ???
+        // // space errors
+        // override def labelSpaceEndOfLineComment: LabelWithExplainConfig = ???
 
         // symbol errors
         override def labelSymbol: Map[String, LabelWithExplainConfig] = {
@@ -74,19 +74,19 @@ object lexer {
             )
         }
 
-        override def labelSymbolEndOfKeyword(symbol: String): String = ???
+        // override def labelSymbolEndOfKeyword(symbol: String): String = ???
 
-        // text errors
-        override def filterCharNonAscii: VanillaFilterConfig[Int] = ???
-        override def filterStringNonAscii: SpecializedFilterConfig[StringBuilder] = ???
-        override def labelCharAscii: LabelWithExplainConfig = ???
-        override def labelCharAsciiEnd: LabelConfig = ???
-        override def labelEscapeSequence: LabelWithExplainConfig = ???
-        override def labelGraphicCharacter: LabelWithExplainConfig = ???
-        override def labelStringAscii(multi: Boolean, raw: Boolean): LabelWithExplainConfig = ???
-        override def labelStringAsciiEnd(multi: Boolean, raw: Boolean): LabelConfig = ???
-        override def verifiedCharBadCharsUsedInLiteral: VerifiedBadChars = ???
-        override def verifiedStringBadCharsUsedInLiteral: VerifiedBadChars = ???
+        // // text errors
+        // override def filterCharNonAscii: VanillaFilterConfig[Int] = ???
+        // override def filterStringNonAscii: SpecializedFilterConfig[StringBuilder] = ???
+        // override def labelCharAscii: LabelWithExplainConfig = ???
+        // override def labelCharAsciiEnd: LabelConfig = ???
+        // override def labelEscapeSequence: LabelWithExplainConfig = ???
+        // override def labelGraphicCharacter: LabelWithExplainConfig = ???
+        // override def labelStringAscii(multi: Boolean, raw: Boolean): LabelWithExplainConfig = ???
+        // override def labelStringAsciiEnd(multi: Boolean, raw: Boolean): LabelConfig = ???
+        // override def verifiedCharBadCharsUsedInLiteral: VerifiedBadChars = ???
+        // override def verifiedStringBadCharsUsedInLiteral: VerifiedBadChars = ???
 
     }
 
