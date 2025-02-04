@@ -101,11 +101,11 @@ object parser {
         | baseType 
     )//.debug("type")
 
-    // problem: the ArrayType constructor needs a parsley[Type] as an argument but this won't work with zip
     lazy val arrayType: Parsley[Type] = atomic(
-        ((pairType | baseType),  some("[]")) zipped (
-            (t, bs) => bs.foldLeft(pure(t))((acc, _) => ArrayType(acc))
-        )    
+        pos <**>
+        ((pairType | baseType),  some("[]")).zipped(
+            (t, bs) => bs.tail.foldLeft(t)((acc, _) => ArrayType(acc))
+        ).map(ArrayType.apply)
     )//.debug("arrayType")
 
     lazy val pairType: Parsley[Type] = atomic(

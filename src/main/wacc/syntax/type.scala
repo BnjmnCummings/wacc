@@ -12,7 +12,13 @@ enum BaseType extends Type {
 case class ArrayType(t: Type)(val pos: (Int, Int)) extends Type
 case class PairType(t1: Type, t2: Type)(val pos: (Int, Int)) extends Type
 
-object ArrayType extends ParserBridgePos1[Type, ArrayType]
-object PairType extends ParserBridgePos2[Type, Type, PairType]
+object ArrayType extends ParserBridgePos1[Type, ArrayType] {
+    /* for testing */
+    def apply(t: Type): ArrayType = ArrayType(t)((0, 0))
+}
+object PairType extends ParserBridgePos2[Type, Type, PairType] {
+    /* for testing */
+    def apply(t1: Type, t2: Type): PairType = PairType(t1, t2)((0, 0))
+}
 
 object ErasedPairType extends Type
