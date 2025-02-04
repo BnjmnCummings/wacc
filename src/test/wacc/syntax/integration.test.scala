@@ -18,27 +18,42 @@ class integration_test extends AnyFlatSpec {
 
     "parser" should "successfully parse valid wacc programs" in {
         val failures: ListBuffer[String] = new ListBuffer()
+        val successes: ListBuffer[String] = new ListBuffer()
         validPaths.foreach {
             p => parser.parseF(File(p)) match 
-                case Success(_) => {} 
+                case Success(_) => successes.addOne(p) 
                 case _ => failures.addOne(p)
         }
         val failList: List[String] = failures.toList
+        val successList: List[String] = successes.toList
+        info("correctly succeeding tests:\n")
+        successList.map(s => s.split("valid/").last).foreach(info(_))
         if (failList.length != 0) {
-            fail("some of the paths failed (they are valid and should succeed):\n" + failList.map(s => s + "\n"))
+            fail(
+                "some of the paths failed (they are valid and should succeed):\n\n" 
+                + failList.foldRight("")((s1, s2) => s1 + "\n" + s2)
+            )
         }
     }
 
     it should "reject invalid wacc programs" in {
         val successes: ListBuffer[String] = new ListBuffer()
+        val failures: ListBuffer[String] = new ListBuffer()
         invalidPaths.foreach {
             p => parser.parseF(File(p)) match 
-                case Failure(_) => {}
+                case Failure(_) => failures.addOne(p)
                 case _ => successes.addOne(p)
         }
         val successList: List[String] = successes.toList
+        val failList: List[String] = failures.toList
+        info("correctly failing tests:\n")
+        failList.map(s => s.split("syntaxErr/").last).foreach(info(_))
         if (successList.length != 0) {
-            fail("some of the paths succeeded (they are invalid and should fail):\n" + successList.map(s => s + "\n"))
+            val successListMapped = successList.map(s => s.split("syntaxErr/").last)
+            fail(
+                "some of the paths succeeded (they are invalid and should fail):\n\n" 
+                + successListMapped.foldRight("")((s1, s2) => s1 + "\n" + s2)
+            )
         }
     }
 
