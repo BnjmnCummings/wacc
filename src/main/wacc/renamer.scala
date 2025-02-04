@@ -43,9 +43,45 @@ object renamer {
     private def rename(param: Param): Q_Param = param match
         case Param(t, v) => Q_Param(t, genName(v))
     
-    private def rename(stmts: List[Stmt], parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): List[Q_Stmt] = ???
+    private def rename(stmts: List[Stmt], parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): List[Q_Stmt] =
+        val _localScope: collection.mutable.Set[Q_Name] = collection.mutable.Set()
+        _localScope ++= localScope
+
+        val _stmts: ListBuffer[Q_Stmt] = ListBuffer()
+        for stmt <- stmts do
+            val _stmt = rename(stmt, parScope, _localScope.toSet)
+            _stmts += _stmt
+            _stmt match
+                case Q_Decl(_, v, _) =>
+                    if localScope.exists(_.old_name == v.old_name) then
+                        println("Already declared in scope")
+                        sys.exit(-1)
+                    else
+                        _localScope += v
+                case _ => ()
+        _stmts.toList
     
-    private def rename(stmt: Stmt, parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): Q_Stmt = ???
+    private def rename(stmt: Stmt, parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): Q_Stmt = stmt match
+        case Decl(t, v, r) => {
+            if (localScope.exists(_.old_name == v)) then
+                println("Name already exists in scope")
+                sys.exit(-1)
+            Q_Decl(t, genName(v), rename(r, parScope ++ localScope))
+        }
+        case Asgn(l, r) => Q_Asgn(rename(l, parScope ++ localScope), rename(r, parScope ++ localScope))
+        case Read(l) => Q_Read(rename(l, parScope ++ localScope))
+        case Free(x) => Q_Free(rename(x, parScope ++ localScope))
+        case Return(x) => Q_Return(rename(x, parScope ++ localScope))
+        case Exit(x) => Q_Exit(rename(x, parScope ++ localScope))
+        case Print(x) => Q_Print(rename(x, parScope ++ localScope))
+        case Println(x) => Q_Println(rename(x, parScope ++ localScope))
+        // heyo
+        case If(cond, body, el) => Q_If(rename(cond, parScope ++ localScope), rename(body, parScope ++ localScope, collection.immutable.Set()), rename(el, parScope ++ localScope, collection.immutable.Set()))
+        // heyo
+        case While(cond, body) => Q_While(rename(cond, parScope ++ localScope), rename(body, parScope ++ localScope, collection.immutable.Set()))
+        // heyo
+        case CodeBlock(body) => Q_CodeBlock(rename(body, parScope ++ localScope, collection.immutable.Set()))
+        case Skip => Q_Skip
 
     private def rename(lvalue: LValue, scope: collection.immutable.Set[Q_Name]): Q_LValue = ???
     
