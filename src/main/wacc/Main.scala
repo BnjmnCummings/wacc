@@ -14,10 +14,19 @@ def main(args: Array[String]): Unit = {
             parser.parseF(f) match
                 case Success(t) => {
                     println(t)
-                    val q_t = renamer.rename(t)
-                    typeChecker.check(q_t)
-                    println(q_t)
-                    sys.exit(0)
+                    try {
+                        val q_t = renamer.rename(t)
+                        typeChecker.check(q_t)
+                        println(q_t)
+                        sys.exit(0)
+                    } catch {
+                        case e: ScopeException => {
+                            // some kind of unified error messaging here
+                            println(e.getMessage)
+                            sys.exit(200)
+                        }
+                    }
+                    
                 }
                 case Failure(msg) => {
                     println(msg)

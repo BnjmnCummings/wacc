@@ -58,8 +58,7 @@ object renamer {
             _stmt match
                 case Q_Decl(_, v, _) =>
                     if localScope.exists(_.old_name == v.old_name) then
-                        println("Already declared in scope")
-                        sys.exit(-1)
+                        throw ScopeException("Already declared in scope")
                     else
                         _localScope += v
                 case _ => ()
@@ -68,8 +67,7 @@ object renamer {
     private def rename(stmt: Stmt, parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): Q_Stmt = stmt match
         case Decl(t, v, r) => {
             if (localScope.exists(_.old_name == v)) then
-                println("Name already exists in scope")
-                sys.exit(-1)
+               throw ScopeException("Already declared in scope")
             Q_Decl(t, genName(v), rename(r, parScope ++ localScope))
         }
         case Asgn(l, r) => Q_Asgn(rename(l, parScope ++ localScope), rename(r, parScope ++ localScope))
@@ -95,8 +93,20 @@ object renamer {
         case Skip => Q_Skip
 
     private def rename(lvalue: LValue, scope: collection.immutable.Set[Q_Name]): Q_LValue = lvalue match
-        case Ident(v) => Q_Ident(updateName(v, scope))
-        case ArrayElem(v, indicies) => Q_ArrayElem(updateName(v, scope), indicies.map(rename(_, scope)))
+        /* if the identity for an l-value doesn't yet exist, complain. */
+        case Ident(v) => {
+            if (!scope.exists(_.old_name == v)) then{
+                throw ScopeException(s"variable $v not declared in scope")
+            }
+            Q_Ident(updateName(v, scope))
+        }
+        case ArrayElem(v, indicies) => {
+            if (!scope.exists(_.old_name == v)) then{
+                throw ScopeException(s"variable $v not declared in scope")
+            }
+            Q_ArrayElem(updateName(v, scope), indicies.map(rename(_, scope)))
+        }
+        /* recursively called on the contained l-value */
         case PairElem(index, v) => Q_PairElem(index, rename(v, scope))
     
     private def rename(rvalue: RValue, scope: collection.immutable.Set[Q_Name]): Q_RValue = rvalue match
