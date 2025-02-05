@@ -67,6 +67,7 @@ def check(stmt: Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
     case CodeBlock(body: List[Stmt]) =>
         val typedBody = check(body, Constraint.Unconstrained) // Don't see why this should be anything other than Unconstrained
         TypedStmt.CodeBlock(typedBody)
+    case Skip => TypedStmt.Skip()
 }
 
 def check(expr: Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedExpr) = expr match {
@@ -208,7 +209,7 @@ extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) mat
     case (?, refTy) => ty ~ refTy
     case (ty, ?) => Some(ty)
     case (ty, refTy) if ty == refTy => Some(ty)
-    case (ArrayLiteral(typ), ArrayLiteral(refTyp)) => ty ~ refTy
+    // case (ArrayLiteral(typ), ArrayLiteral(refTyp)) => ty ~ refTy
     case _ => None
 
 extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (ty, c) match {
