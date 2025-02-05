@@ -57,12 +57,12 @@ def check(stmt: Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
         TypedStmt.Return(typedX)
     case If(cond: Expr, body: List[Stmt], el: List[Stmt]) =>
         val (condTy, typedCond) = check(cond, Constraint.Unconstrained) // Create a constraint for this being a boolean!
-        val (bodyTy, typedBody) = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
-        val (elTy, typedEl) = check(el, Constraint.Unconstrained) // As above
+        val typedBody = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
+        val typedEl = check(el, Constraint.Unconstrained) // As above
         TypedStmt.If(typedCond, typedBody, typedEl)
     case While(cond: Expr, body: List[Stmt]) =>
         val (condTy, typedCond) = check(cond, Constraint.Unconstrained) // Create a constraint for this being a boolean!
-        val (bodyTy, typedBody) = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
+        val typedBody = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
         TypedStmt.While(typedCond, typedBody)
     case CodeBlock(body: List[Stmt]) =>
         val (bodyTy, typedBody) = check(bodyTy, Constraint.Unconstrained) // Don't see why this should be anything other than Unconstrained
