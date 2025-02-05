@@ -13,12 +13,12 @@ def main(args: Array[String]): Unit = {
             val f = new File(fname)
             parser.parseF(f) match
                 case Success(x) => {
-                    println(x)
                     // check semantics here 
+                    println(x)
                     sys.exit(0)
                 }
-                case Failure(msg) => {
-                    println(msg)
+                case Failure(err) => {
+                    println(err.format())
                     sys.exit(100)
                 }
         }
