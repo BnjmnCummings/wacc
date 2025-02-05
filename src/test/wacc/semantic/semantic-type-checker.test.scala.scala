@@ -4,9 +4,10 @@ import wacc.semantic.*
 import wacc.ast.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
+import wacc.semantic.Error.TypeMismatch
 
 class types_tst extends AnyFlatSpec {
-    "basic types" should "be semantically valid" in {
+    "basic type declaration" should "be semantically valid" in {
         val funcs: List[Func] = List[Func]()
 
         val body: List[Stmt] = List[Stmt](
@@ -129,9 +130,7 @@ class types_tst extends AnyFlatSpec {
             "xBool" -> KnownType.Boolean,
             "yBool" -> KnownType.Boolean,
             "zBool" -> KnownType.Boolean
-        ), funcTys = Map(
-
-        ))
+        ), funcTys = Map())
 
         val typedFuncs: List[TypedFunc] = List[TypedFunc]()
         val typedBody: List[TypedStmt] = List[TypedStmt]()
@@ -141,6 +140,62 @@ class types_tst extends AnyFlatSpec {
             Error.TypeMismatch(KnownType.Char, KnownType.Boolean),
             Error.TypeMismatch(KnownType.String, KnownType.Boolean)
         ))
+
+        wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
+    }
+
+    "array declaration" should "be semantically valid" in {
+        val funcs: List[Func] = List[Func]()
+        val body: List[Stmt] = List[Stmt](
+            Decl(ArrayType(BaseType.Int), Ident("intArr"), ArrayLiteral(List[Expr](IntLiteral(1), IntLiteral(2), IntLiteral(3))))
+        )
+
+        val prog: Prog = Prog(funcs, body)
+
+        val tyInfo = TypeInfo(varTys = Map(
+            "intArr" -> KnownType.Array(KnownType.Int)
+        ), funcTys = Map())
+
+        val typedFuncs: List[TypedFunc] = List[TypedFunc]()
+        val typedBody: List[TypedStmt] = List[TypedStmt](
+            TypedStmt.Decl(ArrayType(BaseType.Int), TypedExpr.Ident("intArr"), TypedRValue.ArrayLiteral(List[TypedExpr](TypedExpr.IntLiteral(1), TypedExpr.IntLiteral(2), TypedExpr.IntLiteral(3))))
+        )
+
+        val expected = Right(TypedProg(typedFuncs, typedBody))
+
+        wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
+    }
+
+    "incorrect array declarations" should "be semantically invalid" in {
+        val funcs: List[Func] = List[Func]()
+        val body: List[Stmt] = List[Stmt](
+            Decl(ArrayType(BaseType.Int), Ident("arr1"), IntLiteral(6)),
+            Decl(ArrayType(BaseType.Int), Ident("arr2"), CharLiteral('b')),
+            Decl(ArrayType(BaseType.Int), Ident("arr3"), BoolLiteral(false)),
+            Decl(ArrayType(BaseType.Int), Ident("arr4"), ArrayLiteral(List[Expr](CharLiteral('a')))),
+            Decl(ArrayType(BaseType.Int), Ident("arr5"), ArrayLiteral(List[Expr](IntLiteral(3), CharLiteral('a'))))
+        )
+
+        val prog: Prog = Prog(funcs, body)
+
+        val tyInfo = TypeInfo(varTys = Map(
+            "arr1" -> KnownType.Array(KnownType.Int),
+            "arr2" -> KnownType.Array(KnownType.Int),
+            "arr3" -> KnownType.Array(KnownType.Int),
+            "arr4" -> KnownType.Array(KnownType.Int),
+            "arr5" -> KnownType.Array(KnownType.Int)
+        ), funcTys = Map())
+
+        val typedFuncs: List[TypedFunc] = List[TypedFunc]()
+        val typedBody: List[TypedStmt] = List[TypedStmt]()
+
+        val expected = Left(
+            TypeMismatch(KnownType.Int, KnownType.Array(KnownType.Int)),
+            TypeMismatch(KnownType.Char, KnownType.Array(KnownType.Int)),
+            TypeMismatch(KnownType.Boolean, KnownType.Array(KnownType.Int)),
+            TypeMismatch(KnownType.Char, KnownType.Array(KnownType.Int)),
+            TypeMismatch(KnownType.Char, KnownType.Array(KnownType.Int)),
+        )
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
     }
