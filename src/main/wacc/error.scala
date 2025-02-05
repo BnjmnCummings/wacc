@@ -44,7 +44,7 @@ case class VanillaError(
         sb.addAll(unexpectedStr)
         val expectedStrs: Set[String] = expecteds.map {
             item => item match {
-                case RawItem(s) => s"\"s\""
+                case RawItem(s) => s"\"$s\""
                 case NamedItem(s) => s
                 case EndOfInputItem => "end of input"
             }
