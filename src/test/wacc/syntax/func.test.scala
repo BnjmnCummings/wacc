@@ -163,6 +163,17 @@ class func_test extends AnyFlatSpec {
             )
         )
     }
+
+    it should "be able to parse a function with a returning statement wrapped in a begin ... end codeblock" in {
+        parser.func.parse("char five() is begin return \'5\' end end") shouldBe Success(
+            Func(
+                BaseType.Char,
+                "five",
+                List(),
+                List(CodeBlock(List(Return(CharLiteral('5')))))
+            )
+        )
+    }
 }
 
 
