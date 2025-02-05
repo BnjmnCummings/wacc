@@ -366,6 +366,48 @@ class rename_func_test extends AnyFlatSpec {
         )
     }
 
+    it should "be able to shadow the function name" in {
+        val prog = Prog(
+            List(
+                Func(
+                    BaseType.Int, 
+                    "fun", 
+                    List(),
+                    List(
+                        Decl(
+                            BaseType.Int, 
+                            Ident("fun"), 
+                            IntLiteral(0)
+                        ),
+                        Return(IntLiteral(0))
+                    )
+                )
+            ),
+            List(Skip)
+        )
+
+        rename(prog) shouldBe Q_Prog(
+            List(
+            Q_Func(
+                BaseType.Int, 
+                Q_Name("fun", "fun/0"), 
+                List(), 
+                List(
+                Q_Decl(
+                    BaseType.Int, 
+                    Q_Name("fun", "fun/1"), 
+                    Q_IntLiteral(0)
+                ),
+                Q_Return(Q_IntLiteral(0))
+                ),              
+                Set(Q_Name("fun", "fun/1"))                                      
+            )
+            ),
+            List(Q_Skip),
+            Set(Q_Name("fun", "fun/0"))
+        )
+    }
+
     it should "be able to shadow parameters with different types" in {
         val prog = Prog(
             List(
