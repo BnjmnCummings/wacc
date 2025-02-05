@@ -1,4 +1,4 @@
-package wacc.syntax
+package wacc.ast
 
 import parsley.generic
 import parsley.Parsley

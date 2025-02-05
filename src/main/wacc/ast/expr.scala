@@ -1,4 +1,4 @@
-package wacc.syntax
+package wacc.ast
 
 sealed trait Expr extends RValue
 sealed trait LValue

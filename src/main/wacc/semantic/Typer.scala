@@ -1,6 +1,6 @@
 package wacc.semantic
 
-import wacc.syntax.* 
+import wacc.ast.* 
 import collection.mutable
 import scala.annotation.targetName
 

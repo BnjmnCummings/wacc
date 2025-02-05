@@ -1,4 +1,4 @@
-package wacc.syntax
+package wacc.ast
 
 case class Prog(funcs: List[Func], body: List[Stmt])(val pos: (Int, Int))
 case class Func(t: Type, v: String, args: List[Param], body: List[Stmt])(val pos: (Int, Int))
