@@ -18,7 +18,7 @@ syntax:
     - rvalue
     - pair_elem
     - array_literal
-    - integration
+    - syntax_integration
 
 # Tests which check the AST semantic checking step of the compiler
 semantic:
@@ -26,6 +26,7 @@ semantic:
   - rename_expr
   - rename_func
   - rename_stmt
+  # - semantic_integration
 
 # Tests which check the AST -> Machine Code step of the compiler
 generation:
