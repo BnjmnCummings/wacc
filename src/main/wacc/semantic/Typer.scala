@@ -156,6 +156,10 @@ def checkBooleanExpr(x: Expr, y: Expr, c: Constraint)
     val ty = mostSpecific(xTy, yTy)
     (ty.satisfies(c), build(typedX, typedY))
 
+def check(l: LValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedLValue) = l match {
+    // FIND CASES FOR LVALUE
+}
+
 def check(r: RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedRValue) = r match {
     case FuncCall(v: String, args: List[Expr]) => ???
         // Check if RValue needs anything special! Own constraint?
@@ -166,6 +170,11 @@ def check(r: RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], 
         val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
         val ty = mostSpecific(xTy, yTy)
         (ty.satisfies(c), TypedRValue.NewPair(typedX, typedY))
+}
+
+@targetName("checkStmts")
+def check(listStmt: List[Stmt], c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], List[TypedStmt]) = { // Think about this list shit more!
+    ??? // Think we just want to map and delegate to check (stmt)
 }
 
 class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
