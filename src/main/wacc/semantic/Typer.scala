@@ -29,6 +29,14 @@ class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
     }
 }
 
+// This will get the most specific type out of 2 given
+// This means if we know something is an Int, we can type check using that rather than ?
+def mostSpecific(ty1: Option[SemType], ty2: Option[SemType]): SemType = (ty1, ty2) match {
+    case (Some(?), Some(t)) => t
+    case (Some(t), _)       => t
+    case (None, t)          => t.getOrElse(?)
+}
+
 class TypeInfo(
     var varTys: Map[String, KnownType],
     var funcTys: Map[String, KnownType, List[KnownType]] // Check with Aidan to see how this would work
