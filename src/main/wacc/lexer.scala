@@ -38,9 +38,9 @@ object lexer {
         // name errors
         override def filterNameIllFormedIdentifier: FilterConfig[String] = BadIdentConfig()
 
-        // // numeric errors
-        // override def labelIntegerSignedNumber: LabelWithExplainConfig = ???
-        // override def labelIntegerUnsignedNumber: LabelWithExplainConfig = ???
+        // numeric errors
+        override def labelIntegerSignedNumber: LabelWithExplainConfig = Label("number")
+        override def labelIntegerNumberEnd: LabelConfig = Label("end of number")
 
         // symbol errors
         override def labelSymbol: Map[String, LabelWithExplainConfig] = {
@@ -67,11 +67,16 @@ object lexer {
             )
         }
 
-        // // text errors
+        // text errors
         override def labelCharAscii: LabelWithExplainConfig = Label("ascii character")
         override def labelCharAsciiEnd: LabelConfig = Label("closing single quote")
         override def labelStringAscii(multi: Boolean, raw: Boolean): LabelWithExplainConfig = Label("string")
         override def labelStringAsciiEnd(multi: Boolean, raw: Boolean): LabelConfig = Label("closing double quote")
+        override def labelEscapeEnd: LabelWithExplainConfig = 
+            LabelAndReason(
+                "valid escape sequences are \\0, \\n, \\t, \\r, \\f, \\b, \\\', \\\" and \\\\",
+                "escape sequence"
+                )
         // override def verifiedCharBadCharsUsedInLiteral: VerifiedBadChars = ???
         // override def verifiedStringBadCharsUsedInLiteral: VerifiedBadChars = ???
 
