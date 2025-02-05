@@ -121,15 +121,14 @@ def check(expr: Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType],
         val (xTy, typedX) = check(x, Constraint.IsCharacter)
         (xTy.getOrElse(?).satisfies(c), TypedExpr.Ord(typedX))
 
-    // TODO: ADD LITERALS
-    /*
-    case class IntLiteral(v: BigInt) extends Expr
-    case class BoolLiteral(v: Boolean) extends Expr
-    case class CharLiteral(v: Char) extends Expr
-    case class StringLiteral(v: String) extends Expr
-    case class Ident(v: String) extends Expr, LValue
-    case class ArrayElem(v: String, indicies: List[Expr]) extends Expr, LValue
-    */
+    case IntLiteral(v: BigInt) => (KnownType.Int.satisfies(c), TypedExpr.IntLiteral(v))
+    case BoolLiteral(v: Boolean) => (KnownType.Boolean.satisfies(c), TypedExpr.BoolLiteral(v))
+    case CharLiteral(v: Char) => (KnownType.Char.satisfies(c), TypedExpr.CharLiteral(v))
+    case StringLiteral(v: String) => (KnownType.String.satisfies(c), TypedExpr.StringLiteral(v))
+    case Ident(v: String) => (KnownType.Ident.satisfies(c), TypedExpr.Ident(v))
+    case ArrayElem(_, _) => ???
+    case PairNullLiteral => ???
+    case PairElem(_, _) => ???
 }
 
 def checkArithmeticExpr(x: Expr, y: Expr, c: Constraint)
@@ -181,6 +180,8 @@ def check(r: RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], 
         val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
         val ty = mostSpecific(xTy, yTy)
         (ty.satisfies(c), TypedRValue.NewPair(typedX, typedY))
+        
+    case e: Expr => check(e, c)
 }
 
 @targetName("checkStmts")

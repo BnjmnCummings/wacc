@@ -30,22 +30,18 @@ object TypedExpr {
     case class BoolLiteral(v: Boolean) extends TypedExpr {
         def ty = KnownType.Boolean
     }
-    case class EscapedCharLiteral(v: Char) extends TypedExpr {
-        def ty = KnownType.Char // check this??
-    }
-    case class StandardCharLiteral(v: Char) extends TypedExpr {
+    case class CharLiteral(v: Char) extends TypedExpr {
         def ty = KnownType.Char
     }
-    case class StringLiteral(v: List[CharLiteral]) extends TypedExpr {
+    case class StringLiteral(v: String) extends TypedExpr {
         def ty = KnownType.String
     }
     case class Ident(v: String) extends TypedExpr, TypedLValue {
         def ty = KnownType.String
     }
     case class ArrayElem(v: String, indicies: List[Expr]) extends TypedExpr, TypedLValue {
-        def ty = ??? // something like KnownType.Array(TypedExpr.ty)?
+        def ty = KnownType.Array
     }
-    // needs pair-liter ??
 }
 
 sealed trait TypedLValue
@@ -65,6 +61,7 @@ object TypedStmt {
     case class If(cond: TypedExpr, body: List[TypedStmt], el: List[TypedStmt]) extends TypedStmt
     case class While(cond: TypedExpr, body: List[TypedStmt]) extends TypedStmt
     case class CodeBlock(body: List[TypedStmt]) extends TypedStmt
+    case class Skip() extends TypedStmt
 }
 
 object TypedRValue {
