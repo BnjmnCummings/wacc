@@ -49,3 +49,24 @@ object TypedExpr {
     }
     // needs pair-liter ??
 }
+
+sealed trait TypedLValue
+sealed trait TypedRValue
+
+sealed abstract class TypedStmt {
+    def ty: SemType
+}
+
+object TypedStmt {
+    case class Decl(t: Type, v: String, r: TypedRValue) extends TypedStmt
+    case class Asgn(l: TypedLValue, r: TypedRValue) extends TypedStmt
+    case class Read(l: TypedLValue) extends TypedStmt
+    case class Free(x: TypedExpr) extends TypedStmt
+    case class Return(x: TypedExpr) extends TypedStmt
+    case class Exit(x: TypedExpr) extends TypedStmt
+    case class Print(x: TypedExpr) extends TypedStmt
+    case class Println(x: TypedExpr) extends TypedStmt
+    case class If(cond: TypedExpr, body: List[TypedStmt], el: List[TypedStmt]) extends TypedStmt
+    case class While(cond: TypedExpr, body: List[TypedStmt]) extends TypedStmt
+    case class CodeBlock(body: List[TypedStmt]) extends TypedStmt
+}
