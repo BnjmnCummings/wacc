@@ -19,8 +19,7 @@ class Err(
         }
         sb.addAll(fileInfo)
         sb.addAll(s"At line: ${pos._1} column: ${pos._2}\n")
-        // need to deal with error lines here
-        sb.addAll(???)
+        sb.addAll(lines.toString())
         sb.toString()
     }
 }
@@ -31,11 +30,38 @@ case class VanillaError(
     unexpected: Option[ErrorItem],
     expecteds: Set[ErrorItem],
     reasons: Set[String],
-) extends ErrorLines
+) extends ErrorLines {
+    override def toString(): String = {
+        val sb = StringBuilder()
+        val unexpectedStr: String = unexpected match
+            case Some(item) =>
+                item match
+                    case RawItem(s) => s"unexpected \"$s\"\n"
+                    case NamedItem(s) => s"unexpected $s\n" 
+                    case EndOfInputItem => "unexpected end of input\n" 
+            case None => ""
+        sb.addAll(unexpectedStr)
+        val expectedStrs: Set[String] = expecteds.map {
+            item => item match {
+                case RawItem(s) => s"\"s\""
+                case NamedItem(s) => s
+                case EndOfInputItem => "end of input"
+            }
+        }
+        sb.addAll("expected ")
+        sb.addAll(expectedStrs.foldLeft("")((s1, s2) => s"$s1, $s2"))
+        sb.addOne('\n')
+        sb.addAll(reasons.foldLeft("")((s1, s2) => s"$s1\n $s2"))
+        sb.addOne('\n')
+        sb.toString()
+    }
+}
 
 case class SpecializedError(
     msgs: Set[String]
-) extends ErrorLines
+) extends ErrorLines {
+    override def toString(): String = msgs.foldLeft("")((s1, s2) => s"$s1\n $s2")
+}
 
 sealed trait ErrorItem
 case class RawItem(item: String) extends ErrorItem
