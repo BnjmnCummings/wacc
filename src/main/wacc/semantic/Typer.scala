@@ -181,15 +181,13 @@ def check(r: RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], 
 }
 
 @targetName("checkStmts")
-def check(listStmt: List[Stmt], c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], List[TypedStmt]) = { // Think about this list shit more!
-    ??? // Think we just want to map and delegate to check (stmt)
-}
+def check(stmts: List[Stmt], c: Constraint)(using TypeCheckerCtx[?]): List[TypedStmt] = stmts.map(check(_))
 
 @targetName("checkExprs")
 def check(listArgs: List[Expr], c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], List[TypedExpr]) = {
-    val mappedArgs: List[(Option[SemType], TypedExpr)] = listArgs.map(check(_, c)) // List[(Option[SemType], TypedExpr)]
-    val semTypes: List[Option[SemType]] = mappedArgs.map(_._1) // List[Option[SemType]]
-    val typedExprs: List[TypedExpr] = mappedArgs.map(_._2) // List[TypedExpr]
+    val mappedArgs: List[(Option[SemType], TypedExpr)] = listArgs.map(check(_, c))
+    val semTypes: List[Option[SemType]] = mappedArgs.map(_._1)
+    val typedExprs: List[TypedExpr] = mappedArgs.map(_._2)
 
     val ty: SemType = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 
