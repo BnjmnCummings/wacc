@@ -134,7 +134,7 @@ def check(expr: Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType],
         val ty = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 
         (ty.satisfies(c), TypedExpr.ArrayElem(TypedExpr.Ident(v), typedExprs))
-    case PairNullLiteral => ???
+    case PairNullLiteral => TypedExpr.PairNullLiteral
     case PairElem(_, _) => ???
 }
 
@@ -291,15 +291,6 @@ class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
         None
     }
 }
-
-// The typer will take this in
-// It maps variable names & function names to their types
-// This should allow for variables and functions to share names
-class TypeInfo(
-    var varTys: Map[String, KnownType],
-    var funcTys: Map[(String, KnownType), Map[String, KnownType]]
-    // This is a map from (Function Identifier, Return Type) -> parameter map [Param name -> Param type]
-)
 
 enum Error {
     case TypeMismatch(actual: SemType, expected: SemType)
