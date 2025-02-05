@@ -177,6 +177,17 @@ def check(listStmt: List[Stmt], c: Constraint)(using TypeCheckerCtx[?]): (Option
     ??? // Think we just want to map and delegate to check (stmt)
 }
 
+@targetName("checkExprs")
+def check(listArgs: List[Expr], c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], List[TypedExpr]) = {
+    val mappedArgs: List[(Option[SemType], TypedExpr)] = listArgs.map(check(_, c)) // List[(Option[SemType], TypedExpr)]
+    val semTypes: List[Option[SemType]] = mappedArgs.map(_._1) // List[Option[SemType]]
+    val typedExprs: List[TypedExpr] = mappedArgs.map(_._2) // List[TypedExpr]
+
+    val ty: SemType = semTypes.foldLeft(Some(?))(mostSpecific) // TODO: FIX THIS!
+
+    (ty.satisfies(c), typedExprs)
+}
+
 class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
     def errors: C = errs.result()
 
