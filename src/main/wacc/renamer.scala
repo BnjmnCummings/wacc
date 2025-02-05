@@ -4,72 +4,78 @@ import wacc.ast.*
 import wacc.q_ast.*
 import scala.collection.mutable.*
 
-object renamer {
-    private var globalScope: collection.mutable.Set[Q_Name] = collection.mutable.Set()
+import collection.immutable.Set as Set
+import collection.mutable.Set as MutableSet
 
+object renamer {
+    private var globalScope: MutableSet[Q_Name] = MutableSet()
     private var name_gen_table: Map[String, Int] = Map[String, Int]()
 
-    def rename(prog: Prog): Q_Prog = prog match
-        case Prog(funcs, body) => {
-            globalScope = collection.mutable.Set()
-            name_gen_table = Map[String, Int]()
+    def rename(prog: Prog): Q_Prog = 
+        globalScope = MutableSet()
+        name_gen_table = Map[String, Int]()
 
-            // it is important this occurs first as it adds functions to globalScope
-            val _funcs = rename(funcs)
-            
-            val (_body, scoped) = rename(body, collection.immutable.Set(), collection.immutable.Set())
+        // it is important this occurs first as it adds functions to globalScope
+        val _funcs = rename(prog.funcs)
+        val (_body, scoped) = rename(prog.body, Set(), Set())
 
-            Q_Prog(_funcs, _body, scoped ++ globalScope)
-        }
+        Q_Prog(_funcs, _body, scoped ++ globalScope)
 
-    private def rename(funcs: List[Func]): List[Q_Func] =
+    private def rename(funcs: List[Func]): List[Q_Func] = 
         val _funcs: ListBuffer[Q_Func] = ListBuffer()
-        for func <- funcs do
+        for (func <- funcs) {
             val _func = rename(func)
             globalScope += _func.v
             _funcs += _func
+        }
         _funcs.toList
     
-    private def rename(func: Func): Q_Func = func match
-        case Func(t, v, args, body) => {
-            val localScope: collection.mutable.Set[Q_Name] = collection.mutable.Set()
 
-            val _v: Q_Name = genName(v)
+    private def rename(func: Func): Q_Func = 
+        val localScope: MutableSet[Q_Name] = MutableSet()
+        val _v: Q_Name = genName(func.v)
+        val _args = func.args.map(rename)
+            
+        localScope ++= _args.map(_.v)
+        val (_body, scoped) = rename(func.body, Set(), localScope.toSet)
 
-            val _args = args.map(rename)
-            localScope ++= _args.map(_.v)
-
-            val (_body, scoped) = rename(body, collection.immutable.Set(), localScope.toSet)
-
-            Q_Func(t, _v, _args, _body, scoped)
-        }
+        Q_Func(func.t, _v, _args, _body, scoped)
     
-    private def rename(param: Param): Q_Param = param match
-        case Param(t, v) => Q_Param(t, genName(v))
     
-    private def rename(stmts: List[Stmt], parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): (List[Q_Stmt], collection.immutable.Set[Q_Name]) =
-        val _localScope: collection.mutable.Set[Q_Name] = collection.mutable.Set()
+    private def rename(param: Param): Q_Param = 
+        Q_Param(param.t, genName(param.v))
+    
+    private def rename(stmts: List[Stmt], parScope: Set[Q_Name], localScope: Set[Q_Name]): (List[Q_Stmt], Set[Q_Name]) = 
+        val _localScope: MutableSet[Q_Name] = MutableSet()
         _localScope ++= localScope
 
         val _stmts: ListBuffer[Q_Stmt] = ListBuffer()
-        for stmt <- stmts do
+        for (stmt <- stmts) {
             val _stmt = rename(stmt, parScope, _localScope.toSet)
             _stmts += _stmt
-            _stmt match
-                case Q_Decl(_, v, _) =>
+            _stmt match {
+                case Q_Decl(_, v, _) => {
                     if localScope.exists(_.old_name == v.old_name) then
                         throw ScopeException("Already declared in scope")
                     else
                         _localScope += v
+                }
                 case _ => ()
+            }
+        }
+            
         (_stmts.toList, _localScope.toSet)
     
-    private def rename(stmt: Stmt, parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): Q_Stmt = stmt match
-        case Decl(t, Ident(v), r) => {
-            if (localScope.exists(_.old_name == v)) then
-               throw ScopeException("Already declared in scope")
-            Q_Decl(t, genName(v), rename(r, parScope ++ localScope))
-        }
+    
+    private def rename(stmt: Stmt, parScope: Set[Q_Name], localScope: Set[Q_Name]): Q_Stmt = stmt match
+        case Decl(t, Ident(v), r) => 
+            if (localScope.exists(_.old_name == v)) {
+                throw ScopeException("Already declared in scope")
+            }
+            /* need to evaluate r-value first so that we can't declare an ident as itself*/
+            val rvalue = rename(r, parScope ++ localScope)
+            Q_Decl(t, genName(v), rvalue)
+        
         case Asgn(l, r) => Q_Asgn(rename(l, parScope ++ localScope), rename(r, parScope ++ localScope))
         case Read(l) => Q_Read(rename(l, parScope ++ localScope))
         case Free(x) => Q_Free(rename(x, parScope ++ localScope))
@@ -79,27 +85,22 @@ object renamer {
         case Println(x) => Q_Println(rename(x, parScope ++ localScope))
         // heyo
         case If(cond, body, el) => 
-            val (_body, scopedBody) = rename(body, parScope ++ localScope, collection.immutable.Set())
-            val (_el, scopedEl) = rename(el, parScope ++ localScope, collection.immutable.Set())
+            val (_body, scopedBody) = rename(body, parScope ++ localScope, Set())
+            val (_el, scopedEl) = rename(el, parScope ++ localScope, Set())
             Q_If(rename(cond, parScope ++ localScope), _body, scopedBody, _el, scopedEl)
         // heyo
         case While(cond, body) => 
-            val (_body, scoped) = rename(body, parScope ++ localScope, collection.immutable.Set())
+            val (_body, scoped) = rename(body, parScope ++ localScope, Set())
             Q_While(rename(cond, parScope ++ localScope), _body, scoped)
         // heyo
-        case CodeBlock(body) => 
-            val (_body, scoped) = rename(body, parScope ++ localScope, collection.immutable.Set())
+        case CodeBlock(body) =>
+            val (_body, scoped) = rename(body, parScope ++ localScope, Set())
             Q_CodeBlock(_body, scoped)
         case Skip => Q_Skip
 
-    private def rename(lvalue: LValue, scope: collection.immutable.Set[Q_Name]): Q_LValue = lvalue match
+    private def rename(lvalue: LValue, scope: Set[Q_Name]): Q_LValue = lvalue match
         /* if the identity for an l-value doesn't yet exist, complain. */
-        case Ident(v) => {
-            if (!scope.exists(_.old_name == v)) then{
-                throw ScopeException(s"variable $v not declared in scope")
-            }
-            Q_Ident(updateName(v, scope))
-        }
+        case Ident(v) => rename(v, scope)
         case ArrayElem(v, indicies) => {
             if (!scope.exists(_.old_name == v)) then{
                 throw ScopeException(s"variable $v not declared in scope")
@@ -108,14 +109,15 @@ object renamer {
         }
         /* recursively called on the contained l-value */
         case PairElem(index, v) => Q_PairElem(index, rename(v, scope))
+
     
-    private def rename(rvalue: RValue, scope: collection.immutable.Set[Q_Name]): Q_RValue = rvalue match
+    private def rename(rvalue: RValue, scope: Set[Q_Name]): Q_RValue = rvalue match
         case expr: Expr => rename(expr, scope)
         case FuncCall(v, args) => Q_FuncCall(updateName(v, scope), args.map(rename(_, scope)))
         case ArrayLiteral(xs) => Q_ArrayLiteral(xs.map(rename(_, scope)))
         case NewPair(x1, x2) => Q_NewPair(rename(x1, scope), rename(x2, scope))
 
-    private def rename(expr: Expr, scope: collection.immutable.Set[Q_Name]): Q_Expr = expr match
+    private def rename(expr: Expr, scope: Set[Q_Name]): Q_Expr = expr match
         case Mul(x, y) => Q_Mul(rename(x, scope), rename(y, scope))
         case Mod(x, y) => Q_Mod(rename(x, scope), rename(y, scope))
         case Add(x, y) => Q_Add(rename(x, scope), rename(y, scope))
@@ -138,24 +140,29 @@ object renamer {
         case BoolLiteral(v) => Q_BoolLiteral(v)
         case CharLiteral(v) => Q_CharLiteral(v)
         case StringLiteral(v) => Q_StringLiteral(v)
-        case Ident(v) => Q_Ident(updateName(v, scope))
         case ArrayElem(v, indicies) => Q_ArrayElem(updateName(v, scope), indicies.map(rename(_, scope)))
         case PairElem(index, v) => Q_PairElem(index, rename(v, scope))
         case PairNullLiteral => Q_PairNullLiteral
+        /* valid idents must be in scope */
+        case Ident(v) => rename(v, scope)
+
+
+    private def rename(ident: String, scope: Set[Q_Name]): Q_Ident = 
+        if (!scope.exists(_.old_name == ident)) then{
+            throw ScopeException(s"variable ${ident} not declared in scope")
+        }
+        Q_Ident(updateName(ident, scope))
     
-    
-    private def genName(name: String): Q_Name = {
+    private def genName(name: String): Q_Name = 
         val count = name_gen_table.getOrElse(name, 0)
         name_gen_table(name) = count + 1
         Q_Name(name, s"${name}/$count")
-    }
 
-    private def updateName(name: String, localScope: collection.immutable.Set[Q_Name]): Q_Name = {
+    private def updateName(name: String, localScope: Set[Q_Name]): Q_Name = 
         if localScope.exists(_.old_name == name) then
             localScope.find(_.old_name == name).get
         else if globalScope.exists(_.old_name == name) then
             globalScope.find(_.old_name == name).get 
         else
             genName(name)
-    }
 }
