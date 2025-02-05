@@ -7,12 +7,14 @@ import parsley.quick.*
 import parsley.syntax.zipped.*
 import parsley.errors.ErrorBuilder
 import parsley.debug.*
+import parsley.errors.combinator.ErrorMethods
 import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix, chain}
 import lexer.{_int, _ident, _char, _string, _bool, fully}
 import lexer.implicits.implicitSymbol
+
 import java.io.File
 import scala.util.Success
-import parsley.expr.Postfix
+
 
 object parser {
     def parseF(input: File): Result[String, Prog] = parser.parseFile(input) match
@@ -103,7 +105,7 @@ object parser {
 
     lazy val arrayType: Parsley[Type] = atomic(
         // must match at least one
-        chain.postfix1(pairType | baseType)(ArrayType from "[]")
+        chain.postfix1(pairType | baseType)(ArrayType from "[]").hide
 
     )//.debug("arrayType")
 
