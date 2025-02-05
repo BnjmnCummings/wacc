@@ -188,6 +188,28 @@ def check(listArgs: List[Expr], c: Constraint)(using TypeCheckerCtx[?]): (Option
     (ty.satisfies(c), typedExprs)
 }
 
+extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) match
+    case (?, reTy) => Some(refTy)
+    case (ty, ?) => Some(ty)
+    case (ty, refTy) if ty == refTy => Some(ty)
+    case (Array(ty), Array(refTy)) => Array(ty ~ refTy)
+    case _ => None
+
+extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (ty, c) match {
+    case (ty, Constraint.Is(refTy)) => (ty ~ refTy).orElse {
+        ctx.error(Error.TypeMismatch(ty, refTy))
+    }
+    case(?, _) => Some(?)
+    case(kty@INT_LITERAL, Constraint.IsNumeric) => Some(kty)
+    case(kty, Constraint.IsNumeric) => ctx.error(Error.NonNumericType(kty))
+    case(kty@CHAR_LITERAL, Constraint.IsCharacter) => Some(kty)
+    case(kty, Constraint.IsCharacter) => ctx.error(Error.NonCharacterType(kty))
+    case(kty@BOOL_LITERAL, Constraint.IsBoolean) => Some(kty)
+    case(kty, Constraint.IsBoolean) => ctx.error(Error.NonCharacterType(kty))
+    case(kty@STRING_LITERAL, Constraint.IsString) => Some(kty)
+    case(kty, Constraint.IsString) => ctx.error(Error.NonStringType(kty))
+}
+
 class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
     def errors: C = errs.result()
 
