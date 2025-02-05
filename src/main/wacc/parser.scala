@@ -40,36 +40,36 @@ object parser {
             "(" ~> expr <~ ")"
         )(
             Ops(Prefix)(
-                Not from "!", 
-                (notFollowedBy(int) ~> (Neg from "-")), 
-                Len from "len", 
-                Ord from "ord", 
-                Chr from "chr"
+                Not `from` "!", 
+                (notFollowedBy(int) ~> (Neg `from` "-")), 
+                Len `from` "len", 
+                Ord `from` "ord", 
+                Chr `from` "chr"
             ),
             Ops(InfixL)(
-                Mul from "*",
-                Mod from "%", 
-                Div from "/"
+                Mul `from` "*",
+                Mod `from` "%", 
+                Div `from` "/"
             ),
             Ops(InfixL)(
-                Add from "+", 
-                Sub from "-"
+                Add `from` "+", 
+                Sub `from` "-"
             ),
             Ops(InfixN)(
-                GreaterThanEq from ">=",
-                GreaterThan from ">",
-                LessThanEq from "<=",
-                LessThan from "<"
+                GreaterThanEq `from` ">=",
+                GreaterThan `from` ">",
+                LessThanEq `from` "<=",
+                LessThan `from` "<"
             ),
             Ops(InfixN)(
-                Eq from "==",
-                NotEq from "!="
+                Eq `from` "==",
+                NotEq `from` "!="
             ),
             Ops(InfixR)(
-                And from "&&"
+                And `from` "&&"
             ),
             Ops(InfixR)(
-                Or from "||"
+                Or `from` "||"
             ),
         )
     //.debug("expr")
@@ -106,7 +106,7 @@ object parser {
 
     lazy val arrayType: Parsley[Type] = atomic(
         // must match at least one
-        chain.postfix1(pairType | baseType)(ArrayType from "[]").hide
+        chain.postfix1(pairType | baseType)(ArrayType `from` "[]").hide
 
     )//.debug("arrayType")
 
