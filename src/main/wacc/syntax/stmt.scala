@@ -2,7 +2,7 @@ package wacc.syntax
 
 sealed trait Stmt
 
-case class Decl(t: Type, v: String, r: RValue)(val pos: (Int, Int)) extends Stmt
+case class Decl(t: Type, v: Ident, r: RValue)(val pos: (Int, Int)) extends Stmt
 case class Asgn(l: LValue, r: RValue)(val pos: (Int, Int)) extends Stmt
 case class Read(l: LValue)(val pos: (Int, Int)) extends Stmt
 case class Free(x: Expr)(val pos: (Int, Int)) extends Stmt
@@ -14,8 +14,8 @@ case class If(cond: Expr, body: List[Stmt], el: List[Stmt])(val pos: (Int, Int))
 case class While(cond: Expr, body: List[Stmt])(val pos: (Int, Int)) extends Stmt
 case class CodeBlock(body: List[Stmt])(val pos: (Int, Int)) extends Stmt
 
-object Decl extends ParserBridgePos3[Type, String, RValue, Decl] {
-    def apply(t: Type, v: String, r: RValue): Decl = Decl(t, v, r)((0, 0))
+object Decl extends ParserBridgePos3[Type, Ident, RValue, Decl] {
+    def apply(t: Type, v: Ident, r: RValue): Decl = Decl(t, v, r)((0, 0))
 }
 object Asgn extends ParserBridgePos2[LValue, RValue, Asgn] {
     def apply(l: LValue, r: RValue): Asgn = Asgn(l, r)((0, 0))
