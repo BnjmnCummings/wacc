@@ -37,12 +37,12 @@ class semantic_integration_test extends AnyFlatSpec {
                         }
                     }
                 }
-                case _ => synFailures.addOne(p)
+                case _ => synFailures += p
         }
         val synFailList: List[String] = synFailures.toList
         val semFailList: List[String] = semFailures.toList
         val successList: List[String] = successes.toList
-        info("correctly succeeding tests:\n")
+        info("programs identified correctly as valid:\n")
         successList.map(s => s.split("valid/").last).foreach(info(_))
         if (synFailList.length != 0) {
             fail(
@@ -58,7 +58,43 @@ class semantic_integration_test extends AnyFlatSpec {
         }
     }
 
-    it should "reject invalid wacc programs" in {
+    it should "reject semantically invalid wacc programs as semantically invalid" in {
+        val synFailures: ListBuffer[String] = new ListBuffer()
+        val semFailures: ListBuffer[String] = new ListBuffer()
+        val successes: ListBuffer[String] = new ListBuffer()
+        invalidPaths.foreach {
+            p => parser.parseF(File(p)) match 
+                case Success(t) => {
+                    try {
+                        val q_t = renamer.rename(t)
+                        typeChecker.check(q_t)
+                        successes += p
+                    } catch {
+                        case e: ScopeException => {
+                            // type/scope checking has failed
+                            semFailures += p
+                        }
+                    }
+                }
+                case _ => synFailures += p
+        }
+        val synFailList: List[String] = synFailures.toList
+        val semFailList: List[String] = semFailures.toList
+        val successList: List[String] = successes.toList
+        info("programs identified correctly as semantically invalid:\n")
+        semFailList.map(s => s.split("semanticErr/").last).foreach(info(_))
+        if (synFailList.length != 0) {
+            fail(
+                "some of the paths failed to parse (they are syntactically valid and should succeed):\n\n" 
+                + synFailList.foldRight("")((s1, s2) => s1 + "\n" + s2)
+            )
+        }
+        if (successList.length != 0) {
+            fail(
+                "some of the paths parsed successfully (they are semantically invalid and should fail):\n\n" 
+                + semFailList.foldRight("")((s1, s2) => s1 + "\n" + s2)
+            )
+        }
     }
 
     def getValidPaths(): List[String] = {
