@@ -126,7 +126,14 @@ def check(expr: Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType],
     case CharLiteral(v: Char) => (KnownType.Char.satisfies(c), TypedExpr.CharLiteral(v))
     case StringLiteral(v: String) => (KnownType.String.satisfies(c), TypedExpr.StringLiteral(v))
     case Ident(v: String) => (KnownType.Ident.satisfies(c), TypedExpr.Ident(v))
-    case ArrayElem(_, _) => ???
+    case ArrayElem(v: String, indicies: List[Expr]) => 
+        val checkedExprs: List[(Option[SemType], TypedExpr)] = indicies.map(expr => check(expr, Constraint.IsNumeric))
+        val semTypes = checkedExprs.map(_._1)
+        val typedExprs = checkedExprs.map(_._2)
+
+        val ty = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
+
+        (ty.satisfies(c), TypedExpr.ArrayElem(TypedExpr.Ident(v), typedExprs))
     case PairNullLiteral => ???
     case PairElem(_, _) => ???
 }
@@ -237,11 +244,6 @@ def check(listArgs: List[Expr], c: Constraint)(using TypeCheckerCtx[?]): (Option
     val ty: SemType = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 
     (ty.satisfies(c), typedExprs)
-}
-
-@targetName("checkFuncs")
-def check(funcs: List[Func], c: Constraint)(using TypeCheckerCtx[?]): List[TypedFunc] = {
-    ???
 }
 
 // This will get the most specific type out of 2 given
