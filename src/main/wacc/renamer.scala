@@ -29,7 +29,6 @@ object renamer {
             _funcs += _func
         }
         _funcs.toList
-    
 
     private def rename(func: Func): Q_Func = 
         val localScope: MutableSet[Q_Name] = MutableSet()
@@ -72,7 +71,7 @@ object renamer {
             if (localScope.exists(_.old_name == v)) {
                 throw ScopeException("Already declared in scope")
             }
-            /* need to evaluate r-value first so that we can't declare an ident as itself*/
+            /* need to evaluate r-value first so that we can't declare an ident as itself */
             val rvalue = rename(r, parScope ++ localScope)
             Q_Decl(t, genName(v), rvalue)
         
@@ -148,9 +147,9 @@ object renamer {
 
 
     private def rename(ident: String, scope: Set[Q_Name]): Q_Ident = 
-        if (!scope.exists(_.old_name == ident)) then{
+        if (!scope.exists(_.old_name == ident)) then 
             throw ScopeException(s"variable ${ident} not declared in scope")
-        }
+
         Q_Ident(updateName(ident, scope))
     
     private def genName(name: String): Q_Name = 

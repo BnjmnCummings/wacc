@@ -12,7 +12,7 @@ import wacc.ScopeException
 class rename_func_test extends AnyFlatSpec {
 
     /* control test */
-    "rename (func)" should "be able to rename programs with functions" in {
+    "rename-func" should "be able to rename programs with functions" in {
         val prog = Prog(
             List(
                 Func(
@@ -266,15 +266,71 @@ class rename_func_test extends AnyFlatSpec {
         a [ScopeException] should be thrownBy rename(prog)
     }
 
-    it should "fail variables shadowed by parameters" in {
+    it should "fail to access func variables from inside the program body" in {
         val prog = Prog(
             List(
                 Func(
                     BaseType.Int, 
                     "fun", 
+                    List(),
                     List(
-                        Param(BaseType.Int, "myVar")
-                    ),
+                        Decl(
+                            BaseType.Int, 
+                            Ident("myVar"), 
+                            IntLiteral(0)
+                        ),
+                        Return(IntLiteral(0))
+                    )
+                )
+            ),
+            List(
+                Asgn(
+                    Ident("myVar"), 
+                    IntLiteral(0)
+                )
+            )
+        )
+
+        a [ScopeException] should be thrownBy rename(prog)
+    }
+
+    it should "be able to have a parameter with the same name as a function" in {
+        val prog = Prog(
+            List(
+                Func(
+                    BaseType.Int, 
+                    "fun", 
+                    List(Param(BaseType.Int, "fun")),
+                    List(Return(IntLiteral(0)))
+                )
+            ),
+            List(Skip)
+        )
+
+        rename(prog) shouldBe Q_Prog(
+            List(
+                Q_Func(
+                    BaseType.Int, 
+                    Q_Name("fun", "fun/0"), 
+                    List(Q_Param(BaseType.Int, Q_Name("fun", "fun/1"))), 
+                    List(Q_Return(Q_IntLiteral(0))),              
+                    Set(Q_Name("fun", "fun/1"))                                      
+                )
+            ),
+            List(Q_Skip),
+            Set(
+                Q_Name("fun", "fun/0")
+            )
+        )
+    }
+
+    it should "be able to shadow parameters" in {
+        val prog = Prog(
+            List(
+                Func(
+                    BaseType.Int, 
+                    "fun", 
+                    List(Param(BaseType.Int, "myVar")),
                     List(
                         Decl(
                             BaseType.Int, 
@@ -288,6 +344,67 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        a [ScopeException] should be thrownBy rename(prog)
+        rename(prog) shouldBe Q_Prog(
+            List(
+            Q_Func(
+                BaseType.Int, 
+                Q_Name("fun", "fun/0"), 
+                List(Q_Param(BaseType.Int, Q_Name("myVar", "myVar/0"))), 
+                List(
+                Q_Decl(
+                    BaseType.Int, 
+                    Q_Name("myVar", "myVar/1"), 
+                    Q_IntLiteral(0)
+                ),
+                Q_Return(Q_IntLiteral(0))
+                ),              
+                Set(Q_Name("myVar", "myVar/0"), Q_Name("myVar", "myVar/1"))                                      
+            )
+            ),
+            List(Q_Skip),
+            Set(Q_Name("fun", "fun/0"))
+        )
+    }
+
+    it should "be able to shadow parameters with different types" in {
+        val prog = Prog(
+            List(
+                Func(
+                    BaseType.Int, 
+                    "fun", 
+                    List(Param(BaseType.String, "myVar")),
+                    List(
+                        Decl(
+                            BaseType.Int, 
+                            Ident("myVar"), 
+                            IntLiteral(0)
+                        ),
+                        Return(IntLiteral(0))
+                    )
+                )
+            ),
+            List(Skip)
+        )
+
+        rename(prog) shouldBe Q_Prog(
+            List(
+            Q_Func(
+                BaseType.Int, 
+                Q_Name("fun", "fun/0"), 
+                List(Q_Param(BaseType.String, Q_Name("myVar", "myVar/0"))), 
+                List(
+                Q_Decl(
+                    BaseType.Int, 
+                    Q_Name("myVar", "myVar/1"), 
+                    Q_IntLiteral(0)
+                ),
+                Q_Return(Q_IntLiteral(0))
+                ),              
+                Set(Q_Name("myVar", "myVar/0"), Q_Name("myVar", "myVar/1"))                                      
+            )
+            ),
+            List(Q_Skip),
+            Set(Q_Name("fun", "fun/0"))
+        )
     }
 }
