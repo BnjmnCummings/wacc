@@ -37,7 +37,7 @@ def check(stmt: Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
         val (_, typedR) = check(r, Constraint.Is(ty.getOrElse(?)))
         TypedStmt.Asgn(typedL, typedR)
     case Read(l: LValue) =>
-        // Only need to  verify the LValue is al LValue - no constraint needed?
+        // Only need to  verify the LValue is actually LValue - no constraint needed? Or create constraint for IsLValue?
         val (ty, typedL) = check(l, Constraint.Unconstrained)
         TypedStmt.Read(typedL)
     case Free(x: Expr) =>
@@ -165,7 +165,9 @@ def checkBooleanExpr(x: Expr, y: Expr, c: Constraint)
     (ty.satisfies(c), build(typedX, typedY))
 
 def check(l: LValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedLValue) = l match {
-    // FIND CASES FOR LVALUE
+    case Ident(v: String) => ???
+    case PairElem(index: PairIndex, v: LValue) => ???
+    case ArrayElem(v: String, indices: List[Expr]) => ???
 }
 
 def check(r: RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedRValue) = r match {
