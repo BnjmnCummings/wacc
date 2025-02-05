@@ -241,7 +241,8 @@ class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
 // This should allow for variables and functions to share names
 class TypeInfo(
     var varTys: Map[String, KnownType],
-    var funcTys: Map[String, KnownType, List[KnownType]] // Check with Aidan to see how this would work
+    var funcTys: Map[(String, KnownType), Map[String, KnownType]]
+    // This is a map from (Function Identifier, Return Type) -> parameter map [Param name -> Param type]
 )
 
 enum Error {
