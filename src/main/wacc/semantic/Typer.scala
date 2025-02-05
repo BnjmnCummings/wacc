@@ -61,6 +61,68 @@ def check(stmt: Stmt)(using TypeCheckerCtx[?]): TypedStmt = stmt match {
         TypedStmt.CodeBlock(typedBody)
 }
 
+def check(expr: Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedExpr) = expr match {
+    // The below only works on two ints
+    case Mul(x: Expr, y: Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Mul.apply)
+    case Div(x: Expr, y: Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Div.apply)
+    case Mod(x: Expr, y: Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Mod.apply)
+    case Add(x: Expr, y: Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Add.apply)
+    case Sub(x: Expr, y: Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Div.apply)
+
+    // The below work on two ints or two chars
+    case GreaterThan(x: Expr, y: Expr) => checkComparisonExpr(x, y, c)(TypedExpr.GreaterThan.apply)
+    case GreaterThanEq(x: Expr, y: Expr) => checkComparisonExpr(x, y, c)(TypedExpr.GreaterThanEq.apply)
+    case LessThan(x: Expr, y: Expr) => checkComparisonExpr(x, y, c)(TypedExpr.LessThan.apply)
+    case LessThanEq(x: Expr, y: Expr) => checkComparisonExpr(x, y, c)(TypedExpr.LessThanEq.apply)
+
+    // The below work on two of the same type
+    case Eq(x: Expr, y: Expr) =>
+        val (xTy, typedX) = check(x, Constraint.Is(?))
+        val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
+        val ty = mostSpecific(xTy, yTy)
+        (ty.satisfies(c), TypedExpr.Eq(typedX, typedY))
+    case NotEq(x: Expr, y: Expr) => 
+        val (xTy, typedX) = check(x, Constraint.Is(?))
+        val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
+        val ty = mostSpecific(xTy, yTy)
+        (ty.satisfies(c), TypedExpr.NotEq(typedX, typedY))
+
+    // The below only work on two bools
+    case And(x: Expr, y: Expr) => checkBooleanExpr(x, y, c)(TypedExpr.And.apply)
+    case Or(x: Expr, y: Expr) => checkBooleanExpr(x, y, c)(TypedExpr.Or.apply)
+
+    // The below are unary
+    // Int:
+    case Neg(x: Expr) =>
+        val (xTy, typedX) = check(x, Constraint.IsNumeric)
+        (xTy.getOrElse(?).satisfies(c), TypedExpr.Neg(typedX))
+    case Chr(x: Expr) =>
+        val (xTy, typedX) = check(x, Constraint.IsNumeric)
+        (xTy.getOrElse(?).satisfies(c), TypedExpr.Chr(typedX))
+    // Bool:
+    case Not(x: Expr) =>
+        val (xTy, typedX) = check(x, Constraint.IsBoolean)
+        (xTy.getOrElse(?).satisfies(c), TypedExpr.Not(typedX))
+    // Array of generic type:
+    case Len(x: Expr) =>
+        val (xTy, typedX) = check(x, Constraint.IsArray)
+        (xTy.getOrElse(?).satisfies(c), TypedExpr.Len(typedX))
+    // Char:
+    case Ord(x: Expr) =>
+        val (xTy, typedX) = check(x, Constraint.IsCharacter)
+        (xTy.getOrElse(?).satisfies(c), TypedExpr.Ord(typedX))
+
+    // TODO: ADD LITERALS
+    /*
+    case class IntLiteral(v: BigInt) extends Expr
+    case class BoolLiteral(v: Boolean) extends Expr
+    case class CharLiteral(v: Char) extends Expr
+    case class StringLiteral(v: String) extends Expr
+    case class Ident(v: String) extends Expr, LValue
+    case class ArrayElem(v: String, indicies: List[Expr]) extends Expr, LValue
+    */
+}
+
 class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
     def errors: C = errs.result()
 
