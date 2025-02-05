@@ -266,6 +266,12 @@ object parser {
                         case (Some(_), Some(_)) => Some(sts)
                         case _ => None
                 }
+                // mixingTypesInArrays.wacc ends a function with a returning Codeblock and this is apparently valid?
+                case CodeBlock(sts2) => {
+                    returningBody(Some(sts2)) match
+                        case Some(_) => Some(sts)
+                        case None => None
+                }
                 // if it ends with anything else its not a returning body
                 case _ => None
         }
