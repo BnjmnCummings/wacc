@@ -197,7 +197,7 @@ def checkReturn(t: Type, stmt: TypedStmt)(using TypeCheckerCtx[?]): Option[SemTy
 
 // Func(t: Type, v: String, args: List[Param], body: List[Stmt])
 def check(func: Func, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedFunc) = {
-    val typedParams: List[TypedParam] = func.args.map(p => check(p, c)._2)
+    val typedParams: List[TypedParam] = func.args.map(check)
     
     val typedBody: List[TypedStmt] = func.body.map(check)
 
@@ -208,8 +208,14 @@ def check(func: Func, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemT
     (checked, TypedFunc(checked.getOrElse(?), TypedExpr.Ident(func.v), typedParams, typedBody))
 }
 
-def check(param: Param, c: Constraint)(using TypeCheckerCtx[?]): (Option[Type], TypedParam) = {
-    ???
+def check(param: Param)(using TypeCheckerCtx[?]): TypedParam = param.t match {
+    case BaseType.Int => TypedParam(KnownType.Int, TypedExpr.Ident(param.v))
+    case BaseType.Bool => TypedParam(KnownType.Boolean, TypedExpr.Ident(param.v))
+    case BaseType.Char => TypedParam(KnownType.Char, TypedExpr.Ident(param.v))
+    case BaseType.String => TypedParam(KnownType.String, TypedExpr.Ident(param.v))
+    case ArrayType(_) => TypedParam(KnownType.Array(?), TypedExpr.Ident(param.v))
+    case PairType(_, _) => TypedParam(KnownType.Pair(?, ?), TypedExpr.Ident(param.v)) // check these types?
+    case ErasedPairType => TypedParam(KnownType.ErasedPairType, TypedExpr.Ident(param.v))
 }
 
 @targetName("checkStmts")

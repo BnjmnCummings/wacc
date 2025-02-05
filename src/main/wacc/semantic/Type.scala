@@ -12,6 +12,7 @@ enum KnownType extends SemType {
     case String
     case Array(ty: SemType)
     case Pair(ty1: SemType, ty2: SemType)
+    case ErasedPairType
     case Ident
     // Note an erased pair can be created with ty1/ty2 = pair(?, ?)
 }
