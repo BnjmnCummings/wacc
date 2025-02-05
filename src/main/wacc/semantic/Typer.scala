@@ -33,3 +33,28 @@ class TypeInfo(
     var varTys: Map[String, KnownType],
     var funcTys: Map[String, KnownType, List[KnownType]] // Check with Aidan to see how this would work
 )
+
+enum Error {
+    case TypeMismatch(actual: SemType, expected: SemType)
+    case NonExitableType(actual: SemType)
+    case NonFreeableType(actual: SemType)
+    case NonNumericType(actual: SemType)
+    case NonCharacterType(actual: SemType)
+    case NonBooleanType(actual: SemType)
+    case NonStringType(actual: SemType)
+}
+
+enum Constraint {
+    case Is(refTy: SemType)
+    case IsNumeric
+    case IsCharacter
+    case IsBoolean
+    case IsExitable
+    case IsFreeable
+    case IsString
+}
+
+object Constraint {
+    val Unconstrained = Is(?) // Always passes
+    val IsArray = Is(KnownType.Array(?))
+}
