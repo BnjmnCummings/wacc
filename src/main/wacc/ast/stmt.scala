@@ -18,10 +18,12 @@ case class Skip(val pos: (Int, Int)) extends Stmt
 object Decl extends ParserBridgePos3[Type, Ident, RValue, Decl] {
     def apply(t: Type, v: Ident, r: RValue): Decl = Decl(t, v, r)((0, 0))
     override def labels = List("declaration")
+    override def reason = Some("illegal declaration")
 }
 object Asgn extends ParserBridgePos2[LValue, RValue, Asgn] {
     def apply(l: LValue, r: RValue): Asgn = Asgn(l, r)((0, 0))
     override def labels = List("assignment")
+    override def reason = Some("illegal assignment")
 }
 object Read extends ParserBridgePos1[LValue, Read] {
     def apply(l: LValue): Read = Read(l)((0, 0))
