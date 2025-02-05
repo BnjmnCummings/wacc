@@ -39,7 +39,7 @@ object TypedExpr {
     case class Ident(v: String) extends TypedExpr, TypedLValue {
         def ty = KnownType.String
     }
-    case class ArrayElem(v: String, indicies: List[Expr]) extends TypedExpr, TypedLValue {
+    case class ArrayElem(v: Ident, indicies: List[TypedExpr]) extends TypedExpr, TypedLValue {
         def ty = KnownType.Array
     }
 }
