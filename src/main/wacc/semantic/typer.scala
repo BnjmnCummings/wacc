@@ -4,6 +4,7 @@ import wacc.*
 import wacc.ast.* 
 import collection.mutable
 import scala.annotation.targetName
+import wacc.KnownType.Pair
 
 case class TypedProg(funcs: List[TypedFunc], body: List[TypedStmt])
 case class TypedFunc(t: SemType, id: TypedExpr.Ident, args: List[TypedParam], body: List[TypedStmt])
@@ -135,7 +136,7 @@ def check(expr: Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType],
         val ty = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 
         (ty.satisfies(c), TypedExpr.ArrayElem(TypedExpr.Ident(v), typedExprs))
-    case PairNullLiteral => TypedExpr.PairNullLiteral
+    case PairNullLiteral => (KnownType.Pair(?, ?).satisfies(c), TPairNullLiteral)
     case PairElem(_, _) => ???
 }
 

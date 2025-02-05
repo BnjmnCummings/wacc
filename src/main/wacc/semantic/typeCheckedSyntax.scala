@@ -45,6 +45,7 @@ object TypedExpr {
         def ty = KnownType.Array
     }
 }
+object TPairNullLiteral extends TypedExpr
 
 sealed trait TypedLValue
 sealed trait TypedRValue
