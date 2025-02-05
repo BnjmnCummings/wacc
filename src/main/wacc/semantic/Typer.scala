@@ -173,7 +173,14 @@ def check(l: LValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], 
 def check(r: RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedRValue) = r match {
     case FuncCall(v: String, args: List[Expr]) => ???
         // Check if RValue needs anything special! Own constraint?
-    case ArrayLiteral(xs: List[Expr]) => ???
+    case ArrayLiteral(xs: List[Expr]) => 
+        val checkedExprs: List[(Option[SemType], TypedExpr)] = xs.map(x => check(x, Constraint.Unconstrained))
+        val semTypes = checkedExprs.map(_._1)
+        val typedExprs = checkedExprs.map(_._2)
+
+        val ty: SemType = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
+
+        (KnownType.Array(ty).satisfies(c), TypedRValue.ArrayLiteral(typedExprs, ty))
     case PairElem(index: PairIndex, v: LValue) => ???
     case NewPair(x: Expr, y: Expr) =>
         val (xTy, typedX) = check(x, Constraint.Unconstrained)
