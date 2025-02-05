@@ -41,10 +41,10 @@ object TypedExpr {
     case class StringLiteral(v: List[CharLiteral]) extends TypedExpr {
         def ty = BaseType.String
     }
-    case class Ident(v: String) extends TypedExpr, LValue {
+    case class Ident(v: String) extends TypedExpr, TypedLValue {
         def ty = BaseType.String
     }
-    case class ArrayElem(v: String, indicies: List[Expr]) extends TypedExpr, LValue {
+    case class ArrayElem(v: String, indicies: List[Expr]) extends TypedExpr, TypedLValue {
         def ty = ???
     }
     // needs pair-liter ??
