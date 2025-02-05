@@ -52,12 +52,20 @@ case class VanillaError(
             }
         }
         sb ++= s"${codeIndent}expected "
-        sb ++= expectedStrs.mkString(", ")
+        sb ++= formatWordSet(expectedStrs)
         sb += '\n'
         sb ++= reasons.mkString("\n")
         sb += '\n'
         sb ++= line
         sb.toString()
+    }
+
+    private def formatWordSet(words: Set[String]): String = {
+        val wordList: List[String] = words.toList.sorted 
+        wordList match 
+            case Nil => ""
+            case List(w: String) => w
+            case _ => words.init.mkString(", ") + " or " + words.last
     }
 }
 

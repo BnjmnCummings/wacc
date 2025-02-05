@@ -95,21 +95,26 @@ object PairNullLiteral extends Expr
 
 object IntLiteral extends ParserBridgePos1[BigInt, IntLiteral] {
   def apply(v: BigInt): IntLiteral = IntLiteral(v)((0, 0))
+  override def labels = List("integer")
 }
 object BoolLiteral extends ParserBridgePos1[Boolean, BoolLiteral] {
   def apply(v: Boolean): BoolLiteral = BoolLiteral(v)((0, 0))
+  override def labels = List("boolean")
 }
 object CharLiteral extends ParserBridgePos1[Char, CharLiteral] {
   def apply(v: Char): CharLiteral = CharLiteral(v)((0, 0))
+  override def labels = List("character")
 }
 object StringLiteral extends ParserBridgePos1[String, StringLiteral] {
   def apply(v: String): StringLiteral = StringLiteral(v)((0, 0))
+  override def labels = List("string")
 }
 object Ident extends ParserBridgePos1[String, Ident] {
   def apply(v: String): Ident = Ident(v)((0, 0))
 }
 object ArrayElem extends ParserBridgePos2[String, List[Expr], ArrayElem] {
   def apply(v: String, indicies: List[Expr]): ArrayElem = ArrayElem(v, indicies)((0, 0))
+  override def labels = List("array element")
 }
 
 // RValues
@@ -125,13 +130,17 @@ enum PairIndex {
 
 object FuncCall extends ParserBridgePos2[String, List[Expr], FuncCall] {
   def apply(v: String, args: List[Expr]): FuncCall = FuncCall(v, args)((0, 0))
+  override def labels = List("function call")
 }
 object ArrayLiteral extends ParserBridgePos1[List[Expr], ArrayLiteral] {
   def apply(xs: List[Expr]): ArrayLiteral = ArrayLiteral(xs)((0, 0))
+  override def labels = List("array")
 }
 object PairElem extends ParserBridgePos2[PairIndex, LValue, PairElem] {
   def apply(index: PairIndex, v: LValue): PairElem = PairElem(index, v)((0, 0))
+  override def labels = List("pair element")
 }
 object NewPair extends ParserBridgePos2[Expr, Expr, NewPair] {
   def apply(x1: Expr, x2: Expr): NewPair = NewPair(x1, x2)((0, 0))
+  override def labels = List("pair constructor")
 }
