@@ -81,16 +81,13 @@ object renamer {
         case Exit(x) => Q_Exit(rename(x, parScope ++ localScope))
         case Print(x) => Q_Print(rename(x, parScope ++ localScope))
         case Println(x) => Q_Println(rename(x, parScope ++ localScope))
-        // heyo
         case If(cond, body, el) => 
             val (_body, scopedBody) = rename(body, parScope ++ localScope, Set())
             val (_el, scopedEl) = rename(el, parScope ++ localScope, Set())
             Q_If(rename(cond, parScope ++ localScope), _body, scopedBody, _el, scopedEl)
-        // heyo
         case While(cond, body) => 
             val (_body, scoped) = rename(body, parScope ++ localScope, Set())
             Q_While(rename(cond, parScope ++ localScope), _body, scoped)
-        // heyo
         case CodeBlock(body) =>
             val (_body, scoped) = rename(body, parScope ++ localScope, Set())
             Q_CodeBlock(_body, scoped)
