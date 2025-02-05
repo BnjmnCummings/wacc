@@ -1,9 +1,9 @@
 package wacc
 
 import parsley.errors.ErrorBuilder
-import parsley.errors.Token
+// import parsley.errors.Token
 
-class MyErrorBuilder extends ErrorBuilder[Err] {
+abstract class MyErrorBuilder extends ErrorBuilder[Err] {
     override def build(
         pos: (Int, Int), 
         source: Option[String],
@@ -55,14 +55,15 @@ class MyErrorBuilder extends ErrorBuilder[Err] {
 
     // The implementation of this is usually provided by a mixed-in
     // token extractor, discussed in `tokenextractors`
+    /*
     def unexpectedToken(
         cs: Iterable[Char],
         amountOfInputParserWanted: Int,
         lexicalError: Boolean
-      ): Token = ???
+    ): Token = ???
+    */
 
     type Position = (Int, Int)
-    // filename, type of error
     type Source = Option[String]
     type ErrorInfoLines = ErrorLines
     type Item = ErrorItem
