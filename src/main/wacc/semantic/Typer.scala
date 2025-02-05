@@ -25,10 +25,10 @@ def typeCheck(prog: Prog, tyInfo: TypeInfo): Either[List[Error], TypedProg] = {
     }
 }
 
-def check(stmt: Stmt)(using TypeCheckerCtx[?]): TypedStmt = stmt match {
+def check(stmt: Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
     case Decl(t: Type, id: Ident, r: RValue) =>
         // This will check the type of r compared to given type t
-        val (_, typedR) = check(r, Constraint.Is(t)) // GIVEN A SYNTAX TYPE, PERHAPS USE THE CTX.var SHIT FOR ITS TYPE RATHER THAN T??
+        val (_, typedR) = check(r, Constraint.Is(ctx.typeOf(id)))
         TypedStmt.Decl(t, id, typedR)
     case Asgn(l: LValue, r: RValue) =>
         // Get the type of left value
