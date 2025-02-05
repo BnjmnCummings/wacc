@@ -65,7 +65,7 @@ def check(stmt: Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
         val typedBody = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
         TypedStmt.While(typedCond, typedBody)
     case CodeBlock(body: List[Stmt]) =>
-        val (bodyTy, typedBody) = check(bodyTy, Constraint.Unconstrained) // Don't see why this should be anything other than Unconstrained
+        val typedBody = check(body, Constraint.Unconstrained) // Don't see why this should be anything other than Unconstrained
         TypedStmt.CodeBlock(typedBody)
 }
 
