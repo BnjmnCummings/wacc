@@ -64,6 +64,8 @@ object lexer {
                 "chr" -> Label("prefix operator"),
                 "(" -> Label("bracketed expression"),
                 ")" -> LabelAndReason("unclosed brackets", "closing bracket"),
+                // Not working currently
+                ";" -> LabelAndReason("semicolons should only connect successive statements", "semicolon")
             )
         }
 
