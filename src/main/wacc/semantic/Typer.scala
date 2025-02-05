@@ -8,13 +8,20 @@ case class TypedProg(funcs: List[TypedFunc], body: List[TypedStmt])
 case class TypedFunc(t: Type, id: Ident, args: List[TypedParam], body: List[TypedStmt])
 case class TypedParam(t: Type, id: Ident)
 
-def typeCheck(prog@(funcs: List[Func], body: List): Prog, tyInfo: TypeInfo): Either[List[Error], TypedProg] = { // Note this List is non-empty. Import won't work
+def typeCheck(prog: Prog, tyInfo: TypeInfo): Either[List[Error], TypedProg] = {
+    // Note this List[Error] is non-empty. NonEmptyList import won't work
+    // We will just return Right if there is no error hence avoids returning Left with an empty list!
     given ctx: TypeCheckerCtx[List[Error]] = TypeCheckerCtx(tyInfo, List.newBuilder)
-    val typedProg = prog.map(check) // prog is not a list of stmt?? CHECK THIS!
+
+    val progFuncs: List[Func] = prog.funcs
+    val progStmts: List[Stmt] = prog.body
+
+    val typedProgFuncs: List[TypedFunc] = ???
+    val typedProgStmts: List[TypedStmt] = progStmts.map(check)
 
     ctx.errors.match {
         case err :: errs => Left(err :: errs)
-        case Nil         => Right(typedProg)
+        case Nil         => Right(TypedProg(typedProgFuncs, typedProgStmts))
     }
 }
 
