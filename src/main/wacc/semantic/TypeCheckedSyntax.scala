@@ -70,3 +70,10 @@ object TypedStmt {
     case class While(cond: TypedExpr, body: List[TypedStmt]) extends TypedStmt
     case class CodeBlock(body: List[TypedStmt]) extends TypedStmt
 }
+
+object TypedRValue {
+    case class FuncCall(v: String, args: List[TypedExpr]) extends TypedRValue
+    case class ArrayLiteral(xs: List[TypedExpr]) extends TypedRValue
+    case class PairElem(index: PairIndex, v: TypedLValue) extends TypedExpr, TypedLValue
+    case class NewPair(x1: TypedExpr, x2: TypedExpr) extends TypedRValue
+}
