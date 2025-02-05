@@ -17,6 +17,50 @@ def typeCheck(prog@(funcs: List[Func], body: List): Prog, tyInfo: TypeInfo): Eit
     }
 }
 
+def check(stmt: Stmt)(using TypeCheckerCtx[?]): TypedStmt = stmt match {
+    case Decl(t: Type, id: Ident, r: RValue) =>
+        // This will check the type of r compared to given type t
+        val (_, typedR) = check(r, Constraint.Is(t)) // GIVEN A SYNTAX TYPE, PERHAPS USE THE CTX.var SHIT FOR ITS TYPE RATHER THAN T??
+        TypedStmt.Decl(t, id, typedR)
+    case Asgn(l: LValue, r: RValue) =>
+        // Get the type of left value
+        val (ty, typedL) = check(l, Constraint.Unconstrained)
+        // We need the type of the right value to match this
+        val (_, typedR) = check(r, Constraint.Is(ty.getOrElse(?)))
+        TypedStmt.Asgn(typedL, typedR)
+    case Read(l: LValue) =>
+        // Only need to  verify the LValue is al LValue - no constraint needed?
+        val (ty, typedL) = check(l, Constraint.Unconstrained)
+        TypedStmt.Read(typedL)
+    case Free(x: Expr) =>
+        val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for free values!
+        TypedStmt.Free(typedX)
+    case Return(x: Expr) =>
+        val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for return values!
+        TypedStmt.Return(typedX)
+    case Exit(x: Expr) =>
+        val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for exit values!
+        TypedStmt.Return(typedX)
+    case Print(x: Expr) =>
+        val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for print values!
+        TypedStmt.Return(typedX)
+    case Println(x: Expr) =>
+        val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for println values!
+        TypedStmt.Return(typedX)
+    case If(cond: Expr, body: List[Stmt], el: List[Stmt]) =>
+        val (condTy, typedCond) = check(cond, Constraint.Unconstrained) // Create a constraint for this being a boolean!
+        val (bodyTy, typedBody) = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
+        val (elTy, typedEl) = check(el, Constraint.Unconstrained) // As above
+        TypedStmt.If(typedCond, typedBody, typedEl)
+    case While(cond: Expr, body: List[Stmt]) =>
+        val (condTy, typedCond) = check(cond, Constraint.Unconstrained) // Create a constraint for this being a boolean!
+        val (bodyTy, typedBody) = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
+        TypedStmt.While(typedCond, typedBody)
+    case CodeBlock(body: List[Stmt]) =>
+        val (bodyTy, typedBody) = check(bodyTy, Constraint.Unconstrained) // Don't see why this should be anything other than Unconstrained
+        TypedStmt.CodeBlock(typedBody)
+}
+
 class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
     def errors: C = errs.result()
 
