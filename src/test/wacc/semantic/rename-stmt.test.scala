@@ -4,7 +4,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import wacc.ast.*
 import wacc.q_ast.*
 
-class rename_stms_test extends AnyFunSuite {
+class rename_stmt_test extends AnyFunSuite {
 
 
 }

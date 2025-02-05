@@ -22,6 +22,9 @@ syntax:
 
 # Tests which check the AST semantic checking step of the compiler
 semantic:
+  - rename_expr
+  - rename_func
+  - rename_stmt
 
 # Tests which check the AST -> Machine Code step of the compiler
 generation:
