@@ -156,6 +156,18 @@ def checkBooleanExpr(x: Expr, y: Expr, c: Constraint)
     val ty = mostSpecific(xTy, yTy)
     (ty.satisfies(c), build(typedX, typedY))
 
+def check(r: RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedRValue) = r match {
+    case FuncCall(v: String, args: List[Expr]) => ???
+        // Check if RValue needs anything special! Own constraint?
+    case ArrayLiteral(xs: List[Expr]) => ???
+    case PairElem(index: PairIndex, v: LValue) => ???
+    case NewPair(x: Expr, y: Expr) =>
+        val (xTy, typedX) = check(x, Constraint.Unconstrained)
+        val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
+        val ty = mostSpecific(xTy, yTy)
+        (ty.satisfies(c), TypedRValue.NewPair(typedX, typedY))
+}
+
 class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
     def errors: C = errs.result()
 
