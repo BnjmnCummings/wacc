@@ -12,15 +12,19 @@ import lexer.implicits.implicitSymbol
 
 import java.io.File
 import scala.util.Success
+import scala.util.Failure
+import parsley.errors.tokenextractors.TillNextWhitespace
 
 object parser {
-    def parseF(input: File): Result[String, Prog] = parser.parseFile(input) match
+    def parseF(input: File): Result[Err, Prog] = parser.parseFile(input) match
         case Success(res) => res
-        case _ => 
-            printf(s"can't find $input file to parseF")
-            sys.exit(-1)
+        case Failure(e) => throw(e)
 
     def parse(input: String): Result[String, Prog] = parser.parse(input)
+
+    private implicit val errBuilder: ErrorBuilder[Err] = new MyErrorBuilder with TillNextWhitespace {
+        def trimToParserDemand: Boolean = false
+    }
 
     private val parser: Parsley[Prog] = fully("begin" ~> Prog(many(func), stmts) <~ "end")
 
