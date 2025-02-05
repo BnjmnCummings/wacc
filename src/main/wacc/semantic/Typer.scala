@@ -184,6 +184,11 @@ def check(r: RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], 
     case e: Expr => check(e, c)
 }
 
+// Func(t: Type, v: String, args: List[Param], body: List[Stmt])
+def check(func: Func, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedFunc) = {
+    ???
+}
+
 @targetName("checkStmts")
 def check(stmts: List[Stmt], c: Constraint)(using TypeCheckerCtx[?]): List[TypedStmt] = stmts.map(check(_))
 
@@ -196,6 +201,11 @@ def check(listArgs: List[Expr], c: Constraint)(using TypeCheckerCtx[?]): (Option
     val ty: SemType = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 
     (ty.satisfies(c), typedExprs)
+}
+
+@targetName("checkFuncs")
+def check(funcs: List[Func], c: Constraint)(using TypeCheckerCtx[?]): List[TypedFunc] = {
+    ???
 }
 
 // This will get the most specific type out of 2 given
