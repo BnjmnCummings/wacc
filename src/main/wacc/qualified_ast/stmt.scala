@@ -25,8 +25,8 @@ object Q_Return extends generic.ParserBridge1[Q_Expr, Q_Return]
 object Q_Exit extends generic.ParserBridge1[Q_Expr, Q_Exit]
 object Q_Print extends generic.ParserBridge1[Q_Expr, Q_Print]
 object Q_Println extends generic.ParserBridge1[Q_Expr, Q_Println]
-object Q_If extends generic.ParserBridge5[Q_Expr, List[Q_Stmt], List[Q_Name], List[Q_Stmt], List[Q_Name], Q_If]
-object Q_While extends generic.ParserBridge3[Q_Expr, List[Q_Stmt], List[Q_Name], Q_While]
-object Q_CodeBlock extends generic.ParserBridge2[List[Q_Stmt], List[Q_Name], Q_CodeBlock]
+object Q_If extends generic.ParserBridge5[Q_Expr, List[Q_Stmt], Set[Q_Name], List[Q_Stmt], Set[Q_Name], Q_If]
+object Q_While extends generic.ParserBridge3[Q_Expr, List[Q_Stmt], Set[Q_Name], Q_While]
+object Q_CodeBlock extends generic.ParserBridge2[List[Q_Stmt], Set[Q_Name], Q_CodeBlock]
 
 object Q_Skip extends Q_Stmt

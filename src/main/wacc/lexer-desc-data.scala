@@ -24,3 +24,5 @@ val charEnd = '\''
 val escChar = '\\'
 
 val sEnds = Set(("\"", "\""))
+
+inline def asciiRange(c: Char): Boolean = c >= ' ' && c <= '~'
