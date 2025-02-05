@@ -191,9 +191,17 @@ def check(listArgs: List[Expr], c: Constraint)(using TypeCheckerCtx[?]): (Option
     val semTypes: List[Option[SemType]] = mappedArgs.map(_._1) // List[Option[SemType]]
     val typedExprs: List[TypedExpr] = mappedArgs.map(_._2) // List[TypedExpr]
 
-    val ty: SemType = semTypes.foldLeft(Some(?))(mostSpecific) // TODO: FIX THIS!
+    val ty: SemType = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 
     (ty.satisfies(c), typedExprs)
+}
+
+// This will get the most specific type out of 2 given
+// This means if we know something is an Int, we can type check using that rather than ?
+def mostSpecific(ty1: Option[SemType], ty2: Option[SemType]): SemType = (ty1, ty2) match {
+    case (Some(?), Some(t)) => t
+    case (Some(t), _)       => t
+    case (None, t)          => t.getOrElse(?)
 }
 
 extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) match
@@ -230,13 +238,7 @@ class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
     }
 }
 
-// This will get the most specific type out of 2 given
-// This means if we know something is an Int, we can type check using that rather than ?
-def mostSpecific(ty1: Option[SemType], ty2: Option[SemType]): SemType = (ty1, ty2) match {
-    case (Some(?), Some(t)) => t
-    case (Some(t), _)       => t
-    case (None, t)          => t.getOrElse(?)
-}
+
 
 // The typer will take this in
 // It maps variable names & function names to their types
