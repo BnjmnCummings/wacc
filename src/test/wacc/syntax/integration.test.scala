@@ -11,7 +11,7 @@ import collection.mutable.ListBuffer
 
 import java.io.File
 
-class integration_test extends AnyFlatSpec {
+class syntax_integration_test extends AnyFlatSpec {
     val validPaths: List[String] = getValidPaths()
 
     val invalidPaths: List[String] = getInvalidPaths()
@@ -21,8 +21,8 @@ class integration_test extends AnyFlatSpec {
         val successes: ListBuffer[String] = new ListBuffer()
         validPaths.foreach {
             p => parser.parseF(File(p)) match 
-                case Success(_) => successes.addOne(p) 
-                case _ => failures.addOne(p)
+                case Success(_) => successes += p
+                case _ => failures += p
         }
         val failList: List[String] = failures.toList
         val successList: List[String] = successes.toList
@@ -31,7 +31,7 @@ class integration_test extends AnyFlatSpec {
         if (failList.length != 0) {
             fail(
                 "some of the paths failed (they are valid and should succeed):\n\n" 
-                + failList.foldRight("")((s1, s2) => s1 + "\n" + s2)
+                + failList.map(s => s.split("valid/").last).mkString("\n")
             )
         }
     }
@@ -41,18 +41,17 @@ class integration_test extends AnyFlatSpec {
         val failures: ListBuffer[String] = new ListBuffer()
         invalidPaths.foreach {
             p => parser.parseF(File(p)) match 
-                case Failure(_) => failures.addOne(p)
-                case _ => successes.addOne(p)
+                case Failure(_) => failures += p
+                case _ => successes += p
         }
         val successList: List[String] = successes.toList
         val failList: List[String] = failures.toList
         info("correctly failing tests:\n")
         failList.map(s => s.split("syntaxErr/").last).foreach(info(_))
         if (successList.length != 0) {
-            val successListMapped = successList.map(s => s.split("syntaxErr/").last)
             fail(
                 "some of the paths succeeded (they are invalid and should fail):\n\n" 
-                + successListMapped.foldRight("")((s1, s2) => s1 + "\n" + s2)
+                + successList.map(s => s.split("syntaxErr/").last).mkString("\n")
             )
         }
     }
