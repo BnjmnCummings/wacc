@@ -1,9 +1,7 @@
 package wacc.semantic
 import wacc.syntax.*
 
-sealed abstract class TypedExpr extends TypedRValue {
-    def ty: Type
-}
+sealed abstract class TypedExpr extends TypedRValue
 
 object TypedExpr {
     case class Mul(x: TypedExpr, y: TypedExpr) extends TypedExpr
@@ -27,25 +25,25 @@ object TypedExpr {
     case class Chr(x: TypedExpr) extends TypedExpr
 
     case class IntLiteral(v: BigInt) extends TypedExpr {
-        def ty = BaseType.Int
+        def ty = KnownType.Int
     }
     case class BoolLiteral(v: Boolean) extends TypedExpr {
-        def ty = BaseType.Bool
+        def ty = KnownType.Boolean
     }
     case class EscapedCharLiteral(v: Char) extends TypedExpr {
-        def ty = BaseType.Char // check this??
+        def ty = KnownType.Char // check this??
     }
     case class StandardCharLiteral(v: Char) extends TypedExpr {
-        def ty = BaseType.Char
+        def ty = KnownType.Char
     }
     case class StringLiteral(v: List[CharLiteral]) extends TypedExpr {
-        def ty = BaseType.String
+        def ty = KnownType.String
     }
     case class Ident(v: String) extends TypedExpr, TypedLValue {
-        def ty = BaseType.String
+        def ty = KnownType.String
     }
     case class ArrayElem(v: String, indicies: List[Expr]) extends TypedExpr, TypedLValue {
-        def ty = ???
+        def ty = ??? // something like KnownType.Array(TypedExpr.ty)?
     }
     // needs pair-liter ??
 }
@@ -53,12 +51,10 @@ object TypedExpr {
 sealed trait TypedLValue
 sealed trait TypedRValue
 
-sealed abstract class TypedStmt {
-    def ty: SemType
-}
+sealed abstract class TypedStmt
 
 object TypedStmt {
-    case class Decl(t: Type, v: String, r: TypedRValue) extends TypedStmt
+    case class Decl(t: Type, v: TypedExpr.Ident, r: TypedRValue) extends TypedStmt
     case class Asgn(l: TypedLValue, r: TypedRValue) extends TypedStmt
     case class Read(l: TypedLValue) extends TypedStmt
     case class Free(x: TypedExpr) extends TypedStmt
