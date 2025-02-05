@@ -35,8 +35,7 @@ object renamer {
         val _v: Q_Name = genName(func.v)
         val _args = func.args.map(rename)
             
-        localScope ++= _args.map(_.v)
-        val (_body, scoped) = rename(func.body, Set(), localScope.toSet)
+        val (_body, scoped) = rename(func.body, _args.map(_.v).toSet, localScope.toSet)
 
         Q_Func(func.t, _v, _args, _body, scoped)
     
