@@ -185,14 +185,14 @@ def check(r: RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], 
 }
 
 def checkReturn(t: Type, stmt: TypedStmt)(using TypeCheckerCtx[?]): Option[SemType] = (stmt, t) match {
-    case (Return(x: Expr), BaseType.Int) => (check(x, Constraint.Is(KnownType.Int)))._1
-    case (Return(x: Expr), BaseType.Bool) => (check(x, Constraint.Is(KnownType.Boolean)))._1
-    case (Return(x: Expr), BaseType.Char) => (check(x, Constraint.Is(KnownType.Char)))._1
-    case (Return(x: Expr), BaseType.String) => (check(x, Constraint.Is(KnownType.String)))._1
-    case (Return(x: Expr), ArrayType(_)) => (check(x, Constraint.IsArray))._1
-    case (Return(x: Expr), PairType(_, _)) => (check(x, Constraint.IsPair))._1
-    case (If(cond: Expr, body: List[Stmt], el: List[Stmt]), t) => 
-        Some(mostSpecific(checkReturn(t, body.map(check).last), checkReturn(t, el.map(check).last)))
+    case (TypedStmt.Return(x: Expr), BaseType.Int) => (check(x, Constraint.Is(KnownType.Int)))._1
+    case (TypedStmt.Return(x: Expr), BaseType.Bool) => (check(x, Constraint.Is(KnownType.Boolean)))._1
+    case (TypedStmt.Return(x: Expr), BaseType.Char) => (check(x, Constraint.Is(KnownType.Char)))._1
+    case (TypedStmt.Return(x: Expr), BaseType.String) => (check(x, Constraint.Is(KnownType.String)))._1
+    case (TypedStmt.Return(x: Expr), ArrayType(_)) => (check(x, Constraint.IsArray))._1
+    case (TypedStmt.Return(x: Expr), PairType(_, _)) => (check(x, Constraint.IsPair))._1
+    case (TypedStmt.If(cond: Expr, body: List[TypedStmt], el: List[Stmt]), t) => 
+        Some(mostSpecific(checkReturn(t, body.last), checkReturn(t, el.last)))
 }
 
 // Func(t: Type, v: String, args: List[Param], body: List[Stmt])
