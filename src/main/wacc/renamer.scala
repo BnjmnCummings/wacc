@@ -53,7 +53,7 @@ object renamer {
             _stmts += _stmt
             _stmt match {
                 case Q_Decl(_, v, _) => {
-                    if localScope.exists(_.old_name == v.old_name) then
+                    if localScope.exists(_.name == v.name) then
                         throw ScopeException("Already declared in scope")
                     else
                         _localScope += v
@@ -67,7 +67,7 @@ object renamer {
     
     private def rename(stmt: Stmt, parScope: Set[Q_Name], localScope: Set[Q_Name]): Q_Stmt = stmt match
         case Decl(t, Ident(v), r) => 
-            if (localScope.exists(_.old_name == v)) {
+            if (localScope.exists(_.name == v)) {
                 throw ScopeException("Already declared in scope")
             }
             /* need to evaluate r-value first so that we can't declare an ident as itself */
@@ -97,7 +97,7 @@ object renamer {
         /* if the identity for an l-value doesn't yet exist, complain. */
         case Ident(v) => rename(v, scope)
         case ArrayElem(v, indicies) => {
-            if (!scope.exists(_.old_name == v)) then{
+            if (!scope.exists(_.name == v)) then{
                 throw ScopeException(s"variable $v not declared in scope")
             }
             Q_ArrayElem(updateName(v, scope), indicies.map(rename(_, scope)))
@@ -143,7 +143,7 @@ object renamer {
 
 
     private def rename(ident: String, scope: Set[Q_Name]): Q_Ident = 
-        if (!scope.exists(_.old_name == ident)) then 
+        if (!scope.exists(_.name == ident)) then 
             throw ScopeException(s"variable ${ident} not declared in scope")
 
         Q_Ident(updateName(ident, scope))
@@ -151,13 +151,13 @@ object renamer {
     private def genName(name: String): Q_Name = 
         val count = name_gen_table.getOrElse(name, 0)
         name_gen_table(name) = count + 1
-        Q_Name(name, s"${name}/$count")
+        Q_Name(name, count)
 
     private def updateName(name: String, localScope: Set[Q_Name]): Q_Name = 
-        if localScope.exists(_.old_name == name) then
-            localScope.find(_.old_name == name).get
-        else if globalScope.exists(_.old_name == name) then
-            globalScope.find(_.old_name == name).get 
+        if localScope.exists(_.name == name) then
+            localScope.find(_.name == name).get
+        else if globalScope.exists(_.name == name) then
+            globalScope.find(_.name == name).get 
         else
             genName(name)
 }
