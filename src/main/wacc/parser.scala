@@ -190,7 +190,7 @@ object parser {
     )//.debug("skip")
 
     lazy val decl: Parsley[Stmt] = atomic(
-        Decl(_type, _ident, "=" ~> rvalue)
+        Decl(_type, Ident(_ident), "=" ~> rvalue)
     )//.debug("decl")
     
     lazy val asgn: Parsley[Stmt] = atomic(
