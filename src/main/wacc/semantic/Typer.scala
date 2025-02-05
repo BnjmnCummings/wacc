@@ -5,8 +5,8 @@ import collection.mutable
 import scala.annotation.targetName
 
 case class TypedProg(funcs: List[TypedFunc], body: List[TypedStmt])
-case class TypedFunc(t: Type, id: Ident, args: List[TypedParam], body: List[TypedStmt])
-case class TypedParam(t: Type, id: Ident)
+case class TypedFunc(t: SemType, id: TypedExpr.Ident, args: List[TypedParam], body: List[TypedStmt])
+case class TypedParam(t: SemType, id: TypedExpr.Ident)
 
 def typeCheck(prog: Prog, tyInfo: TypeInfo): Either[List[Error], TypedProg] = {
     // Note this List[Error] is non-empty. NonEmptyList import won't work
@@ -48,13 +48,13 @@ def check(stmt: Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
         TypedStmt.Return(typedX)
     case Exit(x: Expr) =>
         val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for exit values!
-        TypedStmt.Return(typedX)
+        TypedStmt.Return(typedX) // THESE NEED CHANGING
     case Print(x: Expr) =>
         val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for print values!
-        TypedStmt.Return(typedX)
+        TypedStmt.Return(typedX) // THESE NEED CHANGING
     case Println(x: Expr) =>
         val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for println values!
-        TypedStmt.Return(typedX)
+        TypedStmt.Return(typedX) // THESE NEED CHANGING
     case If(cond: Expr, body: List[Stmt], el: List[Stmt]) =>
         val (condTy, typedCond) = check(cond, Constraint.Unconstrained) // Create a constraint for this being a boolean!
         val typedBody = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
@@ -184,8 +184,31 @@ def check(r: RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], 
     case e: Expr => check(e, c)
 }
 
+def checkReturn(t: Type, stmt: TypedStmt)(using TypeCheckerCtx[?]): Option[SemType] = (stmt, t) match {
+    case (Return(x: Expr), BaseType.Int) => (check(x, Constraint.Is(KnownType.Int)))._1
+    case (Return(x: Expr), BaseType.Bool) => (check(x, Constraint.Is(KnownType.Boolean)))._1
+    case (Return(x: Expr), BaseType.Char) => (check(x, Constraint.Is(KnownType.Char)))._1
+    case (Return(x: Expr), BaseType.String) => (check(x, Constraint.Is(KnownType.String)))._1
+    case (Return(x: Expr), ArrayType(_)) => (check(x, Constraint.IsArray))._1
+    case (Return(x: Expr), PairType(_, _)) => (check(x, Constraint.IsPair))._1
+    case (If(cond: Expr, body: List[Stmt], el: List[Stmt]), t) => 
+        Some(mostSpecific(checkReturn(t, body.map(check).last), checkReturn(t, el.map(check).last)))
+}
+
 // Func(t: Type, v: String, args: List[Param], body: List[Stmt])
-def check(func: Func, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedFunc) = {
+def check(func: Func, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedFunc) = {
+    val typedParams: List[TypedParam] = func.args.map(p => check(p, c)._2)
+    
+    val typedBody: List[TypedStmt] = func.body.map(check)
+
+    val lastStmt: TypedStmt = typedBody.last
+
+    val checked = checkReturn(func.t, lastStmt)
+
+    (checked, TypedFunc(checked.getOrElse(?), TypedExpr.Ident(func.v), typedParams, typedBody))
+}
+
+def check(param: Param, c: Constraint)(using TypeCheckerCtx[?]): (Option[Type], TypedParam) = {
     ???
 }
 
@@ -286,4 +309,5 @@ enum Constraint {
 object Constraint {
     val Unconstrained = Is(?) // Always passes
     val IsArray = Is(KnownType.Array(?))
+    val IsPair = Is(KnownType.Pair(?, ?))
 }
