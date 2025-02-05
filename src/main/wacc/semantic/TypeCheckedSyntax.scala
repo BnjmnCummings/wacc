@@ -61,8 +61,8 @@ object TypedStmt {
     case class If(cond: TypedExpr, body: List[TypedStmt], el: List[TypedStmt]) extends TypedStmt
     case class While(cond: TypedExpr, body: List[TypedStmt]) extends TypedStmt
     case class CodeBlock(body: List[TypedStmt]) extends TypedStmt
-    case class Skip() extends TypedStmt
 }
+object TSkip extends TypedStmt
 
 object TypedRValue {
     case class FuncCall(v: String, args: List[TypedExpr]) extends TypedRValue

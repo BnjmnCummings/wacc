@@ -16,7 +16,7 @@ def typeCheck(prog: Prog, tyInfo: TypeInfo): Either[List[Error], TypedProg] = {
     val progFuncs: List[Func] = prog.funcs
     val progStmts: List[Stmt] = prog.body
 
-    val typedProgFuncs: List[TypedFunc] = ???
+    val typedProgFuncs: List[TypedFunc] = progFuncs.map(f => check(f, Constraint.Unconstrained)._2)
     val typedProgStmts: List[TypedStmt] = progStmts.map(check)
 
     ctx.errors.match {
@@ -67,7 +67,7 @@ def check(stmt: Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
     case CodeBlock(body: List[Stmt]) =>
         val typedBody = check(body, Constraint.Unconstrained) // Don't see why this should be anything other than Unconstrained
         TypedStmt.CodeBlock(typedBody)
-    case Skip => TypedStmt.Skip()
+    case Skip => TSkip
 }
 
 def check(expr: Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedExpr) = expr match {
@@ -191,7 +191,7 @@ def checkReturn(t: Type, stmt: TypedStmt)(using TypeCheckerCtx[?]): Option[SemTy
     case (TypedStmt.Return(x: Expr), BaseType.String) => (check(x, Constraint.Is(KnownType.String)))._1
     case (TypedStmt.Return(x: Expr), ArrayType(_)) => (check(x, Constraint.IsArray))._1
     case (TypedStmt.Return(x: Expr), PairType(_, _)) => (check(x, Constraint.IsPair))._1
-    case (TypedStmt.If(cond: Expr, body: List[TypedStmt], el: List[Stmt]), t) => 
+    case (TypedStmt.If(cond: Expr, body: List[TypedStmt], el: List[TypedStmt]), t) => 
         Some(mostSpecific(checkReturn(t, body.last), checkReturn(t, el.last)))
 }
 
