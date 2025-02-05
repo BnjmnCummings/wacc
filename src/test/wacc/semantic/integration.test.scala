@@ -5,10 +5,12 @@ import wacc.renamer
 import wacc.typeChecker
 import wacc.ScopeException
 
+import wacc.utilities.searchDir
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 
-import parsley.{Success, Failure}
+import parsley.Success
 
 import collection.mutable.ListBuffer
 
@@ -47,13 +49,13 @@ class semantic_integration_test extends AnyFlatSpec {
         if (synFailList.length != 0) {
             fail(
                 "some of the paths failed to parse (they are syntactically valid and should succeed):\n\n" 
-                + synFailList.foldRight("")((s1, s2) => s1 + "\n" + s2)
+                + synFailList.map(s => s.split("syntaxErr/").last).mkString("\n")
             )
         }
         if (semFailList.length != 0) {
             fail(
                 "some of the paths failed to scope/type check (they are semantically valid and should succeed):\n\n" 
-                + semFailList.foldRight("")((s1, s2) => s1 + "\n" + s2)
+                + semFailList.map(s => s.split("semanticErr/").last).mkString("\n")
             )
         }
     }
@@ -86,42 +88,24 @@ class semantic_integration_test extends AnyFlatSpec {
         if (synFailList.length != 0) {
             fail(
                 "some of the paths failed to parse (they are syntactically valid and should succeed):\n\n" 
-                + synFailList.foldRight("")((s1, s2) => s1 + "\n" + s2)
+                + synFailList.map(s => s.split("syntaxErr/").last).mkString("\n")
             )
         }
         if (successList.length != 0) {
             fail(
                 "some of the paths parsed successfully (they are semantically invalid and should fail):\n\n" 
-                + semFailList.foldRight("")((s1, s2) => s1 + "\n" + s2)
+                + successList.map(s => s.split("valid/").last).mkString("\n")
             )
         }
     }
 
     def getValidPaths(): List[String] = {
         val fPathStart: String = "wacc-examples/valid/"
-        searchFiles(File(fPathStart))
+        searchDir(File(fPathStart))
     }
 
     def getInvalidPaths(): List[String] = {
         val fPathStart: String = "wacc-examples/invalid/semanticErr"
-        searchFiles(File(fPathStart))
+        searchDir(File(fPathStart))
     }
-
-    // Function to recursively search for files in the given directory
-    // Chatgpt wrote this one
-    def searchFiles(dir: File): List[String] = {
-        if (dir.exists && dir.isDirectory) {
-            // List to collect all file paths
-            val filePaths = dir.listFiles.filter(_.isFile).map(_.getAbsolutePath).toList
-
-            // Recursively search in subdirectories
-            val subDirFiles = dir.listFiles.filter(_.isDirectory).flatMap(searchFiles).toList
-
-            // Combine files from current directory and subdirectories
-            filePaths ++ subDirFiles
-        } else {
-            List()  // Return empty list if the path is not a valid directory
-        }
-    }
-
 }

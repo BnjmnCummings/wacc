@@ -2,6 +2,8 @@ package wacc.ast
 
 import wacc.parser
 
+import wacc.utilities.searchDir
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 
@@ -10,6 +12,7 @@ import parsley.{Success, Failure}
 import collection.mutable.ListBuffer
 
 import java.io.File
+import wacc.utilities.searchDir
 
 class syntax_integration_test extends AnyFlatSpec {
     val validPaths: List[String] = getValidPaths()
@@ -58,29 +61,11 @@ class syntax_integration_test extends AnyFlatSpec {
 
     def getValidPaths(): List[String] = {
         val fPathStart: String = "wacc-examples/valid/"
-        searchFiles(File(fPathStart))
+        searchDir(File(fPathStart))
     }
 
     def getInvalidPaths(): List[String] = {
         val fPathStart: String = "wacc-examples/invalid/syntaxErr"
-        searchFiles(File(fPathStart))
-    }
-
-
-    // Function to recursively search for files in the given directory
-    // Chatgpt wrote this one
-    def searchFiles(dir: File): List[String] = {
-        if (dir.exists && dir.isDirectory) {
-            // List to collect all file paths
-            val filePaths = dir.listFiles.filter(_.isFile).map(_.getAbsolutePath).toList
-
-            // Recursively search in subdirectories
-            val subDirFiles = dir.listFiles.filter(_.isDirectory).flatMap(searchFiles).toList
-
-            // Combine files from current directory and subdirectories
-            filePaths ++ subDirFiles
-        } else {
-            List()  // Return empty list if the path is not a valid directory
-        }
+        searchDir(File(fPathStart))
     }
 }
