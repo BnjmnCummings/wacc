@@ -123,6 +123,39 @@ def check(expr: Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType],
     */
 }
 
+def checkArithmeticExpr(x: Expr, y: Expr, c: Constraint)
+                      (build: ((TypedExpr, TypedExpr) => TypedExpr))
+                      (using TypeCheckerCtx[?]): (Option[SemType], TypedExpr) =
+    val (xTy, typedX) = check(x, Constraint.IsNumeric)
+    val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
+    val ty = mostSpecific(xTy, yTy)
+    (ty.satisfies(c), build(typedX, typedY))
+
+def checkComparisonExpr(x: Expr, y: Expr, c: Constraint)
+                       (build: ((TypedExpr, TypedExpr) => TypedExpr))
+                       (using TypeCheckerCtx[?]): (Option[SemType], TypedExpr) =
+    val (xTy, typedX) = check(x, Constraint.IsNumeric)
+        if (xTy.getOrElse(?) == ?) {
+            // X is not an int - is it a character?
+            val (xTy, typedX) = check(x, Constraint.IsCharacter)
+            val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
+            val ty = mostSpecific(xTy, yTy)
+            (ty.satisfies(c), TypedExpr.GreaterThan(typedX, typedY))
+        } else {
+            // X is an int
+            val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
+            val ty = mostSpecific(xTy, yTy)
+            (ty.satisfies(c), TypedExpr.GreaterThan(typedX, typedY))
+        }
+
+def checkBooleanExpr(x: Expr, y: Expr, c: Constraint)
+                      (build: ((TypedExpr, TypedExpr) => TypedExpr))
+                      (using TypeCheckerCtx[?]): (Option[SemType], TypedExpr) =
+    val (xTy, typedX) = check(x, Constraint.IsBoolean)
+    val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
+    val ty = mostSpecific(xTy, yTy)
+    (ty.satisfies(c), build(typedX, typedY))
+
 class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
     def errors: C = errs.result()
 
