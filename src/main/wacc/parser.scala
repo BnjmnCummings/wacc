@@ -30,7 +30,7 @@ object parser {
 
     lazy val expr: Parsley[Expr] = 
         precedence(
-            atomic("null" as PairNullLiteral),
+            ("null" as PairNullLiteral),
             bool,
             int,
             charLiteral,
@@ -74,47 +74,28 @@ object parser {
         )
     //.debug("expr")
 
-    lazy val int: Parsley[IntLiteral] = atomic(
-        IntLiteral(_int)
-    )//.debug("int")
+    lazy val int: Parsley[IntLiteral] = IntLiteral(_int)//.debug("int")
 
-    lazy val ident: Parsley[Ident] = atomic(
-        Ident(_ident)
-    )//.debug("identity")
+    lazy val ident: Parsley[Ident] = Ident(_ident)//.debug("identity)
 
-    lazy val bool: Parsley[BoolLiteral] = atomic(
-        BoolLiteral(_bool)
-    )//.debug("boolLiteral")
+    lazy val bool: Parsley[BoolLiteral] = BoolLiteral(_bool)//.debug("boolLiteral")
 
-    lazy val stringLiteral: Parsley[StringLiteral] = atomic(
-        StringLiteral(_string)
-    )//.debug("stringLiteral")
+    lazy val stringLiteral: Parsley[StringLiteral] = StringLiteral(_string)//.debug("stringLiteral")
 
-    lazy val charLiteral: Parsley[CharLiteral] = atomic(
-       CharLiteral(_char)
-    )//.debug("charLiteral")
+    lazy val charLiteral: Parsley[CharLiteral] = CharLiteral(_char)//.debug("charLiteral")
 
-    lazy val arrayLiteral: Parsley[ArrayLiteral] = (
-        ArrayLiteral("[" ~> sepBy(expr, ",") <~ "]")
-    )//.debug("arrayLiteral")
+    lazy val arrayLiteral: Parsley[ArrayLiteral] = ArrayLiteral("[" ~> sepBy(expr, ",") <~ "]")//.debug("arrayLiteral")
 
-    lazy val _type: Parsley[Type] = atomic(
-        arrayType 
-        | pairType  
-        | baseType 
-    )//.debug("type")
+    lazy val _type: Parsley[Type] = arrayType | pairType | baseType 
 
     lazy val arrayType: Parsley[Type] = atomic(
         // must match at least one
         chain.postfix1(pairType | baseType)(ArrayType `from` "[]").hide
-
     )//.debug("arrayType")
 
-    lazy val pairType: Parsley[Type] = atomic(
-        PairType(
-            "pair(" ~> pairElemType <~ ",", 
-            pairElemType <~ ")"
-        )
+    lazy val pairType: Parsley[Type] = PairType(
+        "pair(" ~> pairElemType <~ ",", 
+        pairElemType <~ ")"
     )//.debug("pairType")
 
     lazy val baseType: Parsley[Type] = (
@@ -124,15 +105,15 @@ object parser {
         | ("string" as BaseType.String)
     )//.debug("baseType")
 
-    lazy val pairElemType: Parsley[Type] = atomic(
+    lazy val pairElemType: Parsley[Type] = (
         arrayType 
         | baseType 
-        | atomic("pair" as ErasedPairType)
+        | ("pair" as ErasedPairType)
     )//.debug("pairElemType")
 
     lazy val lvalue: Parsley[LValue] = pairElem | arrayElem | ident
 
-    lazy val pairElem: Parsley[PairElem] = atomic(
+    lazy val pairElem: Parsley[PairElem] = (
         PairElem(
             ("fst" as PairIndex.First) | ("snd" as PairIndex.Second), 
             lvalue
@@ -152,14 +133,14 @@ object parser {
         | pairElem
     )//.debug("rvalue")
 
-    lazy val newPair: Parsley[NewPair] = atomic(
+    lazy val newPair: Parsley[NewPair] = (
         NewPair(
             "newpair" ~> "(" ~> expr,
             "," ~> expr <~ ")"
         )
     )//.debug("newPair")
 
-    lazy val funcCall: Parsley[FuncCall] = atomic(
+    lazy val funcCall: Parsley[FuncCall] = (
         FuncCall(
             "call" ~> _ident, 
             "(" ~> argList <~ ")"
@@ -170,7 +151,7 @@ object parser {
         sepBy(expr, ",")
     )//.debug("argList")
 
-    lazy val params: Parsley[List[Param]] = atomic(
+    lazy val params: Parsley[List[Param]] = (
         sepBy(
             Param(_type, _ident),
             ","
@@ -185,43 +166,41 @@ object parser {
         )
     )//.debug("func")
 
-    lazy val skip: Parsley[Skip.type] = atomic(
-        "skip" as Skip
-    )//.debug("skip")
+    lazy val skip: Parsley[Skip.type] = "skip" as Skip
 
-    lazy val decl: Parsley[Stmt] = atomic(
+    lazy val decl: Parsley[Stmt] = (
         Decl(_type, Ident(_ident), "=" ~> rvalue)
     )//.debug("decl")
     
-    lazy val asgn: Parsley[Stmt] = atomic(
+    lazy val asgn: Parsley[Stmt] = (
         Asgn(lvalue, "=" ~> rvalue)
     )//.debug("asgn")
 
-    lazy val read: Parsley[Stmt] = atomic(
+    lazy val read: Parsley[Stmt] = (
         Read("read" ~> lvalue)
     )//.debug("read")
 
-    lazy val free: Parsley[Stmt] = atomic(
+    lazy val free: Parsley[Stmt] = (
         Free("free" ~> expr)
     )//.debug("free")
 
-    lazy val _return: Parsley[Stmt] = atomic(
+    lazy val _return: Parsley[Stmt] = (
         Return("return" ~> expr)
     )//.debug("return")
 
-    lazy val exit: Parsley[Stmt] = atomic(
+    lazy val exit: Parsley[Stmt] = (
         Exit("exit" ~> expr)
     )//.debug("exit")
 
-    lazy val print: Parsley[Stmt] = atomic(
+    lazy val print: Parsley[Stmt] = (
         Print("print" ~> expr)
     )//.debug("print")
 
-    lazy val println: Parsley[Stmt] = atomic(
+    lazy val println: Parsley[Stmt] = (
         Println("println" ~> expr)
     )//.debug("println")
     
-    lazy val _if: Parsley[Stmt] = atomic(
+    lazy val _if: Parsley[Stmt] = (
         If(
             "if" ~> expr <~ "then",
             stmts,
@@ -229,18 +208,18 @@ object parser {
         )
     )//.debug("if")
 
-    lazy val _while: Parsley[Stmt] = atomic(
+    lazy val _while: Parsley[Stmt] = (
         While(
             "while" ~> expr <~ "do",
             stmts <~ "done"
         )
     )//.debug("while")
 
-    lazy val codeblock: Parsley[Stmt] = atomic(
+    lazy val codeblock: Parsley[Stmt] = (
         CodeBlock("begin" ~> stmts <~ "end")
     )//.debug("codeblock")
 
-    lazy val stmts: Parsley[List[Stmt]] = atomic(
+    lazy val stmts: Parsley[List[Stmt]] = (
         sepBy1(
             (skip | decl | asgn | read | free | _return | exit | print | println | codeblock | _if | _while),
             ";"
