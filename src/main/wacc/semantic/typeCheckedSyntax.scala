@@ -1,4 +1,6 @@
 package wacc.semantic
+
+import wacc.*
 import wacc.ast.*
 
 sealed abstract class TypedExpr extends TypedRValue

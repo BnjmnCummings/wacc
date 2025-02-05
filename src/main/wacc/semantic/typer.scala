@@ -1,5 +1,6 @@
 package wacc.semantic
 
+import wacc.*
 import wacc.ast.* 
 import collection.mutable
 import scala.annotation.targetName
@@ -228,8 +229,8 @@ def check(param: Param)(using TypeCheckerCtx[?]): TypedParam = param.t match {
     case BaseType.Char => TypedParam(KnownType.Char, TypedExpr.Ident(param.v))
     case BaseType.String => TypedParam(KnownType.String, TypedExpr.Ident(param.v))
     case ArrayType(_) => TypedParam(KnownType.Array(?), TypedExpr.Ident(param.v))
-    case PairType(_, _) => TypedParam(KnownType.Pair(?, ?), TypedExpr.Ident(param.v)) // check these types?
-    case ErasedPairType => TypedParam(KnownType.ErasedPairType, TypedExpr.Ident(param.v))
+    case PairType(_, _) => TypedParam(KnownType.Pair(?, ?), TypedExpr.Ident(param.v)) // TODO: CHANGE THE _, _ ??
+    case ErasedPairType => TypedParam(KnownType.Pair(?, ?), TypedExpr.Ident(param.v))
 }
 
 @targetName("checkStmts")
