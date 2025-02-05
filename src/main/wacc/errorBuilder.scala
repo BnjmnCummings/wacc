@@ -15,28 +15,28 @@ abstract class MyErrorBuilder extends ErrorBuilder[Err] {
         expected: Set[ErrorItem],
         reasons: Set[String],
         line: String
-    ): ErrorInfoLines = VanillaError(unexpected, expected, reasons)
+    ): ErrorInfoLines = VanillaError(unexpected, expected, reasons, line)
 
     override def specializedError(
         msgs: Set[String],
         line: String
-      ): ErrorLines = SpecializedError(msgs)
+      ): ErrorLines = SpecializedError(msgs, line)
 
     override def pos(line: Int, col: Int): (Int, Int) = (line, col)
-    def source(sourceName: Option[String]): Option[String] = sourceName
-    def combineExpectedItems(alts: Set[ErrorItem]): Set[ErrorItem] = alts
-    def combineMessages(alts: Seq[String]): Set[String] = alts.toSet
-    def unexpected(item: Option[ErrorItem]): Option[ErrorItem] = item
-    def expected(alts: Set[ErrorItem]): Set[ErrorItem] = alts
-    def message(msg: String): String = msg
-    def reason(msg: String): String = msg
-    def raw(item: String): RawItem = RawItem(item)
-    def named(item: String): NamedItem = NamedItem(item)
+    override def source(sourceName: Option[String]): Option[String] = sourceName
+    override def combineExpectedItems(alts: Set[ErrorItem]): Set[ErrorItem] = alts
+    override def combineMessages(alts: Seq[String]): Set[String] = alts.toSet
+    override def unexpected(item: Option[ErrorItem]): Option[ErrorItem] = item
+    override def expected(alts: Set[ErrorItem]): Set[ErrorItem] = alts
+    override def message(msg: String): String = msg
+    override def reason(msg: String): String = msg
+    override def raw(item: String): RawItem = RawItem(item)
+    override def named(item: String): NamedItem = NamedItem(item)
     val endOfInput: EndOfInputItem.type = EndOfInputItem
 
     val numLinesAfter: Int = 0
     val numLinesBefore: Int = 0
-    def lineInfo(
+    override def lineInfo(
         line: String,
         linesBefore: Seq[String],
         linesAfter: Seq[String],
@@ -47,7 +47,7 @@ abstract class MyErrorBuilder extends ErrorBuilder[Err] {
             sb.addOne('\n')
             sb.addAll(line)
             sb.addOne('\n')
-            sb.addAll(" ".repeat(errorPointsAt - 1) + "^".repeat(errorWidth) + "\n")
+            sb.addAll(" ".repeat(errorPointsAt) + "^".repeat(errorWidth) + "\n")
             linesAfter.foreach{sb.addAll(_)}
             sb.addOne('\n')
             sb.toString()

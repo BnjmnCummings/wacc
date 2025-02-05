@@ -30,6 +30,7 @@ case class VanillaError(
     unexpected: Option[ErrorItem],
     expecteds: Set[ErrorItem],
     reasons: Set[String],
+    line: String
 ) extends ErrorLines {
     override def toString(): String = {
         val sb = StringBuilder()
@@ -53,14 +54,22 @@ case class VanillaError(
         sb.addOne('\n')
         sb.addAll(reasons.foldLeft("")((s1, s2) => s"$s1\n $s2"))
         sb.addOne('\n')
+        sb.addAll(line)
         sb.toString()
     }
 }
 
 case class SpecializedError(
-    msgs: Set[String]
+    msgs: Set[String],
+    line: String
 ) extends ErrorLines {
-    override def toString(): String = msgs.foldLeft("")((s1, s2) => s"$s1\n $s2")
+    override def toString(): String = {
+        val sb = StringBuilder()
+        sb.addAll(msgs.foldLeft("")((s1, s2) => s"$s1\n $s2"))
+        sb.addOne('\n')
+        sb.addAll(line)
+        sb.toString()
+    }
 }
 
 sealed trait ErrorItem
