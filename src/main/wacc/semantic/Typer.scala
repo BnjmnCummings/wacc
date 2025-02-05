@@ -214,13 +214,13 @@ extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[
         ctx.error(Error.TypeMismatch(ty, refTy))
     }
     case(?, _) => Some(?)
-    case(kty@INT_LITERAL, Constraint.IsNumeric) => Some(kty)
+    case(kty@KnownType.Int, Constraint.IsNumeric) => Some(kty)
     case(kty, Constraint.IsNumeric) => ctx.error(Error.NonNumericType(kty))
-    case(kty@CHAR_LITERAL, Constraint.IsCharacter) => Some(kty)
+    case(kty@KnownType.Char, Constraint.IsCharacter) => Some(kty)
     case(kty, Constraint.IsCharacter) => ctx.error(Error.NonCharacterType(kty))
-    case(kty@BOOL_LITERAL, Constraint.IsBoolean) => Some(kty)
+    case(kty@KnownType.Boolean, Constraint.IsBoolean) => Some(kty)
     case(kty, Constraint.IsBoolean) => ctx.error(Error.NonCharacterType(kty))
-    case(kty@STRING_LITERAL, Constraint.IsString) => Some(kty)
+    case(kty@KnownType.String, Constraint.IsString) => Some(kty)
     case(kty, Constraint.IsString) => ctx.error(Error.NonStringType(kty))
 }
 
@@ -235,8 +235,6 @@ class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
         None
     }
 }
-
-
 
 // The typer will take this in
 // It maps variable names & function names to their types
