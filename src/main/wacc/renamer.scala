@@ -65,7 +65,7 @@ object renamer {
         (_stmts.toList, _localScope.toSet)
     
     private def rename(stmt: Stmt, parScope: collection.immutable.Set[Q_Name], localScope: collection.immutable.Set[Q_Name]): Q_Stmt = stmt match
-        case Decl(t, v, r) => {
+        case Decl(t, Ident(v), r) => {
             if (localScope.exists(_.old_name == v)) then
                throw ScopeException("Already declared in scope")
             Q_Decl(t, genName(v), rename(r, parScope ++ localScope))

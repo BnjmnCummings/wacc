@@ -4,24 +4,27 @@ import wacc.ast.*
 
 import parsley.{Parsley, Result}
 import parsley.quick.*
-import parsley.syntax.zipped.*
 import parsley.errors.ErrorBuilder
-import parsley.debug.*
+import parsley.errors.combinator.ErrorMethods
 import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix, chain}
 import lexer.{_int, _ident, _char, _string, _bool, fully}
 import lexer.implicits.implicitSymbol
+
 import java.io.File
 import scala.util.Success
-import parsley.expr.Postfix
+import scala.util.Failure
+import parsley.errors.tokenextractors.TillNextWhitespace
 
 object parser {
-    def parseF(input: File): Result[String, Prog] = parser.parseFile(input) match
+    def parseF(input: File): Result[Err, Prog] = parser.parseFile(input) match
         case Success(res) => res
-        case _ => 
-            printf(s"can't find $input file to parseF")
-            sys.exit(-1)
+        case Failure(e) => throw(e)
 
     def parse(input: String): Result[String, Prog] = parser.parse(input)
+
+    private implicit val errBuilder: ErrorBuilder[Err] = new MyErrorBuilder with TillNextWhitespace {
+        def trimToParserDemand: Boolean = false
+    }
 
     private val parser: Parsley[Prog] = fully("begin" ~> Prog(many(func), stmts) <~ "end")
 
@@ -103,7 +106,7 @@ object parser {
 
     lazy val arrayType: Parsley[Type] = atomic(
         // must match at least one
-        chain.postfix1(pairType | baseType)(ArrayType from "[]")
+        chain.postfix1(pairType | baseType)(ArrayType from "[]").hide
 
     )//.debug("arrayType")
 
@@ -187,7 +190,7 @@ object parser {
     )//.debug("skip")
 
     lazy val decl: Parsley[Stmt] = atomic(
-        Decl(_type, _ident, "=" ~> rvalue)
+        Decl(_type, Ident(_ident), "=" ~> rvalue)
     )//.debug("decl")
     
     lazy val asgn: Parsley[Stmt] = atomic(

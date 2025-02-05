@@ -125,7 +125,7 @@ class rename_func_test extends AnyFlatSpec {
                     List(
                         Decl(
                             BaseType.Int, 
-                            "myVar", 
+                            Ident("myVar"), 
                             IntLiteral(0)
                         ),
                         Return(IntLiteral(0))
@@ -169,7 +169,7 @@ class rename_func_test extends AnyFlatSpec {
                     List(
                         Decl(
                             BaseType.Int, 
-                            "myVar", 
+                            Ident("myVar"), 
                             IntLiteral(0)
                         ),
                         Asgn(
@@ -245,12 +245,12 @@ class rename_func_test extends AnyFlatSpec {
                     List(
                         Decl(
                             BaseType.Int, 
-                            "myVar", 
+                            Ident("myVar"), 
                             IntLiteral(0)
                         ),
                         Decl(
                             BaseType.Int, 
-                            "myVar", 
+                            Ident("myVar"), 
                             IntLiteral(0)
                         ),
                         Asgn(
@@ -279,7 +279,7 @@ class rename_func_test extends AnyFlatSpec {
                     List(
                         Decl(
                             BaseType.Int, 
-                            "myVar", 
+                            Ident("myVar"), 
                             IntLiteral(0)
                         ),
                         Return(IntLiteral(0))

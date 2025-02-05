@@ -12,6 +12,13 @@ trait ParserSingletonBridgePos[+A] extends generic.ErrorBridge {
     final def <#(op: Parsley[?]): Parsley[A] = this.from(op)
 }
 
+trait ParserBridgePos0[+B] extends ParserSingletonBridgePos[B] {
+    def apply(pos: (Int, Int)): B
+    def apply(): Parsley[B] = error(pos.map(con))
+
+    override final def con(pos: (Int, Int)):B = this(pos)
+}
+
 trait ParserBridgePos1[-A, +B] extends ParserSingletonBridgePos[A => B] {
     def apply(a: A)(pos: (Int, Int)): B
     def apply(a: Parsley[A]): Parsley[B] = error(ap1(pos.map(con), a))

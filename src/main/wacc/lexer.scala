@@ -36,17 +36,11 @@ object lexer {
 
     private val errConfig = new ErrorConfig {
         // name errors
-        // override def filterNameIllFormedIdentifier: FilterConfig[String] = ???
-        // override def labelNameIdentifier: String = ???
-        // override def unexpectedNameIllegalIdentifier(v: String): String = ???
+        override def filterNameIllFormedIdentifier: FilterConfig[String] = BadIdentConfig()
 
-        // // numeric errors
-        // override def filterIntegerOutOfBounds(min: BigInt, max: BigInt, nativeRadix: Int): FilterConfig[BigInt] = ???
-        // override def labelIntegerSignedNumber: LabelWithExplainConfig = ???
-        // override def labelIntegerUnsignedNumber: LabelWithExplainConfig = ???
-
-        // // space errors
-        // override def labelSpaceEndOfLineComment: LabelWithExplainConfig = ???
+        // numeric errors
+        override def labelIntegerSignedNumber: LabelWithExplainConfig = Label("number")
+        override def labelIntegerNumberEnd: LabelConfig = Label("end of number")
 
         // symbol errors
         override def labelSymbol: Map[String, LabelWithExplainConfig] = {
@@ -73,21 +67,24 @@ object lexer {
             )
         }
 
-        // override def labelSymbolEndOfKeyword(symbol: String): String = ???
-
-        // // text errors
-        // override def filterCharNonAscii: VanillaFilterConfig[Int] = ???
-        // override def filterStringNonAscii: SpecializedFilterConfig[StringBuilder] = ???
-        // override def labelCharAscii: LabelWithExplainConfig = ???
-        // override def labelCharAsciiEnd: LabelConfig = ???
-        // override def labelEscapeSequence: LabelWithExplainConfig = ???
-        // override def labelGraphicCharacter: LabelWithExplainConfig = ???
-        // override def labelStringAscii(multi: Boolean, raw: Boolean): LabelWithExplainConfig = ???
-        // override def labelStringAsciiEnd(multi: Boolean, raw: Boolean): LabelConfig = ???
+        // text errors
+        override def labelCharAscii: LabelWithExplainConfig = Label("character")
+        override def labelCharAsciiEnd: LabelConfig = Label("closing single quote")
+        override def labelStringAscii(multi: Boolean, raw: Boolean): LabelWithExplainConfig = Label("string")
+        override def labelStringAsciiEnd(multi: Boolean, raw: Boolean): LabelConfig = Label("closing double quote")
+        override def labelEscapeEnd: LabelWithExplainConfig = 
+            LabelAndReason(
+                "valid escape sequences are \\0, \\n, \\t, \\r, \\f, \\b, \\\', \\\" and \\\\",
+                "escape sequence"
+                )
         // override def verifiedCharBadCharsUsedInLiteral: VerifiedBadChars = ???
         // override def verifiedStringBadCharsUsedInLiteral: VerifiedBadChars = ???
 
     }
+
+    class BadIdentConfig extends Because[String] {
+        override def reason(x: String): String = s"$x is an invalid identifier (identifiers must start with a letter or an underscore)"
+    } 
 
     private val lexer = Lexer(desc, errConfig)
 

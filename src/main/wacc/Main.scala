@@ -28,8 +28,8 @@ def main(args: Array[String]): Unit = {
                     }
                     
                 }
-                case Failure(msg) => {
-                    println(msg)
+                case Failure(err) => {
+                    println(err.format())
                     sys.exit(100)
                 }
         }
