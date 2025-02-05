@@ -190,10 +190,10 @@ def check(listArgs: List[Expr], c: Constraint)(using TypeCheckerCtx[?]): (Option
 }
 
 extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) match
-    case (?, reTy) => Some(refTy)
+    case (?, refTy) => ty ~ refTy
     case (ty, ?) => Some(ty)
     case (ty, refTy) if ty == refTy => Some(ty)
-    case (Array(ty), Array(refTy)) => Array(ty ~ refTy)
+    case (ArrayLiteral(typ), ArrayLiteral(refTyp)) => ty ~ refTy
     case _ => None
 
 extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (ty, c) match {
@@ -231,6 +231,9 @@ def mostSpecific(ty1: Option[SemType], ty2: Option[SemType]): SemType = (ty1, ty
     case (None, t)          => t.getOrElse(?)
 }
 
+// The typer will take this in
+// It maps variable names & function names to their types
+// This should allow for variables and functions to share names
 class TypeInfo(
     var varTys: Map[String, KnownType],
     var funcTys: Map[String, KnownType, List[KnownType]] // Check with Aidan to see how this would work
