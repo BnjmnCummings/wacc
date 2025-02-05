@@ -34,8 +34,8 @@ abstract class MyErrorBuilder extends ErrorBuilder[Err] {
     override def named(item: String): NamedItem = NamedItem(item)
     val endOfInput: EndOfInputItem.type = EndOfInputItem
 
-    val numLinesAfter: Int = 0
-    val numLinesBefore: Int = 0
+    val numLinesAfter: Int = 2
+    val numLinesBefore: Int = 2
     override def lineInfo(
         line: String,
         linesBefore: Seq[String],
@@ -43,14 +43,14 @@ abstract class MyErrorBuilder extends ErrorBuilder[Err] {
         lineNum: Int, errorPointsAt: Int, errorWidth: Int
         ): String = {
             val sb = StringBuilder()
-            linesBefore.foreach{sb.addAll(_)}
-            sb.addOne('\n')
-            sb.addAll(line)
-            sb.addOne('\n')
-            sb.addAll(" ".repeat(errorPointsAt) + "^".repeat(errorWidth) + "\n")
-            linesAfter.foreach{sb.addAll(_)}
-            sb.addOne('\n')
-            sb.toString()
+            sb ++= s"${codeIndent}> "
+            linesBefore.map(_ + s"\n${codeIndent}> ").foreach{sb ++= _}
+            sb ++= line
+            sb ++= s"\n${codeIndent}> "
+            sb ++= " ".repeat(errorPointsAt) + "^".repeat(errorWidth) + s"\n${codeIndent}> "
+            linesAfter.map(_ + s"\n${codeIndent}> ").foreach{sb ++= _}
+            // remove extra newline
+            sb.dropRight(3 + codeIndent.length()).toString()
         }
 
     // The implementation of this is usually provided by a mixed-in

@@ -68,7 +68,7 @@ object lexer {
         }
 
         // text errors
-        override def labelCharAscii: LabelWithExplainConfig = Label("ascii character")
+        override def labelCharAscii: LabelWithExplainConfig = Label("character")
         override def labelCharAsciiEnd: LabelConfig = Label("closing single quote")
         override def labelStringAscii(multi: Boolean, raw: Boolean): LabelWithExplainConfig = Label("string")
         override def labelStringAsciiEnd(multi: Boolean, raw: Boolean): LabelConfig = Label("closing double quote")

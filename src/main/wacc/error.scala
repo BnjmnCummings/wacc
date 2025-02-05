@@ -1,5 +1,7 @@
 package wacc
 
+val codeIndent: String = " ".repeat(2)
+
 class Err(
     fname: Option[String],
     pos: (Int, Int),
@@ -9,17 +11,17 @@ class Err(
     def format(): String = {
         val sb = StringBuilder()
         val eTypeStr: String = errType match {
-            case ErrorType.SemanticError => "Semantic Error\n"
-            case ErrorType.SyntaxError => "Syntax Error\n"
+            case ErrorType.SemanticError => "Semantic error in "
+            case ErrorType.SyntaxError => "Syntax error in "
         }
-        sb.addAll(eTypeStr)
+        sb ++= eTypeStr
         val fileInfo: String = fname match {
-            case Some(f) => s"In file $f\n"
-            case None => "No file location found\n"
+            case Some(f) => s"$f "
+            case None => "unknown file "
         }
-        sb.addAll(fileInfo)
-        sb.addAll(s"At line: ${pos._1} column: ${pos._2}\n")
-        sb.addAll(lines.toString())
+        sb ++= fileInfo
+        sb ++= s"at (line: ${pos._1}, column: ${pos._2}):\n"
+        sb ++= lines.toString()
         sb.toString()
     }
 }
@@ -37,11 +39,11 @@ case class VanillaError(
         val unexpectedStr: String = unexpected match
             case Some(item) =>
                 item match
-                    case RawItem(s) => s"unexpected \"$s\"\n"
-                    case NamedItem(s) => s"unexpected $s\n" 
-                    case EndOfInputItem => "unexpected end of input\n" 
+                    case RawItem(s) => s"${codeIndent}unexpected \"$s\"\n"
+                    case NamedItem(s) => s"${codeIndent}unexpected $s\n" 
+                    case EndOfInputItem => s"${codeIndent}unexpected end of input\n" 
             case None => ""
-        sb.addAll(unexpectedStr)
+        sb ++= unexpectedStr
         val expectedStrs: Set[String] = expecteds.map {
             item => item match {
                 case RawItem(s) => s"\"$s\""
@@ -49,12 +51,12 @@ case class VanillaError(
                 case EndOfInputItem => "end of input"
             }
         }
-        sb.addAll("expected ")
-        sb.addAll(expectedStrs.mkString(", "))
-        sb.addOne('\n')
-        sb.addAll(reasons.mkString("\n"))
-        sb.addOne('\n')
-        sb.addAll(line)
+        sb ++= s"${codeIndent}expected "
+        sb ++= expectedStrs.mkString(", ")
+        sb += '\n'
+        sb ++= reasons.mkString("\n")
+        sb += '\n'
+        sb ++= line
         sb.toString()
     }
 }
