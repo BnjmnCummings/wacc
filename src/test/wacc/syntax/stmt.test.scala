@@ -16,7 +16,7 @@ class stmt_test extends AnyFlatSpec {
         parser.decl.parse("int var = 6") shouldBe Success(
             Decl(
                 BaseType.Int,
-                "var",
+                Ident("var"),
                 IntLiteral(6)
             )
         )        
