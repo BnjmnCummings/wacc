@@ -51,9 +51,9 @@ class types_tst extends AnyFlatSpec {
         val typedBody: List[TypedStmt] = List[TypedStmt]()
 
         val expected = Left(List[Error](
-            Error.TypeMismatch(KnownType.Int, KnownType.String),
-            Error.TypeMismatch(KnownType.Int, KnownType.Char),
-            Error.TypeMismatch(KnownType.Int, KnownType.Boolean)
+            Error.TypeMismatch(KnownType.String, KnownType.Int),
+            Error.TypeMismatch(KnownType.Char, KnownType.Int),
+            Error.TypeMismatch(KnownType.Boolean, KnownType.Int)
         ))
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
@@ -79,9 +79,9 @@ class types_tst extends AnyFlatSpec {
         val typedBody: List[TypedStmt] = List[TypedStmt]()
 
         val expected = Left(List[Error](
-            Error.TypeMismatch(KnownType.Char, KnownType.String),
-            Error.TypeMismatch(KnownType.Char, KnownType.Boolean),
-            Error.TypeMismatch(KnownType.Char, KnownType.Int)
+            Error.TypeMismatch(KnownType.String, KnownType.Char),
+            Error.TypeMismatch(KnownType.Boolean, KnownType.Char),
+            Error.TypeMismatch(KnownType.Int, KnownType.Char)
         ))
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
@@ -107,9 +107,9 @@ class types_tst extends AnyFlatSpec {
         val typedBody: List[TypedStmt] = List[TypedStmt]()
 
         val expected = Left(List[Error](
-            Error.TypeMismatch(KnownType.String, KnownType.Char),
-            Error.TypeMismatch(KnownType.String, KnownType.Boolean),
-            Error.TypeMismatch(KnownType.String, KnownType.Int),
+            Error.TypeMismatch(KnownType.Char, KnownType.String),
+            Error.TypeMismatch(KnownType.Boolean, KnownType.String),
+            Error.TypeMismatch(KnownType.Int, KnownType.String),
         ))
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
@@ -137,9 +137,9 @@ class types_tst extends AnyFlatSpec {
         val typedBody: List[TypedStmt] = List[TypedStmt]()
 
         val expected = Left(List[Error](
-            Error.TypeMismatch(KnownType.Boolean, KnownType.Int),
-            Error.TypeMismatch(KnownType.Boolean, KnownType.Char),
-            Error.TypeMismatch(KnownType.Boolean, KnownType.String)
+            Error.TypeMismatch(KnownType.Int, KnownType.Boolean),
+            Error.TypeMismatch(KnownType.Char, KnownType.Boolean),
+            Error.TypeMismatch(KnownType.String, KnownType.Boolean)
         ))
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
