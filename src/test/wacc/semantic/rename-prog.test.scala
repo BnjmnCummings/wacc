@@ -1,11 +1,11 @@
 package test.wacc.semantic
 
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers.*
+
 import wacc.ast.*
 import wacc.q_ast.*
 import wacc.renamer.*
-
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers.*
 
 class rename_prog_test extends AnyFlatSpec {
     "rename" should "be able to rename basic programs" in {
