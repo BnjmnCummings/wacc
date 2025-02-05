@@ -1,6 +1,7 @@
 package test.wacc.semantic
 
 import wacc.semantic.*
+import wacc.*
 import wacc.ast.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
