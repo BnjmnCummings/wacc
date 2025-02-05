@@ -143,7 +143,7 @@ class types_tst extends AnyFlatSpec {
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
     }
-
+    
     "array declaration" should "be semantically valid" in {
         val funcs: List[Func] = List[Func]()
         val body: List[Stmt] = List[Stmt](
@@ -158,14 +158,14 @@ class types_tst extends AnyFlatSpec {
 
         val typedFuncs: List[TypedFunc] = List[TypedFunc]()
         val typedBody: List[TypedStmt] = List[TypedStmt](
-            TypedStmt.Decl(ArrayType(BaseType.Int), TypedExpr.Ident("intArr"), TypedRValue.ArrayLiteral(List[TypedExpr](TypedExpr.IntLiteral(1), TypedExpr.IntLiteral(2), TypedExpr.IntLiteral(3))))
+            TypedStmt.Decl(ArrayType(BaseType.Int), TypedExpr.Ident("intArr"), TypedRValue.ArrayLiteral(List[TypedExpr](TypedExpr.IntLiteral(1), TypedExpr.IntLiteral(2), TypedExpr.IntLiteral(3)), KnownType.Int))
         )
 
         val expected = Right(TypedProg(typedFuncs, typedBody))
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
     }
-
+    
     "incorrect array declarations" should "be semantically invalid" in {
         val funcs: List[Func] = List[Func]()
         val body: List[Stmt] = List[Stmt](
@@ -173,7 +173,6 @@ class types_tst extends AnyFlatSpec {
             Decl(ArrayType(BaseType.Int), Ident("arr2"), CharLiteral('b')),
             Decl(ArrayType(BaseType.Int), Ident("arr3"), BoolLiteral(false)),
             Decl(ArrayType(BaseType.Int), Ident("arr4"), ArrayLiteral(List[Expr](CharLiteral('a')))),
-            Decl(ArrayType(BaseType.Int), Ident("arr5"), ArrayLiteral(List[Expr](IntLiteral(3), CharLiteral('a'))))
         )
 
         val prog: Prog = Prog(funcs, body)
@@ -182,20 +181,40 @@ class types_tst extends AnyFlatSpec {
             "arr1" -> KnownType.Array(KnownType.Int),
             "arr2" -> KnownType.Array(KnownType.Int),
             "arr3" -> KnownType.Array(KnownType.Int),
-            "arr4" -> KnownType.Array(KnownType.Int),
-            "arr5" -> KnownType.Array(KnownType.Int)
+            "arr4" -> KnownType.Array(KnownType.Int)
         ), funcTys = Map())
 
         val typedFuncs: List[TypedFunc] = List[TypedFunc]()
         val typedBody: List[TypedStmt] = List[TypedStmt]()
 
-        val expected = Left(
+        val expected = Left(List(
             TypeMismatch(KnownType.Int, KnownType.Array(KnownType.Int)),
             TypeMismatch(KnownType.Char, KnownType.Array(KnownType.Int)),
             TypeMismatch(KnownType.Boolean, KnownType.Array(KnownType.Int)),
-            TypeMismatch(KnownType.Char, KnownType.Array(KnownType.Int)),
-            TypeMismatch(KnownType.Char, KnownType.Array(KnownType.Int)),
+            TypeMismatch(KnownType.Array(KnownType.Char), KnownType.Array(KnownType.Int))
+        ))
+
+        wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
+    }
+
+    "array declaration with mixed types" should "be semantically invalid" in {
+        val funcs: List[Func] = List[Func]()
+        val body: List[Stmt] = List[Stmt](
+            Decl(ArrayType(BaseType.Int), Ident("arr5"), ArrayLiteral(List[Expr](IntLiteral(3), CharLiteral('a'))))
         )
+
+        val prog: Prog = Prog(funcs, body)
+
+        val tyInfo = TypeInfo(varTys = Map(
+            "arr" -> KnownType.Array(KnownType.Int)
+        ), funcTys = Map())
+
+        val typedFuncs: List[TypedFunc] = List[TypedFunc]()
+        val typedBody: List[TypedStmt] = List[TypedStmt]()
+
+        val expected = Left(List(
+            TypeMismatch(KnownType.Char, KnownType.Int)
+        ))
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
     }
