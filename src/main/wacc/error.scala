@@ -50,9 +50,9 @@ case class VanillaError(
             }
         }
         sb.addAll("expected ")
-        sb.addAll(expectedStrs.foldLeft("")((s1, s2) => s"$s1, $s2"))
+        sb.addAll(expectedStrs.mkString(", "))
         sb.addOne('\n')
-        sb.addAll(reasons.foldLeft("")((s1, s2) => s"$s1\n $s2"))
+        sb.addAll(reasons.mkString("\n"))
         sb.addOne('\n')
         sb.addAll(line)
         sb.toString()
@@ -65,7 +65,7 @@ case class SpecializedError(
 ) extends ErrorLines {
     override def toString(): String = {
         val sb = StringBuilder()
-        sb.addAll(msgs.foldLeft("")((s1, s2) => s"$s1\n $s2"))
+        sb.addAll(msgs.mkString("\n"))
         sb.addOne('\n')
         sb.addAll(line)
         sb.toString()
