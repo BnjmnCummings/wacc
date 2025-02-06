@@ -270,7 +270,7 @@ def mostSpecific(ty1: Option[SemType], ty2: Option[SemType]): SemType = (ty1, ty
 }
 
 extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) match
-    case (?, refTy) => ty ~ refTy
+    case (?, refTy) => Some(refTy)
     case (ty, ?) => Some(ty)
     case (ty, refTy) if ty == refTy => Some(ty)
     // case (ArrayLiteral(typ), ArrayLiteral(refTyp)) => ty ~ refTy

@@ -1,4 +1,4 @@
-package wacc.ast
+package wacc.semantic
 
 import wacc.parser
 import wacc.renamer
@@ -8,7 +8,6 @@ import wacc.ScopeException
 import wacc.utilities.searchDir
 
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers.*
 
 import parsley.Success
 
@@ -29,12 +28,14 @@ class semantic_integration_test extends AnyFlatSpec {
             p => parser.parseF(File(p)) match 
                 case Success(t) => {
                     try {
-                        val (q_t, _) = renamer.rename(t)
-                        typeChecker.check(q_t)
-                        successes += p
+                        val (q_t, tyInfo) = renamer.rename(t)
+                        typeCheck(q_t, tyInfo) match {
+                            case Left(_) => semFailures += p
+                            case Right(_) => successes += p 
+                        }
                     } catch {
                         case e: ScopeException => {
-                            // type/scope checking has failed
+                            // scope checking has failed
                             semFailures += p
                         }
                     }
@@ -68,12 +69,14 @@ class semantic_integration_test extends AnyFlatSpec {
             p => parser.parseF(File(p)) match 
                 case Success(t) => {
                     try {
-                        val (q_t, _) = renamer.rename(t)
-                        typeChecker.check(q_t)
-                        successes += p
+                        val (q_t, tyInfo) = renamer.rename(t)
+                        typeCheck(q_t, tyInfo) match {
+                            case Left(_) => semFailures += p
+                            case Right(_) => successes += p 
+                        }
                     } catch {
                         case e: ScopeException => {
-                            // type/scope checking has failed
+                            // scope checking has failed
                             semFailures += p
                         }
                     }
