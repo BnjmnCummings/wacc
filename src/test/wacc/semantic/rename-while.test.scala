@@ -342,13 +342,13 @@ class rename_while_test extends AnyFlatSpec{
                         BoolLiteral(true),
                         List(
                             Decl(
-                                BaseType.Int,
+                                BaseType.String,
                                 Ident("x"),
                                 StringLiteral("string")
                             ),
                             Asgn(
                                 Ident("x"),
-                               StringLiteral("newString")
+                                StringLiteral("newString")
                             )
                         )
                     )
