@@ -174,8 +174,8 @@ def checkBooleanExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
     val ty = mostSpecific(xTy, yTy)
     (ty.satisfies(c), build(typedX, typedY))
 
-def check(l: Q_LValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedLValue) = l match {
-    case Q_Ident(v: Q_Name) => ???
+def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedLValue) = l match {
+    case Q_Ident(v: Q_Name) => (ctx.typeOf(v).satisfies(c), TypedExpr.Ident(v))
     case Q_PairElem(index: PairIndex, v: Q_LValue) => ???
     case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr]) => ???
 }
