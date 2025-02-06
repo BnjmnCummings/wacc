@@ -205,7 +205,7 @@ def checkReturn(t: Type, stmt: TypedStmt)(using ctx: TypeCheckerCtx[?]): Option[
     case (TypedStmt.Return(x: Q_Expr), ty) => check(x, Constraint.Is(toSemType(ty)))._1
     case (TypedStmt.If(cond: Q_Expr, body: List[TypedStmt], el: List[TypedStmt]), t) => 
         Some(mostSpecific(checkReturn(t, body.last), checkReturn(t, el.last)))
-    case (_, _) => throw SyntaxFailureException("Last statement is not a return/if. This should be dealt with in parsing syntax!")
+    case (_, _) => throw SyntaxFailureException("Last statement is not a return/if. This should be dealt with in parsing")
 }
 
 // Func(t: Type, v: String, args: List[Param], body: List[Stmt])
