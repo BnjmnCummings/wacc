@@ -56,7 +56,10 @@ case class VanillaError(
         sb += '\n'
         sb ++= codeIndent
         sb ++= reasons.mkString(s"\n$codeIndent")
-        sb ++= "\n\n"
+        if (!reasons.isEmpty) {
+            sb += '\n'
+        }
+        sb += '\n'
         sb ++= line
         sb.toString()
     }
@@ -78,7 +81,10 @@ case class SpecializedError(
         val sb = StringBuilder()
         sb ++= codeIndent
         sb ++= msgs.mkString(s"\n$codeIndent")
-        sb ++= "\n\n"
+        if (!msgs.isEmpty) {
+            sb += '\n'
+        }
+        sb += '\n'
         sb ++= line
         sb.toString()
     }
