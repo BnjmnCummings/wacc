@@ -15,7 +15,6 @@ import lexer.LexErrorBuilder
 import java.io.File
 import scala.util.Success
 import scala.util.Failure
-import parsley.errors.tokenextractors.TillNextWhitespace
 
 object parser {
     def parseF(input: File): Result[Err, Prog] = parser.parseFile(input) match
