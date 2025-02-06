@@ -27,7 +27,7 @@ class rename_while_test extends AnyFlatSpec{
                 Q_While(
                     Q_BoolLiteral(true),
                     List(
-                        Q_Skip
+                        Q_Skip()
                     ),
                     Set()
                 )

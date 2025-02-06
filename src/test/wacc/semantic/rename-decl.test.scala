@@ -19,7 +19,7 @@ class rename_decl_test extends AnyFlatSpec {
 
         rename(prog) shouldBe (Q_Prog(
             List(),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set()
         ), TypeInfo(Map(), Map()))
     }

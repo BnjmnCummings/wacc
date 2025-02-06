@@ -32,11 +32,11 @@ class rename_if_test extends AnyFlatSpec{
                 Q_If(
                     Q_BoolLiteral(true),
                     List(
-                        Q_Skip
+                        Q_Skip()
                     ),
                     Set(),
                     List(
-                        Q_Skip
+                        Q_Skip()
                     ),
                     Set()
                 )

@@ -32,7 +32,7 @@ class rename_func_test extends AnyFlatSpec {
                     Set()                                         // No locals
                 )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(
                 Q_Name("fun", 0)
             )
@@ -62,7 +62,7 @@ class rename_func_test extends AnyFlatSpec {
                     Set()                                      
                 )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(
                 Q_Name("fun", 0)
             )
@@ -106,7 +106,7 @@ class rename_func_test extends AnyFlatSpec {
                     Set()                                      
                 )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(
                 Q_Name("fun2", 0),
                 Q_Name("fun", 0),
@@ -152,7 +152,7 @@ class rename_func_test extends AnyFlatSpec {
                     Set(Q_Name("x", 0))                                      
                 )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(
                 Q_Name("fun", 0)
             )
@@ -194,7 +194,7 @@ class rename_func_test extends AnyFlatSpec {
                     Set()                                      
                 )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(
                 Q_Name("fun", 0)
             )
@@ -238,7 +238,7 @@ class rename_func_test extends AnyFlatSpec {
                     Set(Q_Name("myVar", 0))                                      
                 )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(
                 Q_Name("fun", 0)
             )
@@ -290,7 +290,7 @@ class rename_func_test extends AnyFlatSpec {
                     Set(Q_Name("myVar", 0))                                      
                 )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(
                 Q_Name("fun", 0)
             )
@@ -405,7 +405,7 @@ class rename_func_test extends AnyFlatSpec {
                     Set()                                      
                 )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(
                 Q_Name("fun", 0)
             )
@@ -449,7 +449,7 @@ class rename_func_test extends AnyFlatSpec {
                 Set(Q_Name("param", 1))                                      
             )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(Q_Name("fun", 0))
         ), TypeInfo(Map(Q_Name("param", 0) -> KnownType.Int, Q_Name("param", 1) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List(Q_Name("param", 0)))))
         )
@@ -491,7 +491,7 @@ class rename_func_test extends AnyFlatSpec {
                 Set(Q_Name("fun", 1))                                      
             )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(Q_Name("fun", 0))
         ), TypeInfo(Map(Q_Name("fun", 1) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List())))
         )
@@ -533,7 +533,7 @@ class rename_func_test extends AnyFlatSpec {
                 Set(Q_Name("param", 1))                                      
             )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(Q_Name("fun", 0))
         ), TypeInfo(Map(Q_Name("param", 0) -> KnownType.String, Q_Name("param", 1) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List(Q_Name("param", 0)))))
         )

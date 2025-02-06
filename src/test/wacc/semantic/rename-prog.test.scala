@@ -17,7 +17,7 @@ class rename_prog_test extends AnyFlatSpec {
 
         rename(prog) shouldBe (Q_Prog(
             List(),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set()
         ), TypeInfo(Map(), Map()))
     }
@@ -41,7 +41,7 @@ class rename_prog_test extends AnyFlatSpec {
                     Set()                                         // No locals
                 )
             ),
-            List(Q_Skip),
+            List(Q_Skip()),
             Set(
                 Q_Name("fun", 0)
             )

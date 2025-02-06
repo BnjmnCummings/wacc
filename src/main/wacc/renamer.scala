@@ -68,7 +68,7 @@ object renamer {
             val _stmt = rename(stmt, pScope, _lScope.toSet)
             _stmts += _stmt
             _stmt match {
-                case Q_Decl(v, _) => {
+                case Q_Decl(v, _, _) => {
                     _lScope += v
                 }
                 case _ => ()
@@ -108,7 +108,7 @@ object renamer {
         case CodeBlock(body) =>
             val (_body, scoped) = rename(body, merge(lScope, pScope), Set())
             Q_CodeBlock(_body, scoped)
-        case Skip => Q_Skip
+        case Skip => Q_Skip()
     
     private def merge(scope1: Set[Q_Name], scope2: Set[Q_Name]): Set[Q_Name] = 
         val scope = MutableSet[Q_Name]()
