@@ -115,7 +115,8 @@ object lexer {
             lexer.nonlexeme.integer.decimal32.map(n => s"integer $n"),
             lexer.nonlexeme.names.identifier.map(v => s"identifier $v"),
             lexer.nonlexeme.character.ascii.map(c => s"character $c"),
-            lexer.nonlexeme.string.ascii.map(s => s"string $s")
+            lexer.nonlexeme.string.ascii.map(s => s"string $s"),
+            atomic((string("true") as true) | (string("false") as false)).map(b => s"$b")
         ) ++ desc.symbolDesc.hardKeywords.map { 
             k => lexer.nonlexeme.symbol(k).as(s"keyword $k")
         }
