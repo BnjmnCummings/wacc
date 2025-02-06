@@ -1,5 +1,7 @@
 package wacc
 
+import wacc.ast.*
+
 sealed abstract class SemType
 case object ? extends SemType
 // ? represents an unknown type
@@ -15,6 +17,15 @@ enum KnownType extends SemType {
     case Ident
     // Note an erased pair can be created with ty1/ty2 = pair(?, ?)
 }
+
+def toSemType(t: Type): SemType = t match
+    case BaseType.Int => KnownType.Int
+    case BaseType.Bool => KnownType.Boolean
+    case BaseType.Char => KnownType.Char
+    case BaseType.String => KnownType.String
+    case ArrayType(t) => KnownType.Array(toSemType(t))
+    case PairType(t1, t2) => KnownType.Pair(toSemType(t1), toSemType(t2))
+    case ErasedPairType => KnownType.Pair(?, ?)
 
 // The typer will take this in
 // It maps variable names & function names to their types
