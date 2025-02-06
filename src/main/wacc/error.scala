@@ -54,8 +54,9 @@ case class VanillaError(
         sb ++= s"${codeIndent}expected "
         sb ++= formatWordSet(expectedStrs)
         sb += '\n'
-        sb ++= reasons.mkString("\n")
-        sb += '\n'
+        sb ++= codeIndent
+        sb ++= reasons.mkString(s"\n$codeIndent")
+        sb ++= "\n\n"
         sb ++= line
         sb.toString()
     }
@@ -75,9 +76,10 @@ case class SpecializedError(
 ) extends ErrorLines {
     override def toString(): String = {
         val sb = StringBuilder()
-        sb.addAll(msgs.mkString("\n"))
-        sb.addOne('\n')
-        sb.addAll(line)
+        sb ++= codeIndent
+        sb ++= msgs.mkString(s"\n$codeIndent")
+        sb ++= "\n\n"
+        sb ++= line
         sb.toString()
     }
 }
