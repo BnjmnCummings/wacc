@@ -201,15 +201,11 @@ def check(r: Q_RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType]
     case e: Q_Expr => check(e, c)
 }
 
-def checkReturn(t: Type, stmt: TypedStmt)(using TypeCheckerCtx[?]): Option[SemType] = (stmt, t) match {
-    case (TypedStmt.Return(x: Q_Expr), BaseType.Int) => (check(x, Constraint.Is(KnownType.Int)))._1
-    case (TypedStmt.Return(x: Q_Expr), BaseType.Bool) => (check(x, Constraint.Is(KnownType.Boolean)))._1
-    case (TypedStmt.Return(x: Q_Expr), BaseType.Char) => (check(x, Constraint.Is(KnownType.Char)))._1
-    case (TypedStmt.Return(x: Q_Expr), BaseType.String) => (check(x, Constraint.Is(KnownType.String)))._1
-    case (TypedStmt.Return(x: Q_Expr), ArrayType(_)) => (check(x, Constraint.IsArray))._1
-    case (TypedStmt.Return(x: Q_Expr), PairType(_, _)) => (check(x, Constraint.IsPair))._1
+def checkReturn(t: Type, stmt: TypedStmt)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (stmt, t) match {
+    case (TypedStmt.Return(x: Q_Expr), ty) => check(x, Constraint.Is(toSemType(ty)))._1
     case (TypedStmt.If(cond: Q_Expr, body: List[TypedStmt], el: List[TypedStmt]), t) => 
         Some(mostSpecific(checkReturn(t, body.last), checkReturn(t, el.last)))
+    case (_, _) => throw SyntaxFailureException("Last statement is not a return/if. This should be dealt with in parsing syntax!")
 }
 
 // Func(t: Type, v: String, args: List[Param], body: List[Stmt])
