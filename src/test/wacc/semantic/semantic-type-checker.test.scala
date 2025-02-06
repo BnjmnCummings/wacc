@@ -326,4 +326,49 @@ class types_tst extends AnyFlatSpec {
     it should "reject any other type of condition" in {
         parseAndTypeCheckStr("begin while (3 + 3) do skip done end") shouldBe a [Left[?, ?]]
     }
+
+    "declaration" should "pass type checks when both sides are int type" in {
+        parseAndTypeCheckStr("begin int x = 7 end") shouldBe a [Right[?, ?]]
+        parseAndTypeCheckStr("begin int x = 7 + 7 end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "pass type checks when both sides are array type" in {
+        parseAndTypeCheckStr("begin int[] x = [1, 2] end") shouldBe a [Right[?, ?]]
+        parseAndTypeCheckStr("begin int[] x = [1, 2 + 3] end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "fail type checks when both sides have different types" in {
+        parseAndTypeCheckStr("begin int x = \'a\' end") shouldBe a [Left[?, ?]]
+    }
+
+    it should "fail type checks when both sides have different array types" in {
+        parseAndTypeCheckStr("begin int[] x = [\'a\'] end") shouldBe a [Left[?, ?]]
+    }
+
+    it should "fail type checks when RHS is an array with multiple types in it" in {
+        parseAndTypeCheckStr("begin int[] x = [9, true] end") shouldBe a [Left[?, ?]]
+    }
+
+    "assignment" should "pass type checks when both sides are int type" in {
+        parseAndTypeCheckStr("begin int x = 7; x = 0 end") shouldBe a [Right[?, ?]]
+        parseAndTypeCheckStr("begin int x = 7 + 7; x = 0 end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "pass type checks when both sides are array type" in {
+        parseAndTypeCheckStr("begin int[] x = [1, 2]; x = [1] end") shouldBe a [Right[?, ?]]
+        parseAndTypeCheckStr("begin int[] x = [1, 2]; x = [1 + 1] end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "fail type checks when both sides have different types" in {
+        parseAndTypeCheckStr("begin int x = \'a\' end") shouldBe a [Left[?, ?]]
+    }
+
+    it should "fail type checks when both sides have different array types" in {
+        parseAndTypeCheckStr("begin int[] x = [\'a\'] end") shouldBe a [Left[?, ?]]
+    }
+
+    it should "fail type checks when RHS is an array with multiple types in it" in {
+        parseAndTypeCheckStr("begin int[] x = [9, true] end") shouldBe a [Left[?, ?]]
+
+    }
 }
