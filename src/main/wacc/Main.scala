@@ -15,7 +15,7 @@ def main(args: Array[String]): Unit = {
                 case Success(t) => {
                     println(t)
                     try {
-                        val q_t = renamer.rename(t)
+                        val (q_t, typeInfo) = renamer.rename(t)
                         typeChecker.check(q_t)
                         println(q_t)
                         sys.exit(0)

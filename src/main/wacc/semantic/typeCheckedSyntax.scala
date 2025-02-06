@@ -1,5 +1,8 @@
 package wacc.semantic
+
+import wacc.*
 import wacc.ast.*
+import wacc.q_ast.*
 
 sealed abstract class TypedExpr extends TypedRValue
 
@@ -36,13 +39,14 @@ object TypedExpr {
     case class StringLiteral(v: String) extends TypedExpr {
         def ty = KnownType.String
     }
-    case class Ident(v: String) extends TypedExpr, TypedLValue {
+    case class Ident(v: Q_Name) extends TypedExpr, TypedLValue {
         def ty = KnownType.String
     }
-    case class ArrayElem(v: String, indicies: List[Expr]) extends TypedExpr, TypedLValue {
+    case class ArrayElem(v: Ident, indicies: List[TypedExpr]) extends TypedExpr, TypedLValue {
         def ty = KnownType.Array
     }
 }
+object TPairNullLiteral extends TypedExpr
 
 sealed trait TypedLValue
 sealed trait TypedRValue
@@ -50,7 +54,7 @@ sealed trait TypedRValue
 sealed abstract class TypedStmt
 
 object TypedStmt {
-    case class Decl(t: Type, v: TypedExpr.Ident, r: TypedRValue) extends TypedStmt
+    case class Decl(v: TypedExpr.Ident, r: TypedRValue) extends TypedStmt
     case class Asgn(l: TypedLValue, r: TypedRValue) extends TypedStmt
     case class Read(l: TypedLValue) extends TypedStmt
     case class Free(x: TypedExpr) extends TypedStmt
@@ -61,12 +65,12 @@ object TypedStmt {
     case class If(cond: TypedExpr, body: List[TypedStmt], el: List[TypedStmt]) extends TypedStmt
     case class While(cond: TypedExpr, body: List[TypedStmt]) extends TypedStmt
     case class CodeBlock(body: List[TypedStmt]) extends TypedStmt
-    case class Skip() extends TypedStmt
 }
+object TSkip extends TypedStmt
 
 object TypedRValue {
     case class FuncCall(v: String, args: List[TypedExpr]) extends TypedRValue
-    case class ArrayLiteral(xs: List[TypedExpr]) extends TypedRValue
+    case class ArrayLiteral(xs: List[TypedExpr], t: SemType) extends TypedRValue
     case class PairElem(index: PairIndex, v: TypedLValue) extends TypedExpr, TypedLValue
     case class NewPair(x1: TypedExpr, x2: TypedExpr) extends TypedRValue
 }

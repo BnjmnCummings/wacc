@@ -29,7 +29,7 @@ class semantic_integration_test extends AnyFlatSpec {
             p => parser.parseF(File(p)) match 
                 case Success(t) => {
                     try {
-                        val q_t = renamer.rename(t)
+                        val (q_t, _) = renamer.rename(t)
                         typeChecker.check(q_t)
                         successes += p
                     } catch {
@@ -68,7 +68,7 @@ class semantic_integration_test extends AnyFlatSpec {
             p => parser.parseF(File(p)) match 
                 case Success(t) => {
                     try {
-                        val q_t = renamer.rename(t)
+                        val (q_t, _) = renamer.rename(t)
                         typeChecker.check(q_t)
                         successes += p
                     } catch {
