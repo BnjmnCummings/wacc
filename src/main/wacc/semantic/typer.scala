@@ -32,7 +32,7 @@ def check(stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
     case Q_Decl(id: Q_Name, r: Q_RValue) =>
         // This will check the type of r compared to given type t
         val (_, typedR) = check(r, Constraint.Is(ctx.typeOf(id)))
-        TypedStmt.Decl(TypedExpr.Ident(id), typedR)
+        TypedStmt.Decl(TypedExpr.Ident(), typedR)
     case Q_Asgn(l: Q_LValue, r: Q_RValue) =>
         // Get the type of left value
         val (ty, typedL) = check(l, Constraint.Unconstrained)
@@ -124,11 +124,11 @@ def check(expr: Q_Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType
         val (xTy, typedX) = check(x, Constraint.IsCharacter)
         (xTy.getOrElse(?).satisfies(c), TypedExpr.Ord(typedX))
 
-    case Q_IntLiteral(v: BigInt) => (KnownType.Int.satisfies(c), TypedExpr.IntLiteral(v))
-    case Q_BoolLiteral(v: Boolean) => (KnownType.Boolean.satisfies(c), TypedExpr.BoolLiteral(v))
-    case Q_CharLiteral(v: Char) => (KnownType.Char.satisfies(c), TypedExpr.CharLiteral(v))
-    case Q_StringLiteral(v: String) => (KnownType.String.satisfies(c), TypedExpr.StringLiteral(v))
-    case Q_Ident(v: Q_Name) => (KnownType.Ident.satisfies(c), TypedExpr.Ident(v))
+    case Q_IntLiteral(v: BigInt) => (KnownType.Int.satisfies(c), TypedExpr.IntLiteral())
+    case Q_BoolLiteral(v: Boolean) => (KnownType.Boolean.satisfies(c), TypedExpr.BoolLiteral())
+    case Q_CharLiteral(v: Char) => (KnownType.Char.satisfies(c), TypedExpr.CharLiteral())
+    case Q_StringLiteral(v: String) => (KnownType.String.satisfies(c), TypedExpr.StringLiteral())
+    case Q_Ident(v: Q_Name) => (KnownType.Ident.satisfies(c), TypedExpr.Ident())
     case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr]) => 
         val checkedExprs: List[(Option[SemType], TypedExpr)] = indices.map(expr => check(expr, Constraint.IsNumeric))
         val semTypes = checkedExprs.map(_._1)
@@ -136,7 +136,7 @@ def check(expr: Q_Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType
 
         val ty = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 
-        (ty.satisfies(c), TypedExpr.ArrayElem(TypedExpr.Ident(v), typedExprs))
+        (ty.satisfies(c), TypedExpr.ArrayElem())
     case Q_PairNullLiteral => (KnownType.Pair(?, ?).satisfies(c), TPairNullLiteral)
     case Q_PairElem(index: PairIndex, v: Q_LValue) => 
         val (vTy, typedV) = check(v, c)
@@ -178,7 +178,7 @@ def checkBooleanExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
     (ty.satisfies(c), build(typedX, typedY))
 
 def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedLValue) = l match {
-    case Q_Ident(v: Q_Name) => (ctx.typeOf(v).satisfies(c), TypedExpr.Ident(v))
+    case Q_Ident(v: Q_Name) => (ctx.typeOf(v).satisfies(c), TypedExpr.Ident())
     case Q_PairElem(index: PairIndex, v: Q_LValue) =>
         val (vTy, typedV) = check(v, c)
         (vTy.getOrElse(?).satisfies(c), TypedRValue.PairElem(index, typedV))
@@ -189,7 +189,7 @@ def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Sem
 
         val ty = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 
-        (ty.satisfies(c), TypedExpr.ArrayElem(TypedExpr.Ident(v), typedExprs))
+        (ty.satisfies(c), TypedExpr.ArrayElem())
 }
 
 def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedRValue) = r match {
@@ -234,17 +234,17 @@ def check(func: Q_Func, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Se
 
     val checked = checkReturn(func.t, func.body.last)
 
-    (checked, TypedFunc(checked.getOrElse(?), TypedExpr.Ident(func.v), typedParams, typedBody))
+    (checked, TypedFunc(checked.getOrElse(?), TypedExpr.Ident(), typedParams, typedBody))
 }
 
 def check(param: Q_Param)(using TypeCheckerCtx[?]): TypedParam = param.t match {
-    case BaseType.Int => TypedParam(KnownType.Int, TypedExpr.Ident(param.v))
-    case BaseType.Bool => TypedParam(KnownType.Boolean, TypedExpr.Ident(param.v))
-    case BaseType.Char => TypedParam(KnownType.Char, TypedExpr.Ident(param.v))
-    case BaseType.String => TypedParam(KnownType.String, TypedExpr.Ident(param.v))
-    case ArrayType(t: Type) => TypedParam(KnownType.Array(toSemType(t)), TypedExpr.Ident(param.v))
-    case PairType(t1: Type, t2: Type) => TypedParam(KnownType.Pair(toSemType(t1), toSemType(t2)), TypedExpr.Ident(param.v)) 
-    case ErasedPairType => TypedParam(KnownType.Pair(?, ?), TypedExpr.Ident(param.v))
+    case BaseType.Int => TypedParam(KnownType.Int, TypedExpr.Ident())
+    case BaseType.Bool => TypedParam(KnownType.Boolean, TypedExpr.Ident())
+    case BaseType.Char => TypedParam(KnownType.Char, TypedExpr.Ident())
+    case BaseType.String => TypedParam(KnownType.String, TypedExpr.Ident())
+    case ArrayType(t: Type) => TypedParam(KnownType.Array(toSemType(t)), TypedExpr.Ident())
+    case PairType(t1: Type, t2: Type) => TypedParam(KnownType.Pair(toSemType(t1), toSemType(t2)), TypedExpr.Ident()) 
+    case ErasedPairType => TypedParam(KnownType.Pair(?, ?), TypedExpr.Ident())
 }
 
 @targetName("checkStmts")
