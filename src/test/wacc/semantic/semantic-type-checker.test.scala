@@ -371,3 +371,4 @@ class types_test extends AnyFlatSpec {
         parseAndTypeCheckStr("begin int[] x = []; x = [3, true] end") shouldBe a [Left[?, ?]]
     }
 }
+}
