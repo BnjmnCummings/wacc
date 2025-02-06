@@ -274,4 +274,40 @@ class types_tst extends AnyFlatSpec {
     it should "allow nested pairs" in {
         parseAndTypeCheckStr("begin pair(int, int) p = newpair(1, 2); pair(pair, pair) nestedPair = newpair(p, p) end") shouldBe a [Right[?, ?]]
     }
+
+    "return" should "not be allowed outside function bodies" in {
+        parseAndTypeCheckStr("begin return 7 end") shouldBe a [Left[?, ?]]
+    }
+
+    it should "type check successfully with the correct type inside a function body" in {
+        parseAndTypeCheckStr("begin int x() is return 7 end skip end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "fail when the incorrect type is returned" in {
+        parseAndTypeCheckStr("begin int x() is return \'a\' end skip end") shouldBe a [Left[?, ?]]
+    }
+
+    "read" should "accept an integer value" in {
+        parseAndTypeCheckStr("begin int x = 0; read x end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "accept a char value" in {
+        parseAndTypeCheckStr("begin char a = 'a'; read a end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "reject any other types" in {
+        parseAndTypeCheckStr("begin string a = \"a\"; read a end") shouldBe a [Left[?, ?]]
+        parseAndTypeCheckStr("begin bool a = true; read a end") shouldBe a [Left[?, ?]]
+        parseAndTypeCheckStr("begin int[] a = [9]; read a end") shouldBe a [Left[?, ?]]
+    }
+
+    "exit" should "accept an integer value" in {
+        parseAndTypeCheckStr("begin exit 0 end") shouldBe a [Right[?, ?]]
+        parseAndTypeCheckStr("begin exit 3 + 4 end") shouldBe a [Right[?, ?]]
+    }
+    
+    it should "reject any other type" in {
+        parseAndTypeCheckStr("begin exit \'a\' end") shouldBe a [Left[?, ?]]
+        parseAndTypeCheckStr("begin exit true end") shouldBe a [Left[?, ?]]
+    }
 }
