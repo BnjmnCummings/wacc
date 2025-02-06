@@ -138,7 +138,10 @@ def check(expr: Q_Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType
 
         (ty.satisfies(c), TypedExpr.ArrayElem(TypedExpr.Ident(v), typedExprs))
     case Q_PairNullLiteral => (KnownType.Pair(?, ?).satisfies(c), TPairNullLiteral)
-    case Q_PairElem(_, _) => ???
+    case Q_PairElem(index: PairIndex, v: Q_LValue) => 
+        val (vTy, typedV) = check(v, c)
+        (vTy.getOrElse(?).satisfies(c), TypedRValue.PairElem(index, typedV))
+        
 }
 
 def checkArithmeticExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
@@ -176,7 +179,9 @@ def checkBooleanExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
 
 def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedLValue) = l match {
     case Q_Ident(v: Q_Name) => (ctx.typeOf(v).satisfies(c), TypedExpr.Ident(v))
-    case Q_PairElem(index: PairIndex, v: Q_LValue) => ???
+    case Q_PairElem(index: PairIndex, v: Q_LValue) =>
+        val (vTy, typedV) = check(v, c)
+        (vTy.getOrElse(?).satisfies(c), TypedRValue.PairElem(index, typedV))
     case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr]) => ???
 }
 
@@ -193,7 +198,9 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Sem
         val ty: SemType = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 
         (KnownType.Array(ty).satisfies(c), TypedRValue.ArrayLiteral(typedExprs, ty))
-    case Q_PairElem(index: PairIndex, v: Q_LValue) => ???
+    case Q_PairElem(index: PairIndex, v: Q_LValue) => 
+        val (vTy, typedV) = check(v, c)
+        (vTy.getOrElse(?).satisfies(c), TypedRValue.PairElem(index, typedV))
     case Q_NewPair(x: Q_Expr, y: Q_Expr) =>
         val (xTy, typedX) = check(x, Constraint.Unconstrained)
         val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
