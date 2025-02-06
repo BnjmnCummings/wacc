@@ -1,6 +1,7 @@
 package wacc
 
 import wacc.ast.*
+import wacc.q_ast.*
 
 sealed abstract class SemType
 case object ? extends SemType
@@ -31,7 +32,7 @@ def toSemType(t: Type): SemType = t match
 // It maps variable names & function names to their types
 // This should allow for variables and functions to share names
 class TypeInfo(
-    var varTys: Map[String, KnownType],
-    var funcTys: Map[(String, KnownType), Map[String, KnownType]]
+    var varTys: Map[Q_Name, KnownType],
+    var funcTys: Map[Q_Name, (KnownType, Map[String, KnownType])]
     // This is a map from (Function Identifier, Return Type) -> parameter map [Param name -> Param type]
 )
