@@ -22,6 +22,7 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo): Either[List[Error], TypedProg] = 
     val typedProgFuncs: List[TypedFunc] = progFuncs.map(f => check(f, Constraint.Unconstrained)._2)
     val typedProgStmts: List[TypedStmt] = progStmts.map(check)
 
+    println(s"qast: $prog")
     println(typedProgStmts)
 
     ctx.errors.match {
@@ -64,9 +65,13 @@ def check(stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
         val (condTy, typedCond) = check(cond, Constraint.Unconstrained) // Create a constraint for this being a boolean!
         val typedBody = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
         val typedEl = check(el, Constraint.Unconstrained) // As above
+        println(s"cond $condTy")
+        condTy.getOrElse(?).satisfies(Constraint.IsBoolean)
         TypedStmt.If(typedCond, typedBody, typedEl)
     case Q_While(cond: Q_Expr, body: List[Q_Stmt], scopedBody: Set[Q_Name], _) =>
         val (condTy, typedCond) = check(cond, Constraint.Unconstrained) // Create a constraint for this being a boolean!
+        println(s"cond $condTy")
+        condTy.getOrElse(?).satisfies(Constraint.IsBoolean)
         val typedBody = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
         TypedStmt.While(typedCond, typedBody)
     case Q_CodeBlock(body: List[Q_Stmt], scopedBody: Set[Q_Name], _) =>
@@ -91,15 +96,16 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Se
 
     // The below work on two of the same type
     case Q_Eq(x: Q_Expr, y: Q_Expr, _) =>
+        println("made it")
         val (xTy, typedX) = check(x, Constraint.Is(?))
+        println(xTy)
         val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
-        val ty = mostSpecific(xTy, yTy)
-        (ty.satisfies(c), TypedExpr.Eq(typedX, typedY))
+        println(yTy)
+        (Some(KnownType.Boolean), TypedExpr.Eq(typedX, typedY))
     case Q_NotEq(x: Q_Expr, y: Q_Expr, _) => 
         val (xTy, typedX) = check(x, Constraint.Is(?))
         val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
-        val ty = mostSpecific(xTy, yTy)
-        (ty.satisfies(c), TypedExpr.NotEq(typedX, typedY))
+        (Some(KnownType.Boolean), TypedExpr.NotEq(typedX, typedY))
 
     // The below only work on two bools
     case Q_And(x: Q_Expr, y: Q_Expr, _) => checkBooleanExpr(x, y, c)(TypedExpr.And.apply)
@@ -287,7 +293,7 @@ extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[
     case (kty@KnownType.Char, Constraint.IsCharacter) => Some(kty)
     case (kty, Constraint.IsCharacter) => ctx.error(Error.NonCharacterType(kty))
     case (kty@KnownType.Boolean, Constraint.IsBoolean) => Some(kty)
-    case (kty, Constraint.IsBoolean) => ctx.error(Error.NonCharacterType(kty))
+    case (kty, Constraint.IsBoolean) => ctx.error(Error.NonBooleanType(kty))
     case (kty@KnownType.String, Constraint.IsString) => Some(kty)
     case (kty, Constraint.IsString) => ctx.error(Error.NonStringType(kty))
     case (kty@KnownType.Int, Constraint.IsExitable) => Some(kty)
