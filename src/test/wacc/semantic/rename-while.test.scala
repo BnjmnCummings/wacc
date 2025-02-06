@@ -390,4 +390,125 @@ class rename_while_test extends AnyFlatSpec{
                 Map()
             ))
     }
+
+    it should "be able to access parent scope variables in the condition" in {
+        val prog = Prog(
+            List(),
+            List(
+                Decl(
+                    BaseType.Int,
+                    Ident("x"),
+                    IntLiteral(5)
+                ),
+                While(
+                    Ident("x"),
+                    List(
+                        Asgn(
+                            Ident("x"),
+                            IntLiteral(10)
+                        )
+                    )
+                )
+            )
+        )
+
+        rename(prog) shouldBe (Q_Prog(
+            List(),
+            List(
+                Q_Decl(
+                    Q_Name("x", 0),
+                    Q_IntLiteral(5)
+                ),
+                Q_While(
+                    Q_Ident(Q_Name("x", 0)),
+                    List(
+                        Q_Asgn(
+                            Q_Ident(Q_Name("x", 0)),
+                            Q_IntLiteral(10)
+                        )
+                    ),
+                    Set()
+                )
+            ),
+            Set(
+                Q_Name("x", 0)
+            )
+        ), TypeInfo(
+            Map(
+                Q_Name("x", 0) -> KnownType.Int
+            ),
+            Map()
+        ))
+    }
+
+    it should "be able to rename variables in nested while loop conditions" in {
+        val prog = Prog(
+            List(),
+            List(
+                Decl(
+                    BaseType.Int,
+                    Ident("x"),
+                    IntLiteral(10)
+                ),
+                While(
+                    BoolLiteral(true),
+                    List(
+                        Decl(
+                            BaseType.Int,
+                            Ident("x"),
+                            IntLiteral(5)
+                        ),
+                        While(
+                            Ident("x"),
+                            List(
+                                Asgn(
+                                    Ident("x"),
+                                    IntLiteral(5)
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        rename(prog) shouldBe (Q_Prog(
+            List(),
+            List(
+                Q_Decl(
+                    Q_Name("x", 0),
+                    Q_IntLiteral(10)
+                ),
+                Q_While(
+                    Q_BoolLiteral(true),
+                    List(
+                        Q_Decl(
+                            Q_Name("x", 1),
+                            Q_IntLiteral(5)
+                        ),
+                        Q_While(
+                            Q_Ident(Q_Name("x", 1)),
+                            List(
+                                Q_Asgn(
+                                    Q_Ident(Q_Name("x", 1)),
+                                    Q_IntLiteral(5)
+                                )
+                            ),
+                            Set()
+                        )
+                    ),
+                    Set(Q_Name("x", 1))
+                )
+            ),
+            Set(
+                Q_Name("x", 0)
+            )
+        ), TypeInfo(
+            Map(
+                Q_Name("x", 0) -> KnownType.Int,
+                Q_Name("x", 1) -> KnownType.Int
+            ),
+            Map()
+        ))
+    }
 }
