@@ -15,7 +15,6 @@ import lexer.LexErrorBuilder
 import java.io.File
 import scala.util.Success
 import scala.util.Failure
-import parsley.errors.tokenextractors.TillNextWhitespace
 
 object parser {
     def parseF(input: File): Result[Err, Prog] = parser.parseFile(input) match
@@ -185,7 +184,7 @@ object parser {
     lazy val codeblock: Parsley[Stmt] = CodeBlock("begin" ~> stmts <~ "end")
 
     lazy val stmts: Parsley[List[Stmt]] = sepBy1(
-        (skip | decl | asgn | read | free | _return | exit | print | println | codeblock | _if | _while),
+        (skip | decl | asgn | read | free | _return | exit | print | println | codeblock | _if | _while).label("statement"),
         ";"
     )
 
