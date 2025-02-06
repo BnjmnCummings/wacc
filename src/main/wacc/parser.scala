@@ -1,6 +1,7 @@
 package wacc
 
 import wacc.ast.*
+import wacc.lexer.{BeginProg, EndProg, ThenIf, FiIf, WhileDo, WhileDone}
 
 import parsley.{Parsley, Result}
 import parsley.quick.*
@@ -15,6 +16,7 @@ import scala.util.Success
 import scala.util.Failure
 import parsley.errors.tokenextractors.TillNextWhitespace
 
+
 object parser {
     def parseF(input: File): Result[Err, Prog] = parser.parseFile(input) match
         case Success(res) => res
@@ -26,7 +28,7 @@ object parser {
         def trimToParserDemand: Boolean = false
     }
 
-    private val parser: Parsley[Prog] = fully("begin" ~> Prog(many(func), stmts) <~ "end")
+    private val parser: Parsley[Prog] = fully(BeginProg ~> Prog(many(func), stmts) <~ EndProg)
 
     lazy val expr: Parsley[Expr] = 
         precedence(
@@ -172,14 +174,14 @@ object parser {
     lazy val println: Parsley[Stmt] = Println("println" ~> expr)
     
     lazy val _if: Parsley[Stmt] = If(
-        "if" ~> expr <~ "then",
+        "if" ~> expr <~ ThenIf,
         stmts,
-        "else" ~> stmts <~ "fi"
+        "else" ~> stmts <~ FiIf
     )
 
     lazy val _while: Parsley[Stmt] = While(
-        "while" ~> expr <~ "do",
-        stmts <~ "done"
+        "while" ~> expr <~ WhileDo,
+        stmts <~ WhileDone
     )
 
     lazy val codeblock: Parsley[Stmt] = CodeBlock("begin" ~> stmts <~ "end")

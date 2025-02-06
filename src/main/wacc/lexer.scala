@@ -6,6 +6,8 @@ import parsley.token.{Lexer, Basic}
 import parsley.token.descriptions.*
 import parsley.token.errors.*
 
+import parsley.errors.combinator.ErrorMethods
+
 import parsley.character.{string}
 
 object lexer {
@@ -64,8 +66,7 @@ object lexer {
                 "chr" -> Label("prefix operator"),
                 "(" -> Label("bracketed expression"),
                 ")" -> LabelAndReason("unclosed brackets", "closing bracket"),
-                // Not working currently
-                ";" -> LabelAndReason("semicolons should only connect successive statements", "semicolon")
+                ";" -> Label("semicolon")
             )
         }
 
@@ -98,6 +99,14 @@ object lexer {
     val implicits = lexer.lexeme.symbol.implicits
     def fully[A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
 
+    // special tokens
+    val BeginProg = lexer.lexeme.symbol("begin").explain("programs must start with 'begin'")
+    val EndProg = lexer.lexeme.symbol("end").explain("programs must end with 'end'")
+    val ThenIf = lexer.lexeme.symbol("then").explain("if statements must have a 'then' before the body")
+    val FiIf = lexer.lexeme.symbol("fi").explain("if statements must end with 'fi'")
+    val WhileDo = lexer.lexeme.symbol("do").explain("while loops must have a 'do' before the body")
+    val WhileDone = lexer.lexeme.symbol("done").explain("while loops must end with 'done'")
+    
     def idStart(c: Char): Boolean = c.isLetter || c == '_'
     def idRest(c: Char): Boolean = c.isLetterOrDigit || c == '_'
 }
