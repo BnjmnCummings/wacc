@@ -8,7 +8,7 @@ import parsley.errors.ErrorBuilder
 import parsley.errors.combinator.ErrorMethods
 import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix, chain}
 import lexer.{_int, _ident, _char, _string, _bool, fully}
-import lexer.{BeginProg, EndProg, ThenIf, FiIf, WhileDo, WhileDone}
+import lexer.{BeginProg, ThenIf, FiIf, WhileDo, WhileDone}
 import lexer.implicits.implicitSymbol
 import lexer.LexErrorBuilder
 
@@ -26,7 +26,7 @@ object parser {
 
     private implicit val errBuilder: ErrorBuilder[Err] = LexErrorBuilder
 
-    private val parser: Parsley[Prog] = fully(BeginProg ~> Prog(many(func), stmts) <~ EndProg)
+    private val parser: Parsley[Prog] = fully(BeginProg ~> Prog(many(func), stmts) <~ "end")
 
     lazy val expr: Parsley[Expr] = 
         precedence(

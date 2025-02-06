@@ -102,7 +102,6 @@ object lexer {
 
     // special tokens
     val BeginProg = lexer.lexeme.symbol("begin").explain("programs must start with 'begin'")
-    val EndProg = lexer.lexeme.symbol("end").explain("programs must end with 'end'")
     val ThenIf = lexer.lexeme.symbol("then").explain("if statements must have a 'then' before the body")
     val FiIf = lexer.lexeme.symbol("fi").explain("if statements must end with 'fi'")
     val WhileDo = lexer.lexeme.symbol("do").explain("while loops must have a 'do' before the body")
