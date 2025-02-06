@@ -2,15 +2,12 @@ package test.wacc.semantic
 
 import wacc.semantic.*
 import wacc.*
-import wacc.ast.*
 import wacc.q_ast.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 import wacc.semantic.Error.TypeMismatch
-import parsley.Failure
-import parsley.Success
 
-class types_tst extends AnyFlatSpec {
+class types_test extends AnyFlatSpec {
     "basic type declaration" should "be semantically valid" in {
         val funcs: List[Q_Func] = List[Q_Func]()
 
@@ -172,8 +169,6 @@ class types_tst extends AnyFlatSpec {
         
         val tyInfo = TypeInfo(varTys = Map(Q_Name("arr1", 0) -> KnownType.Array(KnownType.Int), Q_Name("arr2", 0) -> KnownType.Array(KnownType.Int), Q_Name("arr3", 0) -> KnownType.Array(KnownType.Int), Q_Name("arr4", 0) -> KnownType.Array(KnownType.Int)), funcTys = Map())
 
-        val typedFuncs: List[TypedFunc] = List[TypedFunc]()
-        val typedBody: List[TypedStmt] = List[TypedStmt]()
 
         val expected = Left(List(
             TypeMismatch(KnownType.Int, KnownType.Array(KnownType.Int)),
@@ -184,27 +179,7 @@ class types_tst extends AnyFlatSpec {
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
     }
-
-    /*"array declaration with mixed types" should "be semantically invalid" in {
-        val funcs: List[Q_Func] = List[Q_Func]()
-
-        val body: List[Q_Stmt] = List[Q_Stmt](
-            Q_Decl(Q_Name("arr5", 0), Q_ArrayLiteral(List[Q_Expr](Q_IntLiteral(3), Q_CharLiteral('a'))))
-        )
-
-        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("arr5", 0))
-
-        val prog: Q_Prog = Q_Prog(funcs, body, scoped)
-        
-        val tyInfo = TypeInfo(varTys = Map(Q_Name("arr5", 0) -> KnownType.Array(KnownType.Int)), funcTys = Map())
-
-        val expected = Left(List(
-            TypeMismatch(KnownType.Char, KnownType.Int)
-        ))
-
-        wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
-    }*/
-
+    
     "free" should "be able to free arrays" in {
         val funcs: List[Q_Func] = List[Q_Func]()
 
@@ -360,15 +335,14 @@ class types_tst extends AnyFlatSpec {
     }
 
     it should "fail type checks when both sides have different types" in {
-        parseAndTypeCheckStr("begin int x = \'a\' end") shouldBe a [Left[?, ?]]
+        parseAndTypeCheckStr("begin int x = 3; x = 'a' end") shouldBe a [Left[?, ?]]
     }
 
     it should "fail type checks when both sides have different array types" in {
-        parseAndTypeCheckStr("begin int[] x = [\'a\'] end") shouldBe a [Left[?, ?]]
+        parseAndTypeCheckStr("begin int[] x = []; x = ['a'] end") shouldBe a [Left[?, ?]]
     }
 
     it should "fail type checks when RHS is an array with multiple types in it" in {
-        parseAndTypeCheckStr("begin int[] x = [9, true] end") shouldBe a [Left[?, ?]]
-
+        parseAndTypeCheckStr("begin int[] x = []; x = [3, true] end") shouldBe a [Left[?, ?]]
     }
 }
