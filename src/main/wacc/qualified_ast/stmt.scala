@@ -5,7 +5,7 @@ import parsley.generic
 
 sealed trait Q_Stmt
 
-case class Q_Decl(t: Type, v: Q_Name, r: Q_RValue) extends Q_Stmt
+case class Q_Decl(v: Q_Name, r: Q_RValue) extends Q_Stmt
 case class Q_Asgn(l: Q_LValue, r: Q_RValue) extends Q_Stmt
 case class Q_Read(l: Q_LValue) extends Q_Stmt
 case class Q_Free(x: Q_Expr) extends Q_Stmt
@@ -17,7 +17,7 @@ case class Q_If(cond: Q_Expr, body: List[Q_Stmt], scopedBody: Set[Q_Name], el: L
 case class Q_While(cond: Q_Expr, body: List[Q_Stmt], scoped: Set[Q_Name]) extends Q_Stmt
 case class Q_CodeBlock(body: List[Q_Stmt], scoped: Set[Q_Name]) extends Q_Stmt
 
-object Q_Decl extends generic.ParserBridge3[Type, Q_Name, Q_RValue, Q_Decl]
+object Q_Decl extends generic.ParserBridge2[Q_Name, Q_RValue, Q_Decl]
 object Q_Asgn extends generic.ParserBridge2[Q_LValue, Q_RValue, Q_Asgn]
 object Q_Read extends generic.ParserBridge1[Q_LValue, Q_Read]
 object Q_Free extends generic.ParserBridge1[Q_Expr, Q_Free]
