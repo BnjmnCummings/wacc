@@ -2,6 +2,7 @@ package wacc.semantic
 
 import wacc.*
 import wacc.ast.*
+import wacc.q_ast.*
 
 sealed abstract class TypedExpr extends TypedRValue
 
@@ -38,7 +39,7 @@ object TypedExpr {
     case class StringLiteral(v: String) extends TypedExpr {
         def ty = KnownType.String
     }
-    case class Ident(v: String) extends TypedExpr, TypedLValue {
+    case class Ident(v: Q_Name) extends TypedExpr, TypedLValue {
         def ty = KnownType.String
     }
     case class ArrayElem(v: Ident, indicies: List[TypedExpr]) extends TypedExpr, TypedLValue {
@@ -53,7 +54,7 @@ sealed trait TypedRValue
 sealed abstract class TypedStmt
 
 object TypedStmt {
-    case class Decl(t: Type, v: TypedExpr.Ident, r: TypedRValue) extends TypedStmt
+    case class Decl(v: TypedExpr.Ident, r: TypedRValue) extends TypedStmt
     case class Asgn(l: TypedLValue, r: TypedRValue) extends TypedStmt
     case class Read(l: TypedLValue) extends TypedStmt
     case class Free(x: TypedExpr) extends TypedStmt

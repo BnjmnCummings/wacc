@@ -3,10 +3,10 @@ package test.wacc.semantic
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 
+import wacc.*
 import wacc.ast.*
 import wacc.q_ast.*
 import wacc.renamer.*
-import java.lang.foreign.MemorySegment.Scope
 import wacc.ScopeException
 
 class rename_stmt_test extends AnyFlatSpec {
@@ -17,11 +17,11 @@ class rename_stmt_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(Q_Skip),
             Set()
-        )
+        ), TypeInfo(Map(), Map()))
     }
 
     /* Declaration and Assignment */
@@ -37,19 +37,21 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
-                    BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(5)
                 )
             ),
             Set(
-                Q_Name("x", "x/0")
+                Q_Name("x", 0)
             )
-        )
+        ), TypeInfo(
+            Map(Q_Name("x", 0) -> KnownType.Int),
+            Map()
+        ))
     }
 
     it should "fail duplicate declarations" in {
@@ -165,25 +167,29 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
-                    BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_Decl(
-                    BaseType.Int,
-                    Q_Name("y", "y/0"),
-                    Q_Ident(Q_Name("x", "x/0"))
+                    Q_Name("y", 0),
+                    Q_Ident(Q_Name("x", 0))
                 )
             ),
             Set(
-                Q_Name("x", "x/0"),
-                Q_Name("y", "y/0")
+                Q_Name("x", 0),
+                Q_Name("y", 0)
             )
-        )
+        ), TypeInfo(
+            Map(
+                Q_Name("x", 0) -> KnownType.Int,
+                Q_Name("y", 0) -> KnownType.Int
+            ),
+            Map()
+        ))
     }
 
     it should "fail to declare a variable to itself" in {
@@ -230,23 +236,27 @@ class rename_stmt_test extends AnyFlatSpec {
                 ),
             )
         )
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
-                    BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(6),
                 ),
                 Q_Asgn(
-                    Q_Ident(Q_Name("x", "x/0")),
-                    Q_Ident(Q_Name("x", "x/0")),
+                    Q_Ident(Q_Name("x", 0)),
+                    Q_Ident(Q_Name("x", 0)),
                 ),
             ),
             Set(
-                Q_Name("x", "x/0")
+                Q_Name("x", 0)
             )
-        )
+        ), TypeInfo(
+            Map(
+                Q_Name("x", 0) -> KnownType.Int,
+            ),
+            Map()
+        ))
     }
 
     "rename-codeblocks" should "be able to rename basic codeblocks and scopes should be confined" in {
@@ -265,24 +275,28 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_CodeBlock(
                     List(
                         Q_Decl(
-                            BaseType.Int,
-                            Q_Name("y", "y/0"),
+                            Q_Name("y", 0),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/0")
+                        Q_Name("y", 0)
                     )
                 )
             ),
             Set()
-        )
+        ), TypeInfo(
+            Map(
+                Q_Name("y", 0) -> KnownType.Int
+            ),
+            Map()
+        ))
     }
 
     it should "be able to rename clashing codeblock scopes" in {
@@ -306,31 +320,35 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
-                    BaseType.Int,
-                    Q_Name("y", "y/0"),
+                    Q_Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
-                            BaseType.Int,
-                            Q_Name("y", "y/1"),
+                            Q_Name("y", 1),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/1")
+                        Q_Name("y", 1)
                     )
                 )
             ),
             Set(
-                Q_Name("y", "y/0"),
+                Q_Name("y", 0)
             )
-        )
+        ), TypeInfo(
+            Map(
+                Q_Name("y", 0) -> KnownType.Int,
+                Q_Name("y", 1) -> KnownType.Int
+            ),
+            Map()
+        ))
     }
 
     it should "be able to access variables in a parent scope" in {
@@ -354,31 +372,35 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
-                    BaseType.Int,
-                    Q_Name("y", "y/0"),
+                    Q_Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
-                            BaseType.Int,
-                            Q_Name("x", "x/0"),
-                            Q_Ident(Q_Name("y", "y/0"))
+                            Q_Name("x", 0),
+                            Q_Ident(Q_Name("y", 0))
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/0")
+                        Q_Name("x", 0)
                     )
                 )
             ),
             Set(
-                Q_Name("y", "y/0")
+                Q_Name("y", 0)
             )
-        )
+        ), TypeInfo(
+            Map(
+                Q_Name("y", 0) -> KnownType.Int,
+                Q_Name("x", 0) -> KnownType.Int
+            ),
+            Map()
+        ))
     }
 
     it should "let a shadowed variable be set to the parent variable" in {
@@ -402,31 +424,35 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
-                    BaseType.Int,
-                    Q_Name("y", "y/0"),
+                    Q_Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
-                            BaseType.Int,
-                            Q_Name("y", "y/1"),
-                            Q_Ident(Q_Name("y", "y/0"))
+                            Q_Name("y", 1),
+                            Q_Ident(Q_Name("y", 0))
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/1")
+                        Q_Name("y", 1)
                     )
                 )
             ),
             Set(
-                Q_Name("y", "y/0")
+                Q_Name("y", 0)
             )
-        )
+        ), TypeInfo(
+            Map(
+                Q_Name("y", 0) -> KnownType.Int,
+                Q_Name("y", 1) -> KnownType.Int
+            ),
+            Map()
+        ))
     }
 
     it should "let shadowed variables have different types" in {
@@ -450,31 +476,35 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
-                    BaseType.Int,
-                    Q_Name("y", "y/0"),
+                    Q_Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
-                            BaseType.String,
-                            Q_Name("y", "y/1"),
+                            Q_Name("y", 1),
                             Q_StringLiteral("hello")
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/1")
+                        Q_Name("y", 1)
                     )
                 )
             ),
             Set(
-                Q_Name("y", "y/0")
+                Q_Name("y", 0)
             )
-        )
+        ), TypeInfo(
+            Map(
+                Q_Name("y", 0) -> KnownType.Int,
+                Q_Name("y", 1) -> KnownType.String
+            ),
+            Map()
+        ))
     }
 
     "rename-if" should "be able to rename basic if statements" in {
@@ -493,7 +523,7 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_If(
@@ -509,7 +539,11 @@ class rename_stmt_test extends AnyFlatSpec {
                 )
             ),
             Set()
-        )
+        ),
+        TypeInfo(
+            Map(),
+            Map()
+        ))
     }
         
     it should "be able to rename if statements with variables" in {
@@ -536,35 +570,39 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_If(
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            BaseType.Int,
-                            Q_Name("x", "x/0"),
+                            Q_Name("x", 0),
                             Q_IntLiteral(5)
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/0")
+                        Q_Name("x", 0)
                     ),
                     List(
                         Q_Decl(
-                            BaseType.Int,
-                            Q_Name("y", "y/0"),
+                            Q_Name("y", 0),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/0")   
+                        Q_Name("y", 0)   
                     )
                 )
             ),
             Set()
-        )
+        ), TypeInfo(
+            Map(
+                Q_Name("x", 0) -> KnownType.Int,
+                Q_Name("y", 0) -> KnownType.Int
+            ),
+            Map()
+        ))
     }
 
     it should "be able to shadow clashing variable names" in {
@@ -596,42 +634,46 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
-                    BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_If(
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            BaseType.Int,
-                            Q_Name("x", "x/1"),
+                            Q_Name("x", 1),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/1")
+                        Q_Name("x", 1)
                     ),
                     List(
                         Q_Decl(
-                            BaseType.Int,
-                            Q_Name("x", "x/2"),
+                            Q_Name("x", 2),
                             Q_IntLiteral(7)
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/2")
+                        Q_Name("x", 2)
                     )
                 )
             ),
             Set(
-                Q_Name("x", "x/0")
+                Q_Name("x", 0)
             )
-        )
+        ), TypeInfo(
+            Map(
+                Q_Name("x", 0) -> KnownType.Int,
+                Q_Name("x", 1) -> KnownType.Int,
+                Q_Name("x", 2) -> KnownType.Int
+            ),
+            Map()
+        ))
     }
 
     it should "fail to access a variable declared in 'if' clause from 'else' clause" in {
@@ -689,42 +731,46 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
-                    BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_If(
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            BaseType.String,
-                            Q_Name("x", "x/1"),
+                            Q_Name("x", 1),
                             Q_StringLiteral("hello")
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/1")
+                        Q_Name("x", 1)
                     ),
                     List(
                         Q_Decl(
-                            BaseType.Int,
-                            Q_Name("x", "x/2"),
+                            Q_Name("x", 2),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/2")
+                        Q_Name("x", 2)
                     )
                 )
             ),
             Set(
-                Q_Name("x", "x/0")
+                Q_Name("x", 0)
             )
-        )
+        ), TypeInfo(
+            Map(
+                Q_Name("x", 0) -> KnownType.Int,
+                Q_Name("x", 1) -> KnownType.String,
+                Q_Name("x", 2) -> KnownType.Int
+            ),
+            Map()
+        ))
     }
 
     it should "be able to access variables from parent scope" in {
@@ -756,42 +802,46 @@ class rename_stmt_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
-                    BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_If(
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            BaseType.Int,
-                            Q_Name("y", "y/0"),
-                            Q_Ident(Q_Name("x", "x/0"))
+                            Q_Name("y", 0),
+                            Q_Ident(Q_Name("x", 0))
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/0")
+                        Q_Name("y", 0)
                     ),
                     List(
                         Q_Decl(
-                            BaseType.Int,
-                            Q_Name("z", "z/0"),
-                            Q_Ident(Q_Name("x", "x/0"))
+                            Q_Name("z", 0),
+                            Q_Ident(Q_Name("x", 0))
                         )
                     ),
                     Set(
-                        Q_Name("z", "z/0")
+                        Q_Name("z", 0)
                     )
                 )
             ),
             Set(
-                Q_Name("x", "x/0")
+                Q_Name("x", 0)
             )
-        )
+        ), TypeInfo(
+            Map(
+                Q_Name("x", 0) -> KnownType.Int,
+                Q_Name("y", 0) -> KnownType.Int,
+                Q_Name("z", 0) -> KnownType.Int
+            ),
+            Map()
+        ))
     }
 
     "rename-call-statement" should "be able to shadow the name of a function" in {
