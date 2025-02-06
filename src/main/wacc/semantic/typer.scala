@@ -217,12 +217,12 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Sem
     case e: Q_Expr => check(e, c)
 }
 
-def checkReturn(t: Type, stmt: TypedStmt)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (stmt, t) match {
-    case (TypedStmt.Return(x: Q_Expr), ty) => check(x, Constraint.Is(toSemType(ty)))._1
-    case (TypedStmt.Exit(x: Q_Expr), _) => check(x, Constraint.Is(KnownType.Int))._1
-    case (TypedStmt.If(cond: Q_Expr, body: List[TypedStmt], el: List[TypedStmt]), t) => 
+def checkReturn(t: Type, stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (stmt, t) match {
+    case (Q_Return(x: Q_Expr), ty) => check(x, Constraint.Is(toSemType(ty)))._1
+    case (Q_Exit(x: Q_Expr), _) => check(x, Constraint.Is(KnownType.Int))._1
+    case (Q_If(cond: Q_Expr, body: List[Q_Stmt], _, el: List[Q_Stmt], _), t) => 
         Some(mostSpecific(checkReturn(t, body.last), checkReturn(t, el.last)))
-    case (TypedStmt.CodeBlock(stmts: List[TypedStmt]), t) => checkReturn(t, stmts.last)
+    case (Q_CodeBlock(stmts: List[Q_Stmt], _), t) => checkReturn(t, stmts.last)
     case (_, _) => throw SyntaxFailureException("Last statement is not a return/if. This should be dealt with in parsing")
 }
 
@@ -232,9 +232,7 @@ def check(func: Q_Func, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Se
     
     val typedBody: List[TypedStmt] = func.body.map(check)
 
-    val lastStmt: TypedStmt = typedBody.last
-
-    val checked = checkReturn(func.t, lastStmt)
+    val checked = checkReturn(func.t, func.body.last)
 
     (checked, TypedFunc(checked.getOrElse(?), TypedExpr.Ident(func.v), typedParams, typedBody))
 }
