@@ -310,4 +310,20 @@ class types_tst extends AnyFlatSpec {
         parseAndTypeCheckStr("begin exit \'a\' end") shouldBe a [Left[?, ?]]
         parseAndTypeCheckStr("begin exit true end") shouldBe a [Left[?, ?]]
     }
+
+    "if statement" should "accept a boolean condition" in {
+        parseAndTypeCheckStr("begin if (3 == 3) then skip else skip fi end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "reject any other type of condition" in {
+        parseAndTypeCheckStr("begin if (3 + 3) then skip else skip fi end") shouldBe a [Left[?, ?]]
+    }
+
+    "while loop" should "accept a boolean condition" in {
+        parseAndTypeCheckStr("begin while (3 == 3) do skip done end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "reject any other type of condition" in {
+        parseAndTypeCheckStr("begin while (3 + 3) do skip done end") shouldBe a [Left[?, ?]]
+    }
 }
