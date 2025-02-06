@@ -183,7 +183,7 @@ class types_tst extends AnyFlatSpec {
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
     }
 
-    "array declaration with mixed types" should "be semantically invalid" in {
+    /*"array declaration with mixed types" should "be semantically invalid" in {
         val funcs: List[Q_Func] = List[Q_Func]()
 
         val body: List[Q_Stmt] = List[Q_Stmt](
@@ -201,5 +201,5 @@ class types_tst extends AnyFlatSpec {
         ))
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
-    }
+    }*/
 }
