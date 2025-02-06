@@ -22,6 +22,8 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo): Either[List[Error], TypedProg] = 
     val typedProgFuncs: List[TypedFunc] = progFuncs.map(f => check(f, Constraint.Unconstrained)._2)
     val typedProgStmts: List[TypedStmt] = progStmts.map(check)
 
+    println(typedProgStmts)
+
     ctx.errors.match {
         case err :: errs => Left(err :: errs)
         case Nil         => Right(TypedProg(typedProgFuncs, typedProgStmts))
@@ -73,7 +75,7 @@ def check(stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
     case Q_Skip => TSkip
 }
 
-def check(expr: Q_Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedExpr) = expr match {
+def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedExpr) = expr match {
     // The below only works on two ints
     case Q_Mul(x: Q_Expr, y: Q_Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Mul.apply)
     case Q_Div(x: Q_Expr, y: Q_Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Div.apply)
@@ -128,11 +130,12 @@ def check(expr: Q_Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType
     case Q_BoolLiteral(v: Boolean) => (KnownType.Boolean.satisfies(c), TypedExpr.BoolLiteral())
     case Q_CharLiteral(v: Char) => (KnownType.Char.satisfies(c), TypedExpr.CharLiteral())
     case Q_StringLiteral(v: String) => (KnownType.String.satisfies(c), TypedExpr.StringLiteral())
-    case Q_Ident(v: Q_Name) => (KnownType.Ident.satisfies(c), TypedExpr.Ident())
+    case Q_Ident(v: Q_Name) => 
+        val kt: KnownType = ctx.typeOf(v)
+        (kt.satisfies(c), knownToTypedExpr(kt))
     case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr]) => 
         val checkedExprs: List[(Option[SemType], TypedExpr)] = indices.map(expr => check(expr, Constraint.IsNumeric))
         val semTypes = checkedExprs.map(_._1)
-        val typedExprs = checkedExprs.map(_._2)
 
         val ty = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 
@@ -185,7 +188,6 @@ def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Sem
     case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr]) =>
         val checkedExprs: List[(Option[SemType], TypedExpr)] = indices.map(expr => check(expr, Constraint.IsNumeric))
         val semTypes = checkedExprs.map(_._1)
-        val typedExprs = checkedExprs.map(_._2)
 
         val ty = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 

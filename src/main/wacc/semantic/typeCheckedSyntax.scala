@@ -39,10 +39,10 @@ object TypedExpr {
     case class StringLiteral() extends TypedExpr {
         def ty = KnownType.String
     }
-    case class ArrayLiteral() extends TypedExpr {
+    case class ArrayLiteral(t: SemType) extends TypedExpr {
         def ty = KnownType.Array
     }
-    case class PairLiteral() extends TypedExpr {
+    case class PairLiteral(t1: SemType, t2: SemType) extends TypedExpr {
         def ty = KnownType.Pair
     }
     case class Ident() extends TypedExpr, TypedLValue {
@@ -80,4 +80,14 @@ object TypedRValue {
     case class ArrayLiteral(xs: List[TypedExpr], t: SemType) extends TypedRValue
     case class PairElem(index: PairIndex, v: TypedLValue) extends TypedExpr, TypedLValue
     case class NewPair(x1: TypedExpr, x2: TypedExpr) extends TypedRValue
+}
+
+def knownToTypedExpr(kt: KnownType): TypedExpr = kt match {
+    case KnownType.Int => TypedExpr.IntLiteral()
+    case KnownType.Boolean => TypedExpr.BoolLiteral()
+    case KnownType.Char => TypedExpr.CharLiteral()
+    case KnownType.String => TypedExpr.StringLiteral()
+    case KnownType.Array(ty) => TypedExpr.ArrayLiteral(ty)
+    case KnownType.Pair(ty1, ty2) => TypedExpr.PairLiteral(ty1, ty2)
+    case KnownType.Ident => TypedExpr.Ident()
 }
