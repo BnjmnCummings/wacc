@@ -3,6 +3,7 @@ package test.wacc.semantic
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 
+import wacc.*
 import wacc.ast.*
 import wacc.q_ast.*
 import wacc.renamer.*
@@ -14,11 +15,11 @@ class rename_prog_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(),
             List(Q_Skip),
             Set()
-        )
+        ), TypeInfo(Map(), Map()))
     }
 
     it should "be able to rename programs with functions" in {
@@ -32,7 +33,7 @@ class rename_prog_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, Q_Name("fun", 0), List(), // int fun/0()
@@ -44,6 +45,7 @@ class rename_prog_test extends AnyFlatSpec {
             Set(
                 Q_Name("fun", 0)
             )
+            ), TypeInfo(Map(), Map(Q_Name("fun", 0) -> (KnownType.Int, List())))
         )
     }
 }

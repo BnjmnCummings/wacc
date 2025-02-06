@@ -7,6 +7,7 @@ import wacc.ast.*
 import wacc.q_ast.*
 import wacc.renamer.*
 import wacc.ScopeException
+import wacc.*
 
 
 class rename_func_test extends AnyFlatSpec {
@@ -23,7 +24,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, Q_Name("fun", 0), List(), // int fun/0()
@@ -35,7 +36,7 @@ class rename_func_test extends AnyFlatSpec {
             Set(
                 Q_Name("fun", 0)
             )
-        )
+        ), TypeInfo(Map(), Map(Q_Name("fun", 0) -> (KnownType.Int, List()))))
     }
 
     it should "be able to rename functions with parameters" in {
@@ -51,7 +52,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -65,7 +66,7 @@ class rename_func_test extends AnyFlatSpec {
             Set(
                 Q_Name("fun", 0)
             )
-        )
+        ), TypeInfo(Map(Q_Name("aryaNarang", 0) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List(Q_Name("aryaNarang", 0))))))
     }
 
     it should "be able to raname many functions without clashing scopes" in {
@@ -87,7 +88,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -111,6 +112,7 @@ class rename_func_test extends AnyFlatSpec {
                 Q_Name("fun", 0),
                
             )
+        ), TypeInfo(Map(Q_Name("aryaNarang", 0) -> KnownType.Int, Q_Name("tejasMungale", 0) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List(Q_Name("aryaNarang", 0))), Q_Name("fun2", 0) -> (KnownType.Int, List(Q_Name("tejasMungale", 0)))))
         )
     }
 
@@ -134,7 +136,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -142,7 +144,6 @@ class rename_func_test extends AnyFlatSpec {
                     List(Q_Param(BaseType.Int, Q_Name("aryaNarang", 0))), 
                     List(
                         Q_Decl(
-                            BaseType.Int,
                             Q_Name("x", 0),
                             Q_Ident(Q_Name("aryaNarang", 0)),
                         ),
@@ -155,7 +156,7 @@ class rename_func_test extends AnyFlatSpec {
             Set(
                 Q_Name("fun", 0)
             )
-        )
+        ), TypeInfo(Map(Q_Name("aryaNarang", 0) -> KnownType.Int, Q_Name("x", 0) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List(Q_Name("aryaNarang", 0))))))
     }
 
         it should "be able to mutate parameters as a parent scope" in {
@@ -177,7 +178,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -197,6 +198,7 @@ class rename_func_test extends AnyFlatSpec {
             Set(
                 Q_Name("fun", 0)
             )
+        ), TypeInfo(Map(Q_Name("aryaNarang", 0) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List(Q_Name("aryaNarang", 0)))))
         )
     }
 
@@ -220,7 +222,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -228,7 +230,6 @@ class rename_func_test extends AnyFlatSpec {
                     List(), 
                     List(
                         Q_Decl(
-                            BaseType.Int, 
                             Q_Name("myVar", 0), 
                             Q_IntLiteral(0)
                         ),
@@ -241,6 +242,7 @@ class rename_func_test extends AnyFlatSpec {
             Set(
                 Q_Name("fun", 0)
             )
+        ), TypeInfo(Map(Q_Name("myVar", 0) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List())))
         )
     }
 
@@ -268,7 +270,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -276,7 +278,6 @@ class rename_func_test extends AnyFlatSpec {
                     List(), 
                     List(
                         Q_Decl(
-                            BaseType.Int, 
                             Q_Name("myVar", 0), 
                             Q_IntLiteral(0)
                         ),
@@ -293,6 +294,7 @@ class rename_func_test extends AnyFlatSpec {
             Set(
                 Q_Name("fun", 0)
             )
+        ), TypeInfo(Map(Q_Name("myVar", 0) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List())))
         )
     }
 
@@ -393,7 +395,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -407,6 +409,7 @@ class rename_func_test extends AnyFlatSpec {
             Set(
                 Q_Name("fun", 0)
             )
+        ), TypeInfo(Map(Q_Name("fun", 1) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List(Q_Name("fun", 1)))))
         )
     }
 
@@ -430,7 +433,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
             Q_Func(
                 BaseType.Int, 
@@ -438,7 +441,6 @@ class rename_func_test extends AnyFlatSpec {
                 List(Q_Param(BaseType.Int, Q_Name("param", 0))), 
                 List(
                 Q_Decl(
-                    BaseType.Int, 
                     Q_Name("param", 1), 
                     Q_IntLiteral(0)
                 ),
@@ -449,6 +451,7 @@ class rename_func_test extends AnyFlatSpec {
             ),
             List(Q_Skip),
             Set(Q_Name("fun", 0))
+        ), TypeInfo(Map(Q_Name("param", 0) -> KnownType.Int, Q_Name("param", 1) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List(Q_Name("param", 0)))))
         )
     }
 
@@ -472,7 +475,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
             Q_Func(
                 BaseType.Int, 
@@ -480,7 +483,6 @@ class rename_func_test extends AnyFlatSpec {
                 List(), 
                 List(
                 Q_Decl(
-                    BaseType.Int, 
                     Q_Name("fun", 1), 
                     Q_IntLiteral(0)
                 ),
@@ -491,6 +493,7 @@ class rename_func_test extends AnyFlatSpec {
             ),
             List(Q_Skip),
             Set(Q_Name("fun", 0))
+        ), TypeInfo(Map(Q_Name("fun", 1) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List())))
         )
     }
 
@@ -514,7 +517,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip)
         )
 
-        rename(prog) shouldBe Q_Prog(
+        rename(prog) shouldBe (Q_Prog(
             List(
             Q_Func(
                 BaseType.Int, 
@@ -522,7 +525,6 @@ class rename_func_test extends AnyFlatSpec {
                 List(Q_Param(BaseType.String, Q_Name("param", 0))), 
                 List(
                 Q_Decl(
-                    BaseType.Int, 
                     Q_Name("param", 1), 
                     Q_IntLiteral(0)
                 ),
@@ -533,6 +535,7 @@ class rename_func_test extends AnyFlatSpec {
             ),
             List(Q_Skip),
             Set(Q_Name("fun", 0))
+        ), TypeInfo(Map(Q_Name("param", 0) -> KnownType.String, Q_Name("param", 1) -> KnownType.Int), Map(Q_Name("fun", 0) -> (KnownType.Int, List(Q_Name("param", 0)))))
         )
     }
 }
