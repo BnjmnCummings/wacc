@@ -72,7 +72,7 @@ def check(stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
     case Q_CodeBlock(body: List[Q_Stmt], scopedBody: Set[Q_Name], _) =>
         val typedBody = check(body, Constraint.Unconstrained) // Don't see why this should be anything other than Unconstrained
         TypedStmt.CodeBlock(typedBody)
-    case Q_Skip => TSkip
+    case Q_Skip(_) => TSkip
 }
 
 def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedExpr) = expr match {
