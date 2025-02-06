@@ -103,7 +103,7 @@ object renamer {
             Q_If(rename(cond, parScope ++ localScope), _body, scopedBody, _el, scopedEl)
         case While(cond, body) => 
             val (_body, scoped) = rename(body, parScope ++ localScope, Set())
-            Q_While(rename(cond, parScope ++ localScope), _body, scoped)
+            Q_While(rename(cond, localScope ++ parScope), _body, scoped)
         case CodeBlock(body) =>
             val (_body, scoped) = rename(body, parScope ++ localScope, Set())
             Q_CodeBlock(_body, scoped)

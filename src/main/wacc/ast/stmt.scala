@@ -21,7 +21,7 @@ object Decl extends ParserBridgePos3[Type, Ident, RValue, Decl] {
     override def reason = Some("illegal declaration")
 }
 object Asgn extends ParserBridgePos2[LValue, RValue, Asgn] {
-    def apply(l: LValue, r: RValue): Asgn = Asgn(l, r)((0, 0))
+    def apply(l: LValue, r: RValue): Asgn = Asgn(l, r)((0,0))
     override def labels = List("assignment")
     override def reason = Some("illegal assignment")
 }
