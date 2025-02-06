@@ -53,16 +53,6 @@ abstract class MyErrorBuilder extends ErrorBuilder[Err] {
             sb.dropRight(3 + codeIndent.length()).toString()
         }
 
-    // The implementation of this is usually provided by a mixed-in
-    // token extractor, discussed in `tokenextractors`
-    /*
-    def unexpectedToken(
-        cs: Iterable[Char],
-        amountOfInputParserWanted: Int,
-        lexicalError: Boolean
-    ): Token = ???
-    */
-
     type Position = (Int, Int)
     type Source = Option[String]
     type ErrorInfoLines = ErrorLines

@@ -219,8 +219,10 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Sem
 
 def checkReturn(t: Type, stmt: TypedStmt)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (stmt, t) match {
     case (TypedStmt.Return(x: Q_Expr), ty) => check(x, Constraint.Is(toSemType(ty)))._1
+    case (TypedStmt.Exit(x: Q_Expr), _) => check(x, Constraint.Is(KnownType.Int))._1
     case (TypedStmt.If(cond: Q_Expr, body: List[TypedStmt], el: List[TypedStmt]), t) => 
         Some(mostSpecific(checkReturn(t, body.last), checkReturn(t, el.last)))
+    case (TypedStmt.CodeBlock(stmts: List[TypedStmt]), t) => checkReturn(t, stmts.last)
     case (_, _) => throw SyntaxFailureException("Last statement is not a return/if. This should be dealt with in parsing")
 }
 
