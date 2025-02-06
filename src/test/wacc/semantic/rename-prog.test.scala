@@ -35,14 +35,14 @@ class rename_prog_test extends AnyFlatSpec {
         rename(prog) shouldBe Q_Prog(
             List(
                 Q_Func(
-                    BaseType.Int, Q_Name("fun", "fun/0"), List(), // int fun/0()
+                    BaseType.Int, Q_Name("fun", 0), List(), // int fun/0()
                     List(Q_Return(Q_IntLiteral(0))),              // return 0  
                     Set()                                         // No locals
                 )
             ),
             List(Q_Skip),
             Set(
-                Q_Name("fun", "fun/0")
+                Q_Name("fun", 0)
             )
         )
     }

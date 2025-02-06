@@ -42,12 +42,12 @@ class rename_stmt_test extends AnyFlatSpec {
             List(
                 Q_Decl(
                     BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(5)
                 )
             ),
             Set(
-                Q_Name("x", "x/0")
+                Q_Name("x", 0)
             )
         )
     }
@@ -170,18 +170,18 @@ class rename_stmt_test extends AnyFlatSpec {
             List(
                 Q_Decl(
                     BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_Decl(
                     BaseType.Int,
-                    Q_Name("y", "y/0"),
-                    Q_Ident(Q_Name("x", "x/0"))
+                    Q_Name("y", 0),
+                    Q_Ident(Q_Name("x", 0))
                 )
             ),
             Set(
-                Q_Name("x", "x/0"),
-                Q_Name("y", "y/0")
+                Q_Name("x", 0),
+                Q_Name("y", 0)
             )
         )
     }
@@ -235,16 +235,16 @@ class rename_stmt_test extends AnyFlatSpec {
             List(
                 Q_Decl(
                     BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(6),
                 ),
                 Q_Asgn(
-                    Q_Ident(Q_Name("x", "x/0")),
-                    Q_Ident(Q_Name("x", "x/0")),
+                    Q_Ident(Q_Name("x", 0)),
+                    Q_Ident(Q_Name("x", 0)),
                 ),
             ),
             Set(
-                Q_Name("x", "x/0")
+                Q_Name("x", 0)
             )
         )
     }
@@ -272,12 +272,12 @@ class rename_stmt_test extends AnyFlatSpec {
                     List(
                         Q_Decl(
                             BaseType.Int,
-                            Q_Name("y", "y/0"),
+                            Q_Name("y", 0),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/0")
+                        Q_Name("y", 0)
                     )
                 )
             ),
@@ -311,24 +311,24 @@ class rename_stmt_test extends AnyFlatSpec {
             List(
                 Q_Decl(
                     BaseType.Int,
-                    Q_Name("y", "y/0"),
+                    Q_Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
                             BaseType.Int,
-                            Q_Name("y", "y/1"),
+                            Q_Name("y", 1),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/1")
+                        Q_Name("y", 1)
                     )
                 )
             ),
             Set(
-                Q_Name("y", "y/0"),
+                Q_Name("y", 0),
             )
         )
     }
@@ -359,24 +359,24 @@ class rename_stmt_test extends AnyFlatSpec {
             List(
                 Q_Decl(
                     BaseType.Int,
-                    Q_Name("y", "y/0"),
+                    Q_Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
                             BaseType.Int,
-                            Q_Name("x", "x/0"),
-                            Q_Ident(Q_Name("y", "y/0"))
+                            Q_Name("x", 0),
+                            Q_Ident(Q_Name("y", 0))
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/0")
+                        Q_Name("x", 0)
                     )
                 )
             ),
             Set(
-                Q_Name("y", "y/0")
+                Q_Name("y", 0)
             )
         )
     }
@@ -407,24 +407,24 @@ class rename_stmt_test extends AnyFlatSpec {
             List(
                 Q_Decl(
                     BaseType.Int,
-                    Q_Name("y", "y/0"),
+                    Q_Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
                             BaseType.Int,
-                            Q_Name("y", "y/1"),
-                            Q_Ident(Q_Name("y", "y/0"))
+                            Q_Name("y", 1),
+                            Q_Ident(Q_Name("y", 0))
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/1")
+                        Q_Name("y", 1)
                     )
                 )
             ),
             Set(
-                Q_Name("y", "y/0")
+                Q_Name("y", 0)
             )
         )
     }
@@ -455,24 +455,24 @@ class rename_stmt_test extends AnyFlatSpec {
             List(
                 Q_Decl(
                     BaseType.Int,
-                    Q_Name("y", "y/0"),
+                    Q_Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
                             BaseType.String,
-                            Q_Name("y", "y/1"),
+                            Q_Name("y", 1),
                             Q_StringLiteral("hello")
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/1")
+                        Q_Name("y", 1)
                     )
                 )
             ),
             Set(
-                Q_Name("y", "y/0")
+                Q_Name("y", 0)
             )
         )
     }
@@ -544,22 +544,22 @@ class rename_stmt_test extends AnyFlatSpec {
                     List(
                         Q_Decl(
                             BaseType.Int,
-                            Q_Name("x", "x/0"),
+                            Q_Name("x", 0),
                             Q_IntLiteral(5)
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/0")
+                        Q_Name("x", 0)
                     ),
                     List(
                         Q_Decl(
                             BaseType.Int,
-                            Q_Name("y", "y/0"),
+                            Q_Name("y", 0),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/0")   
+                        Q_Name("y", 0)   
                     )
                 )
             ),
@@ -601,7 +601,7 @@ class rename_stmt_test extends AnyFlatSpec {
             List(
                 Q_Decl(
                     BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_If(
@@ -609,27 +609,27 @@ class rename_stmt_test extends AnyFlatSpec {
                     List(
                         Q_Decl(
                             BaseType.Int,
-                            Q_Name("x", "x/1"),
+                            Q_Name("x", 1),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/1")
+                        Q_Name("x", 1)
                     ),
                     List(
                         Q_Decl(
                             BaseType.Int,
-                            Q_Name("x", "x/2"),
+                            Q_Name("x", 2),
                             Q_IntLiteral(7)
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/2")
+                        Q_Name("x", 2)
                     )
                 )
             ),
             Set(
-                Q_Name("x", "x/0")
+                Q_Name("x", 0)
             )
         )
     }
@@ -694,7 +694,7 @@ class rename_stmt_test extends AnyFlatSpec {
             List(
                 Q_Decl(
                     BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_If(
@@ -702,27 +702,27 @@ class rename_stmt_test extends AnyFlatSpec {
                     List(
                         Q_Decl(
                             BaseType.String,
-                            Q_Name("x", "x/1"),
+                            Q_Name("x", 1),
                             Q_StringLiteral("hello")
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/1")
+                        Q_Name("x", 1)
                     ),
                     List(
                         Q_Decl(
                             BaseType.Int,
-                            Q_Name("x", "x/2"),
+                            Q_Name("x", 2),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("x", "x/2")
+                        Q_Name("x", 2)
                     )
                 )
             ),
             Set(
-                Q_Name("x", "x/0")
+                Q_Name("x", 0)
             )
         )
     }
@@ -761,7 +761,7 @@ class rename_stmt_test extends AnyFlatSpec {
             List(
                 Q_Decl(
                     BaseType.Int,
-                    Q_Name("x", "x/0"),
+                    Q_Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_If(
@@ -769,27 +769,27 @@ class rename_stmt_test extends AnyFlatSpec {
                     List(
                         Q_Decl(
                             BaseType.Int,
-                            Q_Name("y", "y/0"),
-                            Q_Ident(Q_Name("x", "x/0"))
+                            Q_Name("y", 0),
+                            Q_Ident(Q_Name("x", 0))
                         )
                     ),
                     Set(
-                        Q_Name("y", "y/0")
+                        Q_Name("y", 0)
                     ),
                     List(
                         Q_Decl(
                             BaseType.Int,
-                            Q_Name("z", "z/0"),
-                            Q_Ident(Q_Name("x", "x/0"))
+                            Q_Name("z", 0),
+                            Q_Ident(Q_Name("x", 0))
                         )
                     ),
                     Set(
-                        Q_Name("z", "z/0")
+                        Q_Name("z", 0)
                     )
                 )
             ),
             Set(
-                Q_Name("x", "x/0")
+                Q_Name("x", 0)
             )
         )
     }
