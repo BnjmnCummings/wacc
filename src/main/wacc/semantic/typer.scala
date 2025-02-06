@@ -242,8 +242,8 @@ def check(param: Q_Param)(using TypeCheckerCtx[?]): TypedParam = param.t match {
     case BaseType.Bool => TypedParam(KnownType.Boolean, TypedExpr.Ident(param.v))
     case BaseType.Char => TypedParam(KnownType.Char, TypedExpr.Ident(param.v))
     case BaseType.String => TypedParam(KnownType.String, TypedExpr.Ident(param.v))
-    case ArrayType(_) => TypedParam(KnownType.Array(?), TypedExpr.Ident(param.v))
-    case PairType(_, _) => TypedParam(KnownType.Pair(?, ?), TypedExpr.Ident(param.v)) // TODO: CHANGE THE _, _ ??
+    case ArrayType(t: Type) => TypedParam(KnownType.Array(toSemType(t)), TypedExpr.Ident(param.v))
+    case PairType(t1: Type, t2: Type) => TypedParam(KnownType.Pair(toSemType(t1), toSemType(t2)), TypedExpr.Ident(param.v)) 
     case ErasedPairType => TypedParam(KnownType.Pair(?, ?), TypedExpr.Ident(param.v))
 }
 
