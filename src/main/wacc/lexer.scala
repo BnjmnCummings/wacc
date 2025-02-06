@@ -38,9 +38,6 @@ object lexer {
     )
 
     private val errConfig = new ErrorConfig {
-        // name errors
-        override def filterNameIllFormedIdentifier: FilterConfig[String] = BadIdentConfig()
-
         // numeric errors
         override def labelIntegerSignedNumber: LabelWithExplainConfig = Label("number")
         override def labelIntegerNumberEnd: LabelConfig = Label("end of number")
@@ -73,22 +70,16 @@ object lexer {
 
         // text errors
         override def labelCharAscii: LabelWithExplainConfig = Label("character")
-        override def labelCharAsciiEnd: LabelConfig = Label("closing single quote")
+        override def labelCharAsciiEnd: LabelConfig = Label("end of character literal")
         override def labelStringAscii(multi: Boolean, raw: Boolean): LabelWithExplainConfig = Label("string")
-        override def labelStringAsciiEnd(multi: Boolean, raw: Boolean): LabelConfig = Label("closing double quote")
+        override def labelStringAsciiEnd(multi: Boolean, raw: Boolean): LabelConfig = Label("end of string literal")
         override def labelEscapeEnd: LabelWithExplainConfig = 
             LabelAndReason(
                 "valid escape sequences are \\0, \\n, \\t, \\r, \\f, \\b, \\\', \\\" and \\\\",
-                "escape sequence"
+                "end of escape sequence"
                 )
-        // override def verifiedCharBadCharsUsedInLiteral: VerifiedBadChars = ???
-        // override def verifiedStringBadCharsUsedInLiteral: VerifiedBadChars = ???
 
     }
-
-    class BadIdentConfig extends Because[String] {
-        override def reason(x: String): String = s"$x is an invalid identifier (identifiers must start with a letter or an underscore)"
-    } 
 
     private val lexer = Lexer(desc, errConfig)
 
