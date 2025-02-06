@@ -143,7 +143,7 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Se
         val checkedExprs: List[(Option[SemType], TypedExpr)] = indices.map(expr => check(expr, Constraint.IsNumeric))
         val semTypes = checkedExprs.map(_._1)
 
-        val ty = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
+        val ty = semTypes.fold(Some(?))((t1, t2) => (t1.getOrElse(?) ~ t2.getOrElse(?))).getOrElse(?)
 
         (ty.satisfies(c), TypedExpr.ArrayElem())
     case Q_PairNullLiteral => (KnownType.Pair(?, ?).satisfies(c), TPairNullLiteral)
@@ -194,7 +194,7 @@ def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Sem
         val checkedExprs: List[(Option[SemType], TypedExpr)] = indices.map(expr => check(expr, Constraint.IsNumeric))
         val semTypes = checkedExprs.map(_._1)
 
-        val ty = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
+        val ty = semTypes.fold(Some(?))((t1, t2) => (t1.getOrElse(?) ~ t2.getOrElse(?))).getOrElse(?)
 
         (ty.satisfies(c), TypedExpr.ArrayElem())
 }
@@ -263,7 +263,7 @@ def check(listArgs: List[Q_Expr], c: Constraint)(using TypeCheckerCtx[?]): (Opti
     val semTypes: List[Option[SemType]] = mappedArgs.map(_._1)
     val typedExprs: List[TypedExpr] = mappedArgs.map(_._2)
 
-    val ty: SemType = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
+    val ty: SemType = semTypes.fold(Some(?))(_.getOrElse(?) ~ _.getOrElse(?)).getOrElse(?)
 
     (ty.satisfies(c), typedExprs)
 }
