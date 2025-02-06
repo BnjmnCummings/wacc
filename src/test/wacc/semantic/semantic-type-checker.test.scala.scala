@@ -202,4 +202,50 @@ class types_tst extends AnyFlatSpec {
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
     }*/
+
+    "free" should "be able to free arrays" in {
+        val funcs: List[Q_Func] = List[Q_Func]()
+
+        val body: List[Q_Stmt] = List[Q_Stmt](
+            Q_Decl(Q_Name("arr1", 0), Q_ArrayLiteral(List[Q_Expr](Q_IntLiteral(1)))),
+            Q_Free(Q_Ident(Q_Name("arr1", 0)))
+            )
+
+        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("arr1", 0))
+
+        val prog: Q_Prog = Q_Prog(funcs, body, scoped)
+        
+        val tyInfo = TypeInfo(varTys = Map(Q_Name("arr1", 0) -> KnownType.Array(KnownType.Int)), funcTys = Map())
+
+        val typedFuncs: List[TypedFunc] = List[TypedFunc]()
+        val typedBody: List[TypedStmt] = List[TypedStmt] (
+            TypedStmt.Decl(TypedExpr.Ident(Q_Name("arr1", 0)), TypedRValue.ArrayLiteral(List[TypedExpr](TypedExpr.IntLiteral(1)), KnownType.Int)),
+            TypedStmt.Free(TypedExpr.Ident(Q_Name("arr1", 0)))
+        )
+
+        wacc.semantic.typeCheck(prog, tyInfo) shouldBe Right(TypedProg(typedFuncs, typedBody))
+    }
+
+    "free" should "be able to free pairs" in {
+        val funcs: List[Q_Func] = List[Q_Func]()
+
+        val body: List[Q_Stmt] = List[Q_Stmt](
+            Q_Decl(Q_Name("p", 0), Q_NewPair(Q_IntLiteral(1), Q_IntLiteral(2))),
+            Q_Free(Q_Ident(Q_Name("p", 0)))
+            )
+
+        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("p", 0))
+
+        val prog: Q_Prog = Q_Prog(funcs, body, scoped)
+        
+        val tyInfo = TypeInfo(varTys = Map(Q_Name("p", 0) -> KnownType.Pair(KnownType.Int, KnownType.Int)), funcTys = Map())
+
+        val typedFuncs: List[TypedFunc] = List[TypedFunc]()
+        val typedBody: List[TypedStmt] = List[TypedStmt] (
+            TypedStmt.Decl(TypedExpr.Ident(Q_Name("p", 0)), TypedRValue.NewPair(TypedExpr.IntLiteral(1), TypedExpr.IntLiteral(2))),
+            TypedStmt.Free(TypedExpr.Ident(Q_Name("p", 0)))
+        )
+
+        wacc.semantic.typeCheck(prog, tyInfo) shouldBe Right(TypedProg(typedFuncs, typedBody))
+    }
 }
