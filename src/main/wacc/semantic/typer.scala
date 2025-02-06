@@ -209,7 +209,7 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Sem
         val semTypes = checkedExprs.map(_._1)
         val typedExprs = checkedExprs.map(_._2)
 
-        val ty: SemType = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
+        val ty: SemType = semTypes.fold(Some(?))((t1, t2) => (t1.getOrElse(?) ~ t2.getOrElse(?))).getOrElse(?)
 
         (KnownType.Array(ty).satisfies(c), TypedRValue.ArrayLiteral(typedExprs, ty))
     case Q_PairElem(index: PairIndex, v: Q_LValue, _) => 
