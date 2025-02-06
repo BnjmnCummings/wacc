@@ -10,7 +10,7 @@ val escapedMapping = Map(
                 )
 
 val hardKwdsSet = Set("null", "if", "then", "else", "fi", "while", 
-                "do", "done", "newpair", "fst", "snd", 
+                "do", "done", "newpair", "fst", "snd", "true", "false",
                 "read", "free", "return", "exit", "print", "call",
                 "println", "int", "bool", "char", "string", "pair", 
                 "begin", "end", "skip", "len", "ord", "chr")

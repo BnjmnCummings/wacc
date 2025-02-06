@@ -8,12 +8,13 @@ import parsley.errors.ErrorBuilder
 import parsley.errors.combinator.ErrorMethods
 import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix, chain}
 import lexer.{_int, _ident, _char, _string, _bool, fully}
+import lexer.{BeginProg, ThenIf, FiIf, WhileDo, WhileDone}
 import lexer.implicits.implicitSymbol
+import lexer.LexErrorBuilder
 
 import java.io.File
 import scala.util.Success
 import scala.util.Failure
-import parsley.errors.tokenextractors.TillNextWhitespace
 
 object parser {
     def parseF(input: File): Result[Err, Prog] = parser.parseFile(input) match
@@ -22,11 +23,9 @@ object parser {
 
     def parse(input: String): Result[String, Prog] = parser.parse(input)
 
-    private implicit val errBuilder: ErrorBuilder[Err] = new MyErrorBuilder with TillNextWhitespace {
-        def trimToParserDemand: Boolean = false
-    }
+    private implicit val errBuilder: ErrorBuilder[Err] = LexErrorBuilder
 
-    private val parser: Parsley[Prog] = fully("begin" ~> Prog(many(func), stmts) <~ "end")
+    private val parser: Parsley[Prog] = fully(BeginProg ~> Prog(many(func), stmts) <~ "end")
 
     lazy val expr: Parsley[Expr] = 
         precedence(
@@ -172,20 +171,20 @@ object parser {
     lazy val println: Parsley[Stmt] = Println("println" ~> expr)
     
     lazy val _if: Parsley[Stmt] = If(
-        "if" ~> expr <~ "then",
+        "if" ~> expr <~ ThenIf,
         stmts,
-        "else" ~> stmts <~ "fi"
+        "else" ~> stmts <~ FiIf
     )
 
     lazy val _while: Parsley[Stmt] = While(
-        "while" ~> expr <~ "do",
-        stmts <~ "done"
+        "while" ~> expr <~ WhileDo,
+        stmts <~ WhileDone
     )
 
     lazy val codeblock: Parsley[Stmt] = CodeBlock("begin" ~> stmts <~ "end")
 
     lazy val stmts: Parsley[List[Stmt]] = sepBy1(
-        (skip | decl | asgn | read | free | _return | exit | print | println | codeblock | _if | _while),
+        (skip | decl | asgn | read | free | _return | exit | print | println | codeblock | _if | _while).label("statement"),
         ";"
     )
 

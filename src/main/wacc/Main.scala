@@ -4,6 +4,8 @@ import parsley.{Success, Failure}
 
 import scala.util.Random
 
+import wacc.semantic.*
+
 import java.io.File
 
 def main(args: Array[String]): Unit = {
@@ -15,8 +17,12 @@ def main(args: Array[String]): Unit = {
                 case Success(t) => {
                     println(t)
                     try {
-                        val (q_t, typeInfo) = renamer.rename(t)
-                        typeChecker.check(q_t)
+                        val (q_t, tyInfo) = renamer.rename(t)
+                        typeCheck(q_t, tyInfo) match {
+                            case Left(_) => sys.exit(200)
+                            case Right(_) => sys.exit(0) 
+                        }
+                        
                         println(q_t)
                         sys.exit(0)
                     } catch {
