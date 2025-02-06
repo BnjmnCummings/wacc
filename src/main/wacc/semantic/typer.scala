@@ -31,45 +31,45 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo): Either[List[Error], TypedProg] = 
 }
 
 def check(stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
-    case Q_Decl(id: Q_Name, r: Q_RValue) =>
+    case Q_Decl(id: Q_Name, r: Q_RValue, _) =>
         // This will check the type of r compared to given type t
         val (_, typedR) = check(r, Constraint.Is(ctx.typeOf(id)))
         TypedStmt.Decl(TypedExpr.Ident(), typedR)
-    case Q_Asgn(l: Q_LValue, r: Q_RValue) =>
+    case Q_Asgn(l: Q_LValue, r: Q_RValue, _) =>
         // Get the type of left value
         val (ty, typedL) = check(l, Constraint.Unconstrained)
         // We need the type of the right value to match this
         val (_, typedR) = check(r, Constraint.Is(ty.getOrElse(?)))
         TypedStmt.Asgn(typedL, typedR)
-    case Q_Read(l: Q_LValue) =>
+    case Q_Read(l: Q_LValue, _) =>
         // Only need to  verify the LValue is actually LValue - no constraint needed? Or create constraint for IsLValue?
         val (ty, typedL) = check(l, Constraint.IsReadable)
         TypedStmt.Read(typedL)
-    case Q_Free(x: Q_Expr) =>
+    case Q_Free(x: Q_Expr, _) =>
         val (ty, typedX) = check(x, Constraint.IsFreeable) // ADD THE CONSTRANTS FOR FREEABLE, EXITABLE
         TypedStmt.Free(typedX)
-    case Q_Return(x: Q_Expr) =>
+    case Q_Return(x: Q_Expr, _) =>
         val (ty, typedX) = check(x, Constraint.Unconstrained)
         TypedStmt.Return(typedX)
-    case Q_Exit(x: Q_Expr) =>
+    case Q_Exit(x: Q_Expr, _) =>
         val (ty, typedX) = check(x, Constraint.IsExitable)
         TypedStmt.Exit(typedX)
-    case Q_Print(x: Q_Expr) =>
+    case Q_Print(x: Q_Expr, _) =>
         val (ty, typedX) = check(x, Constraint.Unconstrained)
         TypedStmt.Print(typedX)
-    case Q_Println(x: Q_Expr) =>
+    case Q_Println(x: Q_Expr, _) =>
         val (ty, typedX) = check(x, Constraint.Unconstrained)
         TypedStmt.Println(typedX)
-    case Q_If(cond: Q_Expr, body: List[Q_Stmt], _, el: List[Q_Stmt], _) =>
+    case Q_If(cond: Q_Expr, body: List[Q_Stmt], _, el: List[Q_Stmt], _, _) =>
         val (condTy, typedCond) = check(cond, Constraint.Unconstrained) // Create a constraint for this being a boolean!
         val typedBody = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
         val typedEl = check(el, Constraint.Unconstrained) // As above
         TypedStmt.If(typedCond, typedBody, typedEl)
-    case Q_While(cond: Q_Expr, body: List[Q_Stmt], scopedBody: Set[Q_Name]) =>
+    case Q_While(cond: Q_Expr, body: List[Q_Stmt], scopedBody: Set[Q_Name], _) =>
         val (condTy, typedCond) = check(cond, Constraint.Unconstrained) // Create a constraint for this being a boolean!
         val typedBody = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
         TypedStmt.While(typedCond, typedBody)
-    case Q_CodeBlock(body: List[Q_Stmt], scopedBody: Set[Q_Name]) =>
+    case Q_CodeBlock(body: List[Q_Stmt], scopedBody: Set[Q_Name], _) =>
         val typedBody = check(body, Constraint.Unconstrained) // Don't see why this should be anything other than Unconstrained
         TypedStmt.CodeBlock(typedBody)
     case Q_Skip => TSkip
@@ -77,63 +77,63 @@ def check(stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
 
 def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedExpr) = expr match {
     // The below only works on two ints
-    case Q_Mul(x: Q_Expr, y: Q_Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Mul.apply)
-    case Q_Div(x: Q_Expr, y: Q_Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Div.apply)
-    case Q_Mod(x: Q_Expr, y: Q_Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Mod.apply)
-    case Q_Add(x: Q_Expr, y: Q_Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Add.apply)
-    case Q_Sub(x: Q_Expr, y: Q_Expr) => checkArithmeticExpr(x, y, c)(TypedExpr.Div.apply)
+    case Q_Mul(x: Q_Expr, y: Q_Expr, _) => checkArithmeticExpr(x, y, c)(TypedExpr.Mul.apply)
+    case Q_Div(x: Q_Expr, y: Q_Expr, _) => checkArithmeticExpr(x, y, c)(TypedExpr.Div.apply)
+    case Q_Mod(x: Q_Expr, y: Q_Expr, _) => checkArithmeticExpr(x, y, c)(TypedExpr.Mod.apply)
+    case Q_Add(x: Q_Expr, y: Q_Expr, _) => checkArithmeticExpr(x, y, c)(TypedExpr.Add.apply)
+    case Q_Sub(x: Q_Expr, y: Q_Expr, _) => checkArithmeticExpr(x, y, c)(TypedExpr.Div.apply)
 
     // The below work on two ints or two chars
-    case Q_GreaterThan(x: Q_Expr, y: Q_Expr) => checkComparisonExpr(x, y, c)(TypedExpr.GreaterThan.apply)
-    case Q_GreaterThanEq(x: Q_Expr, y: Q_Expr) => checkComparisonExpr(x, y, c)(TypedExpr.GreaterThanEq.apply)
-    case Q_LessThan(x: Q_Expr, y: Q_Expr) => checkComparisonExpr(x, y, c)(TypedExpr.LessThan.apply)
-    case Q_LessThanEq(x: Q_Expr, y: Q_Expr) => checkComparisonExpr(x, y, c)(TypedExpr.LessThanEq.apply)
+    case Q_GreaterThan(x: Q_Expr, y: Q_Expr, _) => checkComparisonExpr(x, y, c)(TypedExpr.GreaterThan.apply)
+    case Q_GreaterThanEq(x: Q_Expr, y: Q_Expr, _) => checkComparisonExpr(x, y, c)(TypedExpr.GreaterThanEq.apply)
+    case Q_LessThan(x: Q_Expr, y: Q_Expr, _) => checkComparisonExpr(x, y, c)(TypedExpr.LessThan.apply)
+    case Q_LessThanEq(x: Q_Expr, y: Q_Expr, _) => checkComparisonExpr(x, y, c)(TypedExpr.LessThanEq.apply)
 
     // The below work on two of the same type
-    case Q_Eq(x: Q_Expr, y: Q_Expr) =>
+    case Q_Eq(x: Q_Expr, y: Q_Expr, _) =>
         val (xTy, typedX) = check(x, Constraint.Is(?))
         val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
         val ty = mostSpecific(xTy, yTy)
         (ty.satisfies(c), TypedExpr.Eq(typedX, typedY))
-    case Q_NotEq(x: Q_Expr, y: Q_Expr) => 
+    case Q_NotEq(x: Q_Expr, y: Q_Expr, _) => 
         val (xTy, typedX) = check(x, Constraint.Is(?))
         val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
         val ty = mostSpecific(xTy, yTy)
         (ty.satisfies(c), TypedExpr.NotEq(typedX, typedY))
 
     // The below only work on two bools
-    case Q_And(x: Q_Expr, y: Q_Expr) => checkBooleanExpr(x, y, c)(TypedExpr.And.apply)
-    case Q_Or(x: Q_Expr, y: Q_Expr) => checkBooleanExpr(x, y, c)(TypedExpr.Or.apply)
+    case Q_And(x: Q_Expr, y: Q_Expr, _) => checkBooleanExpr(x, y, c)(TypedExpr.And.apply)
+    case Q_Or(x: Q_Expr, y: Q_Expr, _) => checkBooleanExpr(x, y, c)(TypedExpr.Or.apply)
 
     // The below are unary
     // Int:
-    case Q_Neg(x: Q_Expr) =>
+    case Q_Neg(x: Q_Expr, _) =>
         val (xTy, typedX) = check(x, Constraint.IsNumeric)
         (xTy.getOrElse(?).satisfies(c), TypedExpr.Neg(typedX))
-    case Q_Chr(x: Q_Expr) =>
+    case Q_Chr(x: Q_Expr, _) =>
         val (xTy, typedX) = check(x, Constraint.IsNumeric)
         (xTy.getOrElse(?).satisfies(c), TypedExpr.Chr(typedX))
     // Bool:
-    case Q_Not(x: Q_Expr) =>
+    case Q_Not(x: Q_Expr, _) =>
         val (xTy, typedX) = check(x, Constraint.IsBoolean)
         (xTy.getOrElse(?).satisfies(c), TypedExpr.Not(typedX))
     // Array of generic type:
-    case Q_Len(x: Q_Expr) =>
+    case Q_Len(x: Q_Expr, _) =>
         val (xTy, typedX) = check(x, Constraint.IsArray)
         (xTy.getOrElse(?).satisfies(c), TypedExpr.Len(typedX))
     // Char:
-    case Q_Ord(x: Q_Expr) =>
+    case Q_Ord(x: Q_Expr, _) =>
         val (xTy, typedX) = check(x, Constraint.IsCharacter)
         (xTy.getOrElse(?).satisfies(c), TypedExpr.Ord(typedX))
 
-    case Q_IntLiteral(v: BigInt) => (KnownType.Int.satisfies(c), TypedExpr.IntLiteral())
-    case Q_BoolLiteral(v: Boolean) => (KnownType.Boolean.satisfies(c), TypedExpr.BoolLiteral())
-    case Q_CharLiteral(v: Char) => (KnownType.Char.satisfies(c), TypedExpr.CharLiteral())
-    case Q_StringLiteral(v: String) => (KnownType.String.satisfies(c), TypedExpr.StringLiteral())
-    case Q_Ident(v: Q_Name) => 
+    case Q_IntLiteral(v: BigInt, _) => (KnownType.Int.satisfies(c), TypedExpr.IntLiteral())
+    case Q_BoolLiteral(v: Boolean, _) => (KnownType.Boolean.satisfies(c), TypedExpr.BoolLiteral())
+    case Q_CharLiteral(v: Char, _) => (KnownType.Char.satisfies(c), TypedExpr.CharLiteral())
+    case Q_StringLiteral(v: String, _) => (KnownType.String.satisfies(c), TypedExpr.StringLiteral())
+    case Q_Ident(v: Q_Name, _) => 
         val kt: KnownType = ctx.typeOf(v)
         (kt.satisfies(c), knownToTypedExpr(kt))
-    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr]) => 
+    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) => 
         val checkedExprs: List[(Option[SemType], TypedExpr)] = indices.map(expr => check(expr, Constraint.IsNumeric))
         val semTypes = checkedExprs.map(_._1)
 
@@ -141,10 +141,18 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Se
 
         (ty.satisfies(c), TypedExpr.ArrayElem())
     case Q_PairNullLiteral => (KnownType.Pair(?, ?).satisfies(c), TPairNullLiteral)
-    case Q_PairElem(index: PairIndex, v: Q_LValue) => 
+    case Q_PairElem(index: PairIndex, v: Q_LValue, _) => 
         val (vTy, typedV) = check(v, c)
         (vTy.getOrElse(?).satisfies(c), TypedRValue.PairElem(index, typedV))
 }
+
+def checkArithmeticExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
+                      (build: ((TypedExpr, TypedExpr) => TypedExpr))
+                      (using TypeCheckerCtx[?]): (Option[SemType], TypedExpr) =
+    val (xTy, typedX) = check(x, Constraint.IsNumeric)
+    val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
+    val ty = mostSpecific(xTy, yTy)
+    (ty.satisfies(c), build(typedX, typedY))
 
 def checkComparisonExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
                        (build: ((TypedExpr, TypedExpr) => TypedExpr))
@@ -172,11 +180,11 @@ def checkBooleanExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
     (ty.satisfies(c), build(typedX, typedY))
 
 def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedLValue) = l match {
-    case Q_Ident(v: Q_Name) => (ctx.typeOf(v).satisfies(c), TypedExpr.Ident())
-    case Q_PairElem(index: PairIndex, v: Q_LValue) =>
+    case Q_Ident(v: Q_Name, _) => (ctx.typeOf(v).satisfies(c), TypedExpr.Ident())
+    case Q_PairElem(index: PairIndex, v: Q_LValue, _) =>
         val (vTy, typedV) = check(v, c)
         (vTy.getOrElse(?).satisfies(c), TypedRValue.PairElem(index, typedV))
-    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr]) =>
+    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) =>
         val checkedExprs: List[(Option[SemType], TypedExpr)] = indices.map(expr => check(expr, Constraint.IsNumeric))
         val semTypes = checkedExprs.map(_._1)
 
@@ -186,11 +194,11 @@ def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Sem
 }
 
 def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedRValue) = r match {
-    case Q_FuncCall(v: Q_Name, args: List[Q_Expr]) =>
+    case Q_FuncCall(v: Q_Name, args: List[Q_Expr], _) =>
         val (exprTy, typedExprs): (Option[SemType], List[TypedExpr]) = check(args, c)
 
         (exprTy, TypedRValue.FuncCall(v.name, typedExprs))
-    case Q_ArrayLiteral(xs: List[Q_Expr]) => 
+    case Q_ArrayLiteral(xs: List[Q_Expr], _) => 
         val checkedExprs: List[(Option[SemType], TypedExpr)] = xs.map(x => check(x, Constraint.Unconstrained))
         val semTypes = checkedExprs.map(_._1)
         val typedExprs = checkedExprs.map(_._2)
@@ -198,10 +206,10 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Sem
         val ty: SemType = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
 
         (KnownType.Array(ty).satisfies(c), TypedRValue.ArrayLiteral(typedExprs, ty))
-    case Q_PairElem(index: PairIndex, v: Q_LValue) => 
+    case Q_PairElem(index: PairIndex, v: Q_LValue, _) => 
         val (vTy, typedV) = check(v, c)
         (vTy.getOrElse(?).satisfies(c), TypedRValue.PairElem(index, typedV))
-    case Q_NewPair(x: Q_Expr, y: Q_Expr) =>
+    case Q_NewPair(x: Q_Expr, y: Q_Expr, _) =>
         val (xTy, typedX) = check(x, Constraint.Unconstrained)
         val (yTy, typedY) = check(y, Constraint.Is(xTy.getOrElse(?)))
         val ty = mostSpecific(xTy, yTy)
@@ -210,12 +218,12 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Sem
     case e: Q_Expr => check(e, c)
 }
 
-def checkReturn(t: Type, stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (stmt, t) match {
-    case (Q_Return(x: Q_Expr), ty) => check(x, Constraint.Is(toSemType(ty)))._1
-    case (Q_Exit(x: Q_Expr), _) => check(x, Constraint.Is(KnownType.Int))._1
-    case (Q_If(cond: Q_Expr, body: List[Q_Stmt], _, el: List[Q_Stmt], _), t) => 
-        Some(mostSpecific(checkReturn(t, body.last), checkReturn(t, el.last)))
-    case (Q_CodeBlock(stmts: List[Q_Stmt], _), t) => checkReturn(t, stmts.last)
+def checkReturnType(t: Type, stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (stmt, t) match {
+    case (Q_Return(x: Q_Expr, _), ty) => check(x, Constraint.Is(toSemType(ty)))._1
+    case (Q_Exit(x: Q_Expr, _), _) => check(x, Constraint.Is(KnownType.Int))._1
+    case (Q_If(cond: Q_Expr, body: List[Q_Stmt], _, el: List[Q_Stmt], _, _), t) => 
+        Some(mostSpecific(checkReturnType(t, body.last), checkReturnType(t, el.last)))
+    case (Q_CodeBlock(stmts: List[Q_Stmt], _, _), t) => checkReturnType(t, stmts.last)
     case (_, _) => throw SyntaxFailureException("Last statement is not a return/if. This should be dealt with in parsing")
 }
 
@@ -223,9 +231,9 @@ def checkReturn(t: Type, stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): Option[Sem
 def check(func: Q_Func, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedFunc) = {
     val typedParams: List[TypedParam] = func.args.map(check)
     
-//     val typedBody: List[TypedStmt] = func.body.map(check)
+    val typedBody: List[TypedStmt] = func.body.map(check)
 
-    val checked = checkReturn(func.t, func.body.last)
+    val checked = checkReturnType(func.t, func.body.last)
 
     (checked, TypedFunc(checked.getOrElse(?), TypedExpr.Ident(), typedParams, typedBody))
 }
@@ -286,6 +294,8 @@ extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[
     case (kty, Constraint.IsExitable) => ctx.error(Error.NonExitableType(kty))
     case (kty@(KnownType.Array(_) | KnownType.Pair(_, _)), Constraint.IsFreeable) => Some(kty)
     case (kty, Constraint.IsFreeable) => ctx.error(Error.NonFreeableType(kty))
+    case (kty@(KnownType.Int | KnownType.Char), Constraint.IsReadable) => Some(kty)
+    case (kty, Constraint.IsReadable) => ctx.error(Error.NonReadableType(kty))
 }
 
 class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
@@ -308,6 +318,7 @@ enum Error {
     case NonCharacterType(actual: SemType)
     case NonBooleanType(actual: SemType)
     case NonStringType(actual: SemType)
+    case NonReadableType(actual: SemType)
 }
 
 enum Constraint {
@@ -318,6 +329,7 @@ enum Constraint {
     case IsExitable
     case IsFreeable
     case IsString
+    case IsReadable
 }
 
 object Constraint {
