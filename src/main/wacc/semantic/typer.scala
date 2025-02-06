@@ -41,16 +41,16 @@ def check(stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
         TypedStmt.Asgn(typedL, typedR)
     case Q_Read(l: Q_LValue) =>
         // Only need to  verify the LValue is actually LValue - no constraint needed? Or create constraint for IsLValue?
-        val (ty, typedL) = check(l, Constraint.Unconstrained)
+        val (ty, typedL) = check(l, Constraint.IsReadable)
         TypedStmt.Read(typedL)
     case Q_Free(x: Q_Expr) =>
-        val (ty, typedX) = check(x, Constraint.Unconstrained)
+        val (ty, typedX) = check(x, Constraint.IsFreeable) // ADD THE CONSTRANTS FOR FREEABLE, EXITABLE
         TypedStmt.Free(typedX)
     case Q_Return(x: Q_Expr) =>
         val (ty, typedX) = check(x, Constraint.Unconstrained)
         TypedStmt.Return(typedX)
     case Q_Exit(x: Q_Expr) =>
-        val (ty, typedX) = check(x, Constraint.Unconstrained)
+        val (ty, typedX) = check(x, Constraint.IsExitable)
         TypedStmt.Exit(typedX)
     case Q_Print(x: Q_Expr) =>
         val (ty, typedX) = check(x, Constraint.Unconstrained)
@@ -293,6 +293,8 @@ extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[
     case (kty, Constraint.IsExitable) => ctx.error(Error.NonExitableType(kty))
     case (kty@(KnownType.Array(_) | KnownType.Pair(_, _)), Constraint.IsFreeable) => Some(kty)
     case (kty, Constraint.IsFreeable) => ctx.error(Error.NonFreeableType(kty))
+    case (kty@(KnownType.Int | KnownType.Char), Constraint.IsReadable) => Some(kty)
+    case (kty, Constraint.IsReadable) => ctx.error(Error.NonReadableType(kty))
 }
 
 class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
@@ -316,6 +318,7 @@ enum Error {
     case NonCharacterType(actual: SemType)
     case NonBooleanType(actual: SemType)
     case NonStringType(actual: SemType)
+    case NonReadableType(actual: SemType)
 }
 
 enum Constraint {
@@ -326,6 +329,7 @@ enum Constraint {
     case IsExitable
     case IsFreeable
     case IsString
+    case IsReadable
 }
 
 object Constraint {

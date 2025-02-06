@@ -6,6 +6,9 @@ import parsley.token.{Lexer, Basic}
 import parsley.token.descriptions.*
 import parsley.token.errors.*
 
+import parsley.errors.combinator.ErrorMethods
+import parsley.errors.tokenextractors.LexToken
+
 import parsley.character.{string}
 
 object lexer {
@@ -35,9 +38,6 @@ object lexer {
     )
 
     private val errConfig = new ErrorConfig {
-        // name errors
-        override def filterNameIllFormedIdentifier: FilterConfig[String] = BadIdentConfig()
-
         // numeric errors
         override def labelIntegerSignedNumber: LabelWithExplainConfig = Label("number")
         override def labelIntegerNumberEnd: LabelConfig = Label("end of number")
@@ -64,29 +64,22 @@ object lexer {
                 "chr" -> Label("prefix operator"),
                 "(" -> Label("bracketed expression"),
                 ")" -> LabelAndReason("unclosed brackets", "closing bracket"),
-                // Not working currently
-                ";" -> LabelAndReason("semicolons should only connect successive statements", "semicolon")
+                ";" -> Label("semicolon")
             )
         }
 
         // text errors
         override def labelCharAscii: LabelWithExplainConfig = Label("character")
-        override def labelCharAsciiEnd: LabelConfig = Label("closing single quote")
+        override def labelCharAsciiEnd: LabelConfig = Label("end of character literal")
         override def labelStringAscii(multi: Boolean, raw: Boolean): LabelWithExplainConfig = Label("string")
-        override def labelStringAsciiEnd(multi: Boolean, raw: Boolean): LabelConfig = Label("closing double quote")
+        override def labelStringAsciiEnd(multi: Boolean, raw: Boolean): LabelConfig = Label("end of string literal")
         override def labelEscapeEnd: LabelWithExplainConfig = 
             LabelAndReason(
                 "valid escape sequences are \\0, \\n, \\t, \\r, \\f, \\b, \\\', \\\" and \\\\",
-                "escape sequence"
+                "end of escape sequence"
                 )
-        // override def verifiedCharBadCharsUsedInLiteral: VerifiedBadChars = ???
-        // override def verifiedStringBadCharsUsedInLiteral: VerifiedBadChars = ???
 
     }
-
-    class BadIdentConfig extends Because[String] {
-        override def reason(x: String): String = s"$x is an invalid identifier (identifiers must start with a letter or an underscore)"
-    } 
 
     private val lexer = Lexer(desc, errConfig)
 
@@ -98,6 +91,25 @@ object lexer {
     val implicits = lexer.lexeme.symbol.implicits
     def fully[A](p: Parsley[A]): Parsley[A] = lexer.fully(p)
 
+    // special tokens
+    val BeginProg = lexer.lexeme.symbol("begin").explain("programs must start with 'begin'")
+    val ThenIf = lexer.lexeme.symbol("then").explain("if statements must have a 'then' before the body")
+    val FiIf = lexer.lexeme.symbol("fi").explain("if statements must end with 'fi'")
+    val WhileDo = lexer.lexeme.symbol("do").explain("while loops must have a 'do' before the body")
+    val WhileDone = lexer.lexeme.symbol("done").explain("while loops must end with 'done'")
+    
     def idStart(c: Char): Boolean = c.isLetter || c == '_'
     def idRest(c: Char): Boolean = c.isLetterOrDigit || c == '_'
+
+    val LexErrorBuilder = new MyErrorBuilder with LexToken {
+        def tokens = Seq(
+            lexer.nonlexeme.integer.decimal32.map(n => s"integer $n"),
+            lexer.nonlexeme.names.identifier.map(v => s"identifier $v"),
+            lexer.nonlexeme.character.ascii.map(c => s"character $c"),
+            lexer.nonlexeme.string.ascii.map(s => s"string $s"),
+            atomic((string("true") as true) | (string("false") as false)).map(b => s"$b")
+        ) ++ desc.symbolDesc.hardKeywords.map { 
+            k => lexer.nonlexeme.symbol(k).as(s"keyword $k")
+        }
+    }
 }
