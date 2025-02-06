@@ -129,8 +129,8 @@ def check(expr: Q_Expr, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType
     case Q_CharLiteral(v: Char) => (KnownType.Char.satisfies(c), TypedExpr.CharLiteral(v))
     case Q_StringLiteral(v: String) => (KnownType.String.satisfies(c), TypedExpr.StringLiteral(v))
     case Q_Ident(v: Q_Name) => (KnownType.Ident.satisfies(c), TypedExpr.Ident(v))
-    case Q_ArrayElem(v: Q_Name, indicies: List[Q_Expr]) => 
-        val checkedExprs: List[(Option[SemType], TypedExpr)] = indicies.map(expr => check(expr, Constraint.IsNumeric))
+    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr]) => 
+        val checkedExprs: List[(Option[SemType], TypedExpr)] = indices.map(expr => check(expr, Constraint.IsNumeric))
         val semTypes = checkedExprs.map(_._1)
         val typedExprs = checkedExprs.map(_._2)
 
@@ -182,7 +182,14 @@ def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[Sem
     case Q_PairElem(index: PairIndex, v: Q_LValue) =>
         val (vTy, typedV) = check(v, c)
         (vTy.getOrElse(?).satisfies(c), TypedRValue.PairElem(index, typedV))
-    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr]) => ???
+    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr]) =>
+        val checkedExprs: List[(Option[SemType], TypedExpr)] = indices.map(expr => check(expr, Constraint.IsNumeric))
+        val semTypes = checkedExprs.map(_._1)
+        val typedExprs = checkedExprs.map(_._2)
+
+        val ty = semTypes.fold(Some(?))((t1, t2) => Some(mostSpecific(t1, t2))).getOrElse(?)
+
+        (ty.satisfies(c), TypedExpr.ArrayElem(TypedExpr.Ident(v), typedExprs))
 }
 
 def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedRValue) = r match {
