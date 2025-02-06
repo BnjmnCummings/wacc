@@ -209,7 +209,6 @@ object renamer {
     
     private def verifyTyped(t: SemType): KnownType = t match
         case ? => throw ScopeException("Variable not typed")
-        case KnownType.Array(t) => verifyTyped(t)
+        case KnownType.Array(t) => KnownType.Array(verifyTyped(t))
         case _ => t.asInstanceOf[KnownType]
-    
 }
