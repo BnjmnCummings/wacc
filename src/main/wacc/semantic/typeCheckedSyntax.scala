@@ -27,22 +27,29 @@ object TypedExpr {
     case class Ord(x: TypedExpr) extends TypedExpr
     case class Chr(x: TypedExpr) extends TypedExpr
 
-    case class IntLiteral(v: BigInt) extends TypedExpr {
+    case class IntLiteral() extends TypedExpr {
         def ty = KnownType.Int
     }
-    case class BoolLiteral(v: Boolean) extends TypedExpr {
+    case class BoolLiteral() extends TypedExpr {
         def ty = KnownType.Boolean
     }
-    case class CharLiteral(v: Char) extends TypedExpr {
+    case class CharLiteral() extends TypedExpr {
         def ty = KnownType.Char
     }
-    case class StringLiteral(v: String) extends TypedExpr {
+    case class StringLiteral() extends TypedExpr {
         def ty = KnownType.String
     }
-    case class Ident(v: Q_Name) extends TypedExpr, TypedLValue {
+    case class ArrayLiteral(t: SemType) extends TypedExpr {
+        def ty = KnownType.Array
+    }
+    case class PairLiteral(t1: SemType, t2: SemType) extends TypedExpr {
+        def ty = KnownType.Pair
+    }
+    case class Ident() extends TypedExpr, TypedLValue {
         def ty = KnownType.String
     }
-    case class ArrayElem(v: Ident, indicies: List[TypedExpr]) extends TypedExpr, TypedLValue {
+    
+    case class ArrayElem() extends TypedExpr, TypedLValue {
         def ty = KnownType.Array
     }
 }
@@ -73,4 +80,14 @@ object TypedRValue {
     case class ArrayLiteral(xs: List[TypedExpr], t: SemType) extends TypedRValue
     case class PairElem(index: PairIndex, v: TypedLValue) extends TypedExpr, TypedLValue
     case class NewPair(x1: TypedExpr, x2: TypedExpr) extends TypedRValue
+}
+
+def knownToTypedExpr(kt: KnownType): TypedExpr = kt match {
+    case KnownType.Int => TypedExpr.IntLiteral()
+    case KnownType.Boolean => TypedExpr.BoolLiteral()
+    case KnownType.Char => TypedExpr.CharLiteral()
+    case KnownType.String => TypedExpr.StringLiteral()
+    case KnownType.Array(ty) => TypedExpr.ArrayLiteral(ty)
+    case KnownType.Pair(ty1, ty2) => TypedExpr.PairLiteral(ty1, ty2)
+    case KnownType.Ident => TypedExpr.Ident()
 }

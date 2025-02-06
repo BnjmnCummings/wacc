@@ -2,7 +2,6 @@ package test.wacc.semantic
 
 import wacc.semantic.*
 import wacc.*
-import wacc.ast.*
 import wacc.q_ast.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
@@ -30,10 +29,10 @@ class types_tst extends AnyFlatSpec {
         val typedFuncs: List[TypedFunc] = List[TypedFunc]()
 
         val typedBody: List[TypedStmt] = List[TypedStmt](
-            TypedStmt.Decl(TypedExpr.Ident(Q_Name("x", 0)), TypedExpr.IntLiteral(7)),
-            TypedStmt.Decl(TypedExpr.Ident(Q_Name("c", 0)), TypedExpr.CharLiteral('c')),
-            TypedStmt.Decl(TypedExpr.Ident(Q_Name("b", 0)), TypedExpr.BoolLiteral(true)),
-            TypedStmt.Decl(TypedExpr.Ident(Q_Name("s", 0)), TypedExpr.StringLiteral("Test"))
+            TypedStmt.Decl(TypedExpr.Ident(), TypedExpr.IntLiteral()),
+            TypedStmt.Decl(TypedExpr.Ident(), TypedExpr.CharLiteral()),
+            TypedStmt.Decl(TypedExpr.Ident(), TypedExpr.BoolLiteral()),
+            TypedStmt.Decl(TypedExpr.Ident(), TypedExpr.StringLiteral())
         )
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe Right(TypedProg(typedFuncs, typedBody))
@@ -150,7 +149,7 @@ class types_tst extends AnyFlatSpec {
 
         val typedFuncs: List[TypedFunc] = List[TypedFunc]()
         val typedBody: List[TypedStmt] = List[TypedStmt](
-            TypedStmt.Decl(TypedExpr.Ident(Q_Name("intArr", 0)), TypedRValue.ArrayLiteral(List[TypedExpr](TypedExpr.IntLiteral(1), TypedExpr.IntLiteral(2), TypedExpr.IntLiteral(3)), KnownType.Int))
+            TypedStmt.Decl(TypedExpr.Ident(), TypedRValue.ArrayLiteral(List[TypedExpr](TypedExpr.IntLiteral(), TypedExpr.IntLiteral(), TypedExpr.IntLiteral()), KnownType.Int))
         )
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe Right(TypedProg(typedFuncs, typedBody))
@@ -205,6 +204,7 @@ class types_tst extends AnyFlatSpec {
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe expected
     }*/
 
+class types_test extends AnyFlatSpec {
     "free" should "be able to free arrays" in {
         val funcs: List[Q_Func] = List[Q_Func]()
 
@@ -221,8 +221,8 @@ class types_tst extends AnyFlatSpec {
 
         val typedFuncs: List[TypedFunc] = List[TypedFunc]()
         val typedBody: List[TypedStmt] = List[TypedStmt] (
-            TypedStmt.Decl(TypedExpr.Ident(Q_Name("arr1", 0)), TypedRValue.ArrayLiteral(List[TypedExpr](TypedExpr.IntLiteral(1)), KnownType.Int)),
-            TypedStmt.Free(TypedExpr.Ident(Q_Name("arr1", 0)))
+            TypedStmt.Decl(TypedExpr.Ident(), TypedRValue.ArrayLiteral(List[TypedExpr](TypedExpr.IntLiteral()), KnownType.Int)),
+            TypedStmt.Free(TypedExpr.Ident())
         )
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe Right(TypedProg(typedFuncs, typedBody))
@@ -244,14 +244,14 @@ class types_tst extends AnyFlatSpec {
 
         val typedFuncs: List[TypedFunc] = List[TypedFunc]()
         val typedBody: List[TypedStmt] = List[TypedStmt] (
-            TypedStmt.Decl(TypedExpr.Ident(Q_Name("p", 0)), TypedRValue.NewPair(TypedExpr.IntLiteral(1), TypedExpr.IntLiteral(2))),
-            TypedStmt.Free(TypedExpr.Ident(Q_Name("p", 0)))
+            TypedStmt.Decl(TypedExpr.Ident(), TypedRValue.NewPair(TypedExpr.IntLiteral(), TypedExpr.IntLiteral())),
+            TypedStmt.Free(TypedExpr.Ident())
         )
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe Right(TypedProg(typedFuncs, typedBody))
     }
 
-    "free" should "reject strings" in {
+    it should "reject strings" in {
         parseAndTypeCheckStr("begin string s = \"adam marshall\"; free s end") shouldBe a [Left[?, ?]]
     }
 
@@ -310,4 +310,65 @@ class types_tst extends AnyFlatSpec {
         parseAndTypeCheckStr("begin exit \'a\' end") shouldBe a [Left[?, ?]]
         parseAndTypeCheckStr("begin exit true end") shouldBe a [Left[?, ?]]
     }
+
+    "if statement" should "accept a boolean condition" in {
+        parseAndTypeCheckStr("begin if (3 == 3) then skip else skip fi end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "reject any other type of condition" in {
+        parseAndTypeCheckStr("begin if (3 + 3) then skip else skip fi end") shouldBe a [Left[?, ?]]
+    }
+
+    "while loop" should "accept a boolean condition" in {
+        parseAndTypeCheckStr("begin while (3 == 3) do skip done end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "reject any other type of condition" in {
+        parseAndTypeCheckStr("begin while (3 + 3) do skip done end") shouldBe a [Left[?, ?]]
+    }
+
+    "declaration" should "pass type checks when both sides are int type" in {
+        parseAndTypeCheckStr("begin int x = 7 end") shouldBe a [Right[?, ?]]
+        parseAndTypeCheckStr("begin int x = 7 + 7 end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "pass type checks when both sides are array type" in {
+        parseAndTypeCheckStr("begin int[] x = [1, 2] end") shouldBe a [Right[?, ?]]
+        parseAndTypeCheckStr("begin int[] x = [1, 2 + 3] end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "fail type checks when both sides have different types" in {
+        parseAndTypeCheckStr("begin int x = \'a\' end") shouldBe a [Left[?, ?]]
+    }
+
+    it should "fail type checks when both sides have different array types" in {
+        parseAndTypeCheckStr("begin int[] x = [\'a\'] end") shouldBe a [Left[?, ?]]
+    }
+
+    it should "fail type checks when RHS is an array with multiple types in it" in {
+        parseAndTypeCheckStr("begin int[] x = [9, true] end") shouldBe a [Left[?, ?]]
+    }
+
+    "assignment" should "pass type checks when both sides are int type" in {
+        parseAndTypeCheckStr("begin int x = 7; x = 0 end") shouldBe a [Right[?, ?]]
+        parseAndTypeCheckStr("begin int x = 7 + 7; x = 0 end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "pass type checks when both sides are array type" in {
+        parseAndTypeCheckStr("begin int[] x = [1, 2]; x = [1] end") shouldBe a [Right[?, ?]]
+        parseAndTypeCheckStr("begin int[] x = [1, 2]; x = [1 + 1] end") shouldBe a [Right[?, ?]]
+    }
+
+    it should "fail type checks when both sides have different types" in {
+        parseAndTypeCheckStr("begin int x = 3; x = 'a' end") shouldBe a [Left[?, ?]]
+    }
+
+    it should "fail type checks when both sides have different array types" in {
+        parseAndTypeCheckStr("begin int[] x = []; x = ['a'] end") shouldBe a [Left[?, ?]]
+    }
+
+    it should "fail type checks when RHS is an array with multiple types in it" in {
+        parseAndTypeCheckStr("begin int[] x = []; x = [3, true] end") shouldBe a [Left[?, ?]]
+    }
+}
 }
