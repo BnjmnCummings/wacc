@@ -44,20 +44,20 @@ def check(stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
         val (ty, typedL) = check(l, Constraint.Unconstrained)
         TypedStmt.Read(typedL)
     case Q_Free(x: Q_Expr) =>
-        val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for free values!
+        val (ty, typedX) = check(x, Constraint.Unconstrained)
         TypedStmt.Free(typedX)
     case Q_Return(x: Q_Expr) =>
-        val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for return values!
+        val (ty, typedX) = check(x, Constraint.Unconstrained)
         TypedStmt.Return(typedX)
     case Q_Exit(x: Q_Expr) =>
-        val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for exit values!
-        TypedStmt.Return(typedX) // THESE NEED CHANGING
+        val (ty, typedX) = check(x, Constraint.Unconstrained)
+        TypedStmt.Exit(typedX) // THESE NEED CHANGING
     case Q_Print(x: Q_Expr) =>
-        val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for print values!
-        TypedStmt.Return(typedX) // THESE NEED CHANGING
+        val (ty, typedX) = check(x, Constraint.Unconstrained)
+        TypedStmt.Print(typedX) // THESE NEED CHANGING
     case Q_Println(x: Q_Expr) =>
-        val (ty, typedX) = check(x, Constraint.Unconstrained) // Create a constraint for println values!
-        TypedStmt.Return(typedX) // THESE NEED CHANGING
+        val (ty, typedX) = check(x, Constraint.Unconstrained)
+        TypedStmt.Println(typedX) // THESE NEED CHANGING
     case Q_If(cond: Q_Expr, body: List[Q_Stmt], scopedBody: Set[Q_Name], el: List[Q_Stmt], scopedEl: Set[Q_Name]) =>
         val (condTy, typedCond) = check(cond, Constraint.Unconstrained) // Create a constraint for this being a boolean!
         val typedBody = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
