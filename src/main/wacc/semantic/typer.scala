@@ -51,13 +51,13 @@ def check(stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): TypedStmt = stmt match {
         TypedStmt.Return(typedX)
     case Q_Exit(x: Q_Expr) =>
         val (ty, typedX) = check(x, Constraint.Unconstrained)
-        TypedStmt.Exit(typedX) // THESE NEED CHANGING
+        TypedStmt.Exit(typedX)
     case Q_Print(x: Q_Expr) =>
         val (ty, typedX) = check(x, Constraint.Unconstrained)
-        TypedStmt.Print(typedX) // THESE NEED CHANGING
+        TypedStmt.Print(typedX)
     case Q_Println(x: Q_Expr) =>
         val (ty, typedX) = check(x, Constraint.Unconstrained)
-        TypedStmt.Println(typedX) // THESE NEED CHANGING
+        TypedStmt.Println(typedX)
     case Q_If(cond: Q_Expr, body: List[Q_Stmt], scopedBody: Set[Q_Name], el: List[Q_Stmt], scopedEl: Set[Q_Name]) =>
         val (condTy, typedCond) = check(cond, Constraint.Unconstrained) // Create a constraint for this being a boolean!
         val typedBody = check(body, Constraint.Unconstrained) // Think this can remain as Unconstrained
@@ -180,9 +180,11 @@ def check(l: Q_LValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType]
     case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr]) => ???
 }
 
-def check(r: Q_RValue, c: Constraint)(using TypeCheckerCtx[?]): (Option[SemType], TypedRValue) = r match {
-    case Q_FuncCall(v: Q_Name, args: List[Q_Expr]) => ???
-        // Check if RValue needs anything special! Own constraint?
+def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): (Option[SemType], TypedRValue) = r match {
+    case Q_FuncCall(v: Q_Name, args: List[Q_Expr]) =>
+        val (exprTy, typedExprs): (Option[SemType], List[TypedExpr]) = check(args, c)
+
+        (exprTy, TypedRValue.FuncCall(v.name, typedExprs))
     case Q_ArrayLiteral(xs: List[Q_Expr]) => 
         val checkedExprs: List[(Option[SemType], TypedExpr)] = xs.map(x => check(x, Constraint.Unconstrained))
         val semTypes = checkedExprs.map(_._1)
@@ -284,6 +286,7 @@ class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
 
     // This will get the type of variables
     def typeOf(id: Q_Name): KnownType = tyInfo.varTys(id)
+    def typeOfFunc(id: Q_Name): (KnownType, List[Q_Name]) = tyInfo.funcTys(id)
 
     def error(err: Error) = {
         errs += err
