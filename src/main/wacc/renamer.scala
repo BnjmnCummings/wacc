@@ -17,13 +17,13 @@ object renamer {
     private var globalScope: MutableSet[Q_Name] = MutableSet()
     private var name_gen_table: MutableMap[String, Int] = MutableMap[String, Int]()
     private var varTypes: MutableMap[Q_Name, SemType] = MutableMap[Q_Name, SemType]()
-    private var funcTypes: MutableMap[Q_Name, (SemType, Map[Q_Name, SemType])] = MutableMap[Q_Name, (SemType, Map[Q_Name, SemType])]()
+    private var funcTypes: MutableMap[Q_Name, (SemType, List[Q_Name])] = MutableMap[Q_Name, (SemType, List[Q_Name])]()
 
     def rename(prog: Prog): (Q_Prog, TypeInfo) = 
         globalScope = MutableSet()
         name_gen_table = MutableMap[String, Int]()
         varTypes = MutableMap[Q_Name, SemType]()
-        funcTypes = MutableMap[Q_Name, (SemType, Map[Q_Name, SemType])]()
+        funcTypes = MutableMap[Q_Name, (SemType, List[Q_Name])]()
 
         // it is important this occurs first as it adds functions to globalScope
         val _funcs = rename(prog.funcs)
@@ -45,7 +45,10 @@ object renamer {
     private def rename(func: Func): Q_Func = 
         val localScope: MutableSet[Q_Name] = MutableSet()
         val _v: Q_Name = genName(func.v)
+
         val _args = func.args.map(rename)
+        
+        newFunc(_v, func.t, _args.map(_.v))
             
         val (_body, scoped) = rename(func.body, _args.map(_.v).toSet, localScope.toSet)
 
@@ -64,13 +67,8 @@ object renamer {
             val _stmt = rename(stmt, parScope, _localScope.toSet)
             _stmts += _stmt
             _stmt match {
-                case Q_Decl(t, v, _) => {
-                    if localScope.exists(_.name == v.name) then
-                        val var_name = localScope.find(_.name == v.name).get
-                        if varTypes(var_name) == ? then
-                            updateType(var_name, toSemType(t))
-                    else
-                        _localScope += v
+                case Q_Decl(v, _) => {
+                    _localScope += v
                 }
                 case _ => ()
             }
@@ -81,12 +79,16 @@ object renamer {
     
     private def rename(stmt: Stmt, parScope: Set[Q_Name], localScope: Set[Q_Name]): Q_Stmt = stmt match
         case Decl(t, Ident(v), r) => 
-            if (localScope.exists(_.name == v)) {
-                throw ScopeException("Already declared in scope")
-            }
             /* need to evaluate r-value first so that we can't declare an ident as itself */
             val rvalue = rename(r, parScope ++ localScope)
-            Q_Decl(t, newVar(v, Some(t)), rvalue)
+            
+            if localScope.exists(_.name == v) then
+                val var_name = localScope.find(_.name == v).get
+                if varTypes(var_name) == ? then
+                    updateType(var_name, toSemType(t))
+                else
+                    throw ScopeException(s"variable $v already declared in scope")
+            Q_Decl(newVar(v, Some(t)), rvalue)
         
         case Asgn(l, r) => Q_Asgn(rename(l, parScope ++ localScope), rename(r, parScope ++ localScope))
         case Read(l) => Q_Read(rename(l, parScope ++ localScope))
@@ -172,11 +174,8 @@ object renamer {
     private def updateType(name: Q_Name, t: SemType) = 
         varTypes(name) = t
 
-    private def newFunc(name: String, t: Type, args: List[Q_Name]): Q_Name =
-        val _name = genName(name)
-        // funcTypes(_name) = (_name, MutableMap(args.map(x => (x, varTypes(x))): List[(Q_Name, SemType)]))
-        funcTypes(_name) = (toSemType(t), (args zip (args.map(varTypes(_)))).toMap)
-        _name
+    private def newFunc(name: Q_Name, t: Type, args: List[Q_Name]) =
+        funcTypes(name) = (toSemType(t), args)
 
     private def genName(name: String): Q_Name = 
         val count = name_gen_table.getOrElse(name, 0)
@@ -191,9 +190,9 @@ object renamer {
         else
             newVar(name, None)
     
-    private def verifyTyped(varTypes: MutableMap[Q_Name, SemType], funcTypes: MutableMap[Q_Name, (SemType, Map[Q_Name, SemType])]): (Map[Q_Name, KnownType], Map[Q_Name, (KnownType, Map[Q_Name, KnownType])]) = 
+    private def verifyTyped(varTypes: MutableMap[Q_Name, SemType], funcTypes: MutableMap[Q_Name, (SemType, List[Q_Name])]): (Map[Q_Name, KnownType], Map[Q_Name, (KnownType, List[Q_Name])]) = 
         val _varTypes = varTypes.map((n, t) => (n, verifyTyped(t))).toMap
-        val _funcTypes = funcTypes.map((n, targs) => (n, (verifyTyped(targs._1), targs._2.map((n, t) => (n, verifyTyped(t)))))).toMap
+        val _funcTypes = funcTypes.map((n, targs) => (n, (verifyTyped(targs._1), targs._2))).toMap
         (_varTypes, _funcTypes)
     
     private def verifyTyped(t: SemType): KnownType = t match
