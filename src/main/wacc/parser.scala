@@ -1,7 +1,6 @@
 package wacc
 
 import wacc.ast.*
-import wacc.lexer.{BeginProg, EndProg, ThenIf, FiIf, WhileDo, WhileDone}
 
 import parsley.{Parsley, Result}
 import parsley.quick.*
@@ -9,13 +8,14 @@ import parsley.errors.ErrorBuilder
 import parsley.errors.combinator.ErrorMethods
 import parsley.expr.{precedence, Ops,InfixN, InfixR, InfixL, Prefix, chain}
 import lexer.{_int, _ident, _char, _string, _bool, fully}
+import lexer.{BeginProg, EndProg, ThenIf, FiIf, WhileDo, WhileDone}
 import lexer.implicits.implicitSymbol
+import lexer.LexErrorBuilder
 
 import java.io.File
 import scala.util.Success
 import scala.util.Failure
 import parsley.errors.tokenextractors.TillNextWhitespace
-
 
 object parser {
     def parseF(input: File): Result[Err, Prog] = parser.parseFile(input) match
@@ -24,9 +24,7 @@ object parser {
 
     def parse(input: String): Result[String, Prog] = parser.parse(input)
 
-    private implicit val errBuilder: ErrorBuilder[Err] = new MyErrorBuilder with TillNextWhitespace {
-        def trimToParserDemand: Boolean = false
-    }
+    private implicit val errBuilder: ErrorBuilder[Err] = LexErrorBuilder
 
     private val parser: Parsley[Prog] = fully(BeginProg ~> Prog(many(func), stmts) <~ EndProg)
 

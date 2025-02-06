@@ -7,6 +7,7 @@ import parsley.token.descriptions.*
 import parsley.token.errors.*
 
 import parsley.errors.combinator.ErrorMethods
+import parsley.errors.tokenextractors.LexToken
 
 import parsley.character.{string}
 
@@ -109,4 +110,15 @@ object lexer {
     
     def idStart(c: Char): Boolean = c.isLetter || c == '_'
     def idRest(c: Char): Boolean = c.isLetterOrDigit || c == '_'
+
+    val LexErrorBuilder = new MyErrorBuilder with LexToken {
+        def tokens = Seq(
+            lexer.nonlexeme.integer.decimal32.map(n => s"integer $n"),
+            lexer.nonlexeme.names.identifier.map(v => s"identifier $v"),
+            lexer.nonlexeme.character.ascii.map(c => s"character $c"),
+            lexer.nonlexeme.string.ascii.map(s => s"string $s")
+        ) ++ desc.symbolDesc.hardKeywords.map { 
+            k => lexer.nonlexeme.symbol(k).as(s"keyword $k")
+        }
+    }
 }
