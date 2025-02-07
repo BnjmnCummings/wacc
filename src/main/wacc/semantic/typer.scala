@@ -16,7 +16,7 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo, fname: Option[String] = None): Opt
     val progStmts: List[Q_Stmt] = prog.body
     
     progFuncs.map(check(_, Constraint.Unconstrained))
-    progStmts.map(check(_, isFunc = false))
+    progStmts.map(check(_, isFunc = false, Constraint.Unconstrained))
 
     ctx.errors.match {
         case err :: errs => Some(err :: errs)
@@ -29,8 +29,6 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo, fname: Option[String] = None): Opt
 // l != array, check l against r => l == r
 
 // break into inner of array, map function on each inner member of literal on right
-
-// TODO: change function name
 
 def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx): Option[SemType] = {
     (l, r) match {
@@ -97,7 +95,7 @@ def foo(l: SemType, t: SemType): Boolean = (l, t) match
 //    ??? // Not sure if this part is necessary
 //}
 
-def check(stmt: Q_Stmt, isFunc: Boolean)(using ctx: TypeCheckerCtx): Unit =
+def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: TypeCheckerCtx): Unit =
     stmt match {
     case Q_Decl(id: Q_Name, r: Q_RValue, pos) =>
         ctx.setPos(pos)
@@ -117,7 +115,7 @@ def check(stmt: Q_Stmt, isFunc: Boolean)(using ctx: TypeCheckerCtx): Unit =
     case Q_Return(x: Q_Expr, pos) => 
         ctx.setPos(pos)
         if isFunc then 
-            check(x, Constraint.Unconstrained)
+            check(x, funcConstraint)
         else
             ctx.error(InvalidReturn())
     case Q_Exit(x: Q_Expr, pos) => 
@@ -132,15 +130,15 @@ def check(stmt: Q_Stmt, isFunc: Boolean)(using ctx: TypeCheckerCtx): Unit =
     case Q_If(cond: Q_Expr, body: List[Q_Stmt], _, el: List[Q_Stmt], _, pos) =>
         ctx.setPos(pos)
         check(cond, Constraint.IsBoolean)
-        check(body, isFunc, Constraint.Unconstrained) // Think this can remain as Unconstrained
-        check(el, isFunc, Constraint.Unconstrained) // As above
+        check(body, isFunc, funcConstraint) // Think this can remain as Unconstrained
+        check(el, isFunc, funcConstraint) // As above
     case Q_While(cond: Q_Expr, body: List[Q_Stmt], scopedBody: Set[Q_Name], pos) =>
         ctx.setPos(pos)
         check(cond, Constraint.IsBoolean)
-        check(body, isFunc, Constraint.Unconstrained) // Think this can remain as Unconstrained
+        check(body, isFunc, funcConstraint) // Think this can remain as Unconstrained
     case Q_CodeBlock(body: List[Q_Stmt], scopedBody: Set[Q_Name], pos) =>
         ctx.setPos(pos)
-        check(body, isFunc, Constraint.Unconstrained) // Don't see why this should be anything other than Unconstrained
+        check(body, isFunc, funcConstraint) // Don't see why this should be anything other than Unconstrained
     case _ => ()
 }
 
@@ -323,9 +321,8 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx): Option[SemType
                 check(args(i), Constraint.Is(expectedType))
             }
 
-        Some(returnType)
-    case Q_ArrayLiteral(xs: List[Q_Expr], pos) =>
-        ctx.setPos(pos)
+        returnType.satisfies(c)
+    case Q_ArrayLiteral(xs: List[Q_Expr], _) =>
         val ty = xs
             .map(check(_, Constraint.Unconstrained))
             .fold(Some(?))((t1, t2) => t1.getOrElse(?).satisfies(Constraint.Is(t2.getOrElse(?)))).getOrElse(X)
@@ -364,12 +361,12 @@ def checkReturnType(t: Type, stmt: Q_Stmt)(using ctx: TypeCheckerCtx): Option[Se
 }
 
 def check(func: Q_Func, c: Constraint)(using ctx: TypeCheckerCtx): Option[SemType] = {
-    func.body.map(check(_, isFunc = true))
+    func.body.map(check(_, isFunc = true, Constraint.Is(toSemType(func.t))))
     checkReturnType(func.t, func.body.last)
 }
 
 @targetName("checkStmts")
-def check(stmts: List[Q_Stmt], isFunc: Boolean, c: Constraint)(using TypeCheckerCtx): Unit = stmts.map(check(_, isFunc = isFunc))
+def check(stmts: List[Q_Stmt], isFunc: Boolean, funcConstraint: Constraint)(using TypeCheckerCtx): Unit = stmts.map(check(_, isFunc = isFunc, funcConstraint))
 
 @targetName("checkExprs")
 def check(listArgs: List[Q_Expr], c: Constraint)(using TypeCheckerCtx): Option[SemType] = {
