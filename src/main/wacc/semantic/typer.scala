@@ -221,7 +221,6 @@ extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) mat
 
 extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (ty, c) match {
     case (ty, Constraint.Is(refTy)) => (ty ~ refTy).orElse {
-        println(s"$ty, $refTy")
         ctx.error(Error.TypeMismatch(ty, refTy))
     }
     case (?, _) => Some(?)
