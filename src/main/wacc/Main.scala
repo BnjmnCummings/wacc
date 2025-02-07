@@ -18,7 +18,9 @@ def main(args: Array[String]): Unit = {
                     try {
                         val (q_t, tyInfo) = renamer.rename(t)
                         typeCheck(q_t, tyInfo) match {
-                            case Some(_) => sys.exit(200)
+                            case Some(e) => 
+                                println(e)
+                                sys.exit(200)
                             case None => sys.exit(0) 
                         }
                         sys.exit(0)

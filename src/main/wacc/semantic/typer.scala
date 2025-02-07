@@ -24,7 +24,8 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo): Option[List[Error]] = {
     }
 }
 
-def check(stmt: Q_Stmt, isFunc: Boolean)(using ctx: TypeCheckerCtx[?]): Unit = stmt match {
+def check(stmt: Q_Stmt, isFunc: Boolean)(using ctx: TypeCheckerCtx[?]): Unit =
+    stmt match {
     case s@Q_Decl(id: Q_Name, r: Q_RValue, _) =>
         check(r, Constraint.Is(ctx.typeOf(id))) // This will check the type of r compared to given type t
     // Check the type of the LValue matches that of the RValue
@@ -98,11 +99,16 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[Sem
     case Q_CharLiteral(v: Char, _) => KnownType.Char.satisfies(c)
     case Q_StringLiteral(v: String, _) => KnownType.String.satisfies(c)
     case Q_Ident(v: Q_Name, _) => ctx.typeOf(v).satisfies(c)
-    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) => 
-        indices
-            .map(expr => check(expr, Constraint.IsNumeric))
-            .fold(Some(?))((t1, t2) => (t1.getOrElse(?) ~ t2.getOrElse(?))).getOrElse(?)
-            .satisfies(c)
+    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) =>
+        indices.map(expr => check(expr, Constraint.IsNumeric))
+        var t: SemType = ctx.typeOf(v)
+        for _ <- indices.length to 1 do
+            t = t match
+                case KnownType.Array(t) => t
+                case _ => ?
+        t match
+            case ? => None
+            case t => t.satisfies(c)
     case Q_PairNullLiteral => KnownType.Pair(?, ?).satisfies(c)
     case Q_PairElem(index: PairIndex, v: Q_LValue, _) => check(v, c).getOrElse(?).satisfies(c)
 }
@@ -137,10 +143,15 @@ def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemT
     case Q_Ident(v: Q_Name, _) => ctx.typeOf(v).satisfies(c)
     case Q_PairElem(index: PairIndex, v: Q_LValue, _) => check(v, c).getOrElse(?).satisfies(c)
     case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) =>
-        indices
-            .map(expr => check(expr, Constraint.IsNumeric))
-            .fold(Some(?))((t1, t2) => (t1.getOrElse(?) ~ t2.getOrElse(?))).getOrElse(?)
-            .satisfies(c)
+        indices.map(expr => check(expr, Constraint.IsNumeric))
+        var t: SemType = ctx.typeOf(v)
+        for _ <- indices.length to 1 do
+            t = t match
+                case KnownType.Array(t) => t
+                case _ => ?
+        t match
+            case ? => None
+            case t => t.satisfies(c)
 }
 
 def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] =
@@ -214,6 +225,7 @@ extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) mat
 
 extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (ty, c) match {
     case (ty, Constraint.Is(refTy)) => (ty ~ refTy).orElse {
+        println(s"$ty, $refTy")
         ctx.error(Error.TypeMismatch(ty, refTy))
     }
     case (?, _) => Some(?)
