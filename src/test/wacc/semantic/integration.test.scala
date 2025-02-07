@@ -71,8 +71,8 @@ class semantic_integration_test extends AnyFlatSpec {
                     try {
                         val (q_t, tyInfo) = renamer.rename(t)
                         typeCheck(q_t, tyInfo) match {
-                            case None => semFailures += p
-                            case Some(_) => successes += p 
+                            case Some(_) => semFailures += p
+                            case None => successes += p 
                         }
                     } catch {
                         case e: ScopeException => {
