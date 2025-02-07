@@ -1,6 +1,5 @@
 package wacc
 
-import wacc.semantic.TypeCheckerCtx
 import java.io.File
 import scala.io.Source
 
@@ -8,7 +7,7 @@ trait semanticErr
 
 object ScopeError {
     def apply(msg: String)(using ctx: RenamerContext) = Err(
-        None,
+        ctx.fname,
         ctx.pos,
         SpecializedError(
             Set(msg),
@@ -19,7 +18,7 @@ object ScopeError {
 }
 
 object TypeMismatch {
-    def apply(unexpected: SemType, expected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType, expected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -33,7 +32,7 @@ object TypeMismatch {
 }
 
 object NonExitableType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -47,7 +46,7 @@ object NonExitableType {
 }
 
 object NonFreeableType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -61,7 +60,7 @@ object NonFreeableType {
 }
 
 object NonNumericType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -75,7 +74,7 @@ object NonNumericType {
 }
 
 object NonCharacterType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -89,7 +88,7 @@ object NonCharacterType {
 }
 
 object NonNumericCharacterType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -103,7 +102,7 @@ object NonNumericCharacterType {
 }
 
 object NonBooleanType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -117,7 +116,7 @@ object NonBooleanType {
 }
 
 object NonStringType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -131,7 +130,7 @@ object NonStringType {
 }
 
 object NonReadableType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -145,11 +144,47 @@ object NonReadableType {
 }
 
 object InvalidReturn {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply()(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         SpecializedError(
             Set("return is not allowed outside of a function body"),
+            getLineFromContext(ctx)
+        ),
+        ErrorType.SemanticError
+    )
+}
+
+object UnknownType {
+    def apply(pTypeIn: SemType)(using ctx: TypeCheckerCtx) = Err(
+        ctx.fname,
+        ctx.pos,
+        SpecializedError(
+            Set("Can't infer type of pair"),
+            getLineFromContext(ctx)
+        ),
+        ErrorType.SemanticError
+    )
+}
+
+object WrongNumberOfArgs {
+    def apply(unexpected: Int, expected: Int)(using ctx: TypeCheckerCtx) = Err(
+        ctx.fname,
+        ctx.pos,
+        SpecializedError(
+            Set(s"Wrong number of arguments, got $unexpected, expected $expected"),
+            getLineFromContext(ctx)
+        ),
+        ErrorType.SemanticError
+    )
+}
+
+object InvalidIndexing {
+    def apply()(using ctx: TypeCheckerCtx) = Err(
+        ctx.fname,
+        ctx.pos,
+        SpecializedError(
+            Set("Invalid array indexing"),
             getLineFromContext(ctx)
         ),
         ErrorType.SemanticError
@@ -167,9 +202,8 @@ def getLineFromContext(ctx: ErrContext): String = {
             }
 
             val curLine: String = contents.next()
-            val NUM_LINES_IN_FILE = contents.size
             var lineAfter: String = ""
-            if (ctx.pos._1 < NUM_LINES_IN_FILE) {
+            if (contents.hasNext) {
                 lineAfter = contents.next()
             }
 
@@ -177,7 +211,7 @@ def getLineFromContext(ctx: ErrContext): String = {
                 curLine,
                 List(lineBefore),
                 List(lineAfter),
-                ctx.pos._2,
+                ctx.pos._2 - 1,
                 1
                 )
         }
@@ -191,7 +225,7 @@ def typeToString(t: SemType): String = t match
     case KnownType.Int => "integer"
     case KnownType.Boolean => "boolean"
     case KnownType.String => "string"
-    case KnownType.Char => "jack bondage fletcher"
+    case KnownType.Char => "char"
     case KnownType.Array(?) => "array"
     case KnownType.Pair(?, ?) => "pair"
     case KnownType.Array(t) => s"array of ${typeToString(t)}"

@@ -34,8 +34,8 @@ abstract class MyErrorBuilder extends ErrorBuilder[Err] {
     override def named(item: String): NamedItem = NamedItem(item)
     val endOfInput: EndOfInputItem.type = EndOfInputItem
 
-    val numLinesAfter: Int = 2
-    val numLinesBefore: Int = 2
+    val numLinesAfter: Int = 1
+    val numLinesBefore: Int = 1
     override def lineInfo(
         line: String,
         linesBefore: Seq[String],

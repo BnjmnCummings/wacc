@@ -4,10 +4,12 @@ import wacc.parser
 
 import parsley.{Failure, Success}
 
+import wacc.Err
+
 import wacc.renamer
 import wacc.ScopeException
 
-def parseAndTypeCheckStr(inpString: String): Option[List[Error]] = {
+def parseAndTypeCheckStr(inpString: String): Option[List[Err]] = {
     parser.parse(inpString) match
         case Failure(msg) => throw new Exception(s"didn't parse syntactically for some reason, here is the message:\n $msg")
         case Success(x) => {
