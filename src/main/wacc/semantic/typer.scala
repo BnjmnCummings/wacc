@@ -50,9 +50,13 @@ def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx): Option[S
             }
         case (t@KnownType.Array(arrT), Q_ArrayLiteral(xs, pos)) =>
             ctx.setPos(pos)
-            val semOpt = xs
-                .map(check(_, Constraint.Unconstrained))
-                .fold(Some(?))((t1, t2) => t1.getOrElse(?).satisfies(Constraint.Is(t2.getOrElse(?)))).getOrElse(X)
+            val semOpt: SemType = 
+                if xs.isEmpty then
+                    arrT
+                else
+                    xs
+                        .map(check(_, Constraint.Unconstrained))
+                        .fold(Some(?))((t1, t2) => t1.getOrElse(?).satisfies(Constraint.Is(t2.getOrElse(?)))).getOrElse(?)
             arrT match
                 case KnownType.String =>
                     if semOpt == KnownType.String | semOpt == KnownType.Array(KnownType.Char) then
@@ -71,7 +75,10 @@ def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx): Option[S
                 case (KnownType.String, KnownType.Array(KnownType.Char)) =>
                     Some(l)
                 case _ =>
-                    ctx.error(TypeMismatch(t, l))
+                    if l == t then
+                        Some(l)
+                    else
+                        ctx.error(TypeMismatch(t, l))
             // check(r, Constraint.IsExactly(l))
         // catches the base value case and the case where r is an ident
         case (_, _) => 
