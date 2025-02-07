@@ -60,6 +60,7 @@ object CodeBlock extends ParserBridgePos1[List[Stmt], CodeBlock] {
     override def labels = List("begin-end block")
 }
 
-object Skip extends Stmt, ParserBridgePos0[Skip] {
+object Skip extends ParserBridgePos0[Skip] {
+    def instance(): Skip = Skip((0,0))
     override def labels = List("skip statement")
 }

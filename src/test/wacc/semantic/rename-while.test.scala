@@ -16,7 +16,7 @@ class rename_while_test extends AnyFlatSpec{
             List(
                While(
                     BoolLiteral(true), 
-                    List(Skip)
+                    List(Skip.instance())
                 )
             )
         )

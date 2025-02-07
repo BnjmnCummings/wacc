@@ -245,8 +245,12 @@ extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[
     case (kty, Constraint.IsReadable) => ctx.error(Error.NonReadableType(kty))
 }
 
-class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
+class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C], fnameIn: Option[String] = None, posIn: (Int, Int) = (0,0)) extends ErrContext{
     def errors: C = errs.result()
+
+    def fname: Option[String] = fnameIn
+
+    def pos: (Int, Int) = posIn
 
     // This will get the type of variables
     def typeOf(id: Q_Name): KnownType = tyInfo.varTys(id)

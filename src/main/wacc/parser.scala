@@ -152,7 +152,7 @@ object parser {
         )
     )
 
-    lazy val skip: Parsley[Skip.type] = "skip" as Skip
+    lazy val skip: Parsley[Skip] =  Skip `from` "skip"
 
     lazy val decl: Parsley[Stmt] = Decl(_type, Ident(_ident), "=" ~> rvalue)
     
