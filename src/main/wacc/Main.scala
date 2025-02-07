@@ -19,8 +19,10 @@ def main(args: Array[String]): Unit = {
                         given filename: Option[String] = Some(fname)
                         val (q_t, tyInfo) = renamer.rename(t)
                         typeCheck(q_t, tyInfo) match {
-                            case Some(e) => 
-                                println(e)
+                            case Some(e: List[Err]) => 
+                                e.foreach {
+                                    er => println(er.format())
+                                }
                                 sys.exit(200)
                             case None => sys.exit(0) 
                         }
@@ -28,7 +30,9 @@ def main(args: Array[String]): Unit = {
                     } catch {
                         case e: ScopeException => {
                             // some kind of unified error messaging here
-                            println(e.getMessage)
+                            e.messages.headOption match 
+                                case Some(er) => println(er.format())
+                                case None => println("no error message for some reason")
                             sys.exit(200)
                         }
                     }

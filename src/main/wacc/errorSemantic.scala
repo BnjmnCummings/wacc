@@ -1,6 +1,5 @@
 package wacc
 
-import wacc.semantic.TypeCheckerCtx
 import java.io.File
 import scala.io.Source
 
@@ -19,7 +18,7 @@ object ScopeError {
 }
 
 object TypeMismatch {
-    def apply(unexpected: SemType, expected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType, expected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -33,7 +32,7 @@ object TypeMismatch {
 }
 
 object NonExitableType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -47,7 +46,7 @@ object NonExitableType {
 }
 
 object NonFreeableType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -61,7 +60,7 @@ object NonFreeableType {
 }
 
 object NonNumericType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -75,7 +74,7 @@ object NonNumericType {
 }
 
 object NonCharacterType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -89,7 +88,7 @@ object NonCharacterType {
 }
 
 object NonNumericCharacterType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -103,7 +102,7 @@ object NonNumericCharacterType {
 }
 
 object NonBooleanType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -117,7 +116,7 @@ object NonBooleanType {
 }
 
 object NonStringType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -131,7 +130,7 @@ object NonStringType {
 }
 
 object NonReadableType {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         VanillaError(
@@ -145,7 +144,7 @@ object NonReadableType {
 }
 
 object InvalidReturn {
-    def apply(unexpected: SemType)(using ctx: TypeCheckerCtx[?]) = Err(
+    def apply()(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
         ctx.pos,
         SpecializedError(
