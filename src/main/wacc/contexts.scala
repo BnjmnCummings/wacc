@@ -22,12 +22,16 @@ class RenamerContext(val errors: ListBuffer[Err] = ListBuffer[Err](), fnameIn: O
     def getErrors: List[Err] = errors.toList
 }
 
-class TypeCheckerCtx(tyInfo: TypeInfo, errs: ListBuffer[Err], fnameIn: Option[String] = None, posIn: (Int, Int) = (0,0)) extends ErrContext{
+class TypeCheckerCtx(tyInfo: TypeInfo, errs: ListBuffer[Err], fnameIn: Option[String] = None, var posVal: (Int, Int) = (0,0)) extends ErrContext{
     def errors: List[Err] = errs.toList
 
     def fname: Option[String] = fnameIn
 
-    def pos: (Int, Int) = posIn
+    def pos: (Int, Int) = posVal
+
+    def setPos(newPos: (Int, Int)) = {
+        posVal = newPos
+    }
 
     // This will get the type of variables
     def typeOf(id: Q_Name): KnownType = tyInfo.varTys(id)

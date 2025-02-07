@@ -17,7 +17,7 @@ def main(args: Array[String]): Unit = {
                 case Success(t) => {
                     try {
                         val (q_t, tyInfo) = renamer.rename(t, Some(fname))
-                        typeCheck(q_t, tyInfo) match {
+                        typeCheck(q_t, tyInfo, Some(fname)) match {
                             case Some(e: List[Err]) => 
                                 e.foreach {
                                     er => println(er.format())
