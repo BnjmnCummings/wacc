@@ -31,7 +31,11 @@ def check(stmt: Q_Stmt, isFunc: Boolean)(using ctx: TypeCheckerCtx[?]): Unit = s
     case Q_Asgn(l: Q_LValue, r: Q_RValue, _) => check(r, Constraint.Is(check(l, Constraint.Unconstrained).getOrElse(?)))
     case Q_Read(l: Q_LValue, _) => check(l, Constraint.IsReadable) // Only need to  verify the LValue is actually LValue - no constraint needed? Or create constraint for IsLValue?
     case Q_Free(x: Q_Expr, _) => check(x, Constraint.IsFreeable) // ADD THE CONSTRANTS FOR FREEABLE, EXITABLE
-    case Q_Return(x: Q_Expr, _) => check(x, Constraint.Unconstrained)
+    case Q_Return(x: Q_Expr, _) => 
+        if isFunc then 
+            check(x, Constraint.Unconstrained)
+        else
+            ctx.error(Error.InvalidReturn())
     case Q_Exit(x: Q_Expr, _) => check(x, Constraint.IsExitable)
     case Q_Print(x: Q_Expr, _) => check(x, Constraint.Unconstrained)
     case Q_Println(x: Q_Expr, _) => check(x, Constraint.Unconstrained)
@@ -238,6 +242,7 @@ enum Error {
     case NonBooleanType(actual: SemType)
     case NonStringType(actual: SemType)
     case NonReadableType(actual: SemType)
+    case InvalidReturn()
 }
 
 enum Constraint {
