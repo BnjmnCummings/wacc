@@ -53,11 +53,11 @@ object renamer {
             
         val (_body, scoped) = rename(func.body, _args.map(_.v).toSet, lScope.toSet)
 
-        Q_Func(func.t, _v, _args, _body, scoped)
+        Q_Func(func.t, _v, _args, _body, scoped, func.pos)
     
     
     private def rename(param: Param): Q_Param = 
-        Q_Param(param.t, newVar(param.v, Some(param.t)))
+        Q_Param(param.t, newVar(param.v, Some(param.t)), param.pos)
     
     private def rename(stmts: List[Stmt], pScope: Set[Q_Name], lScope: Set[Q_Name]): (List[Q_Stmt], Set[Q_Name]) = 
         val _lScope: MutableSet[Q_Name] = MutableSet()
@@ -79,7 +79,7 @@ object renamer {
     
     
     private def rename(stmt: Stmt, pScope: Set[Q_Name], lScope: Set[Q_Name]): Q_Stmt = stmt match
-        case Decl(t, Ident(v), r) => 
+        case decl@Decl(t, Ident(v), r) => 
             /* need to evaluate r-value first so that we can't declare an ident as itself */
             val rvalue = rename(r, merge(lScope, pScope))
             
@@ -89,26 +89,26 @@ object renamer {
                     updateType(var_name, toSemType(t))
                 else
                     throw ScopeException(s"variable $v already declared in scope")
-            Q_Decl(newVar(v, Some(t)), rvalue)
+            Q_Decl(newVar(v, Some(t)), rvalue, decl.pos)
         
-        case Asgn(l, r) => Q_Asgn(rename(l, merge(lScope, pScope)), rename(r, merge(lScope, pScope)))
-        case Read(l) => Q_Read(rename(l, merge(lScope, pScope)))
-        case Free(x) => Q_Free(rename(x, merge(lScope, pScope)))
-        case Return(x) => Q_Return(rename(x, merge(lScope, pScope)))
-        case Exit(x) => Q_Exit(rename(x, merge(lScope, pScope)))
-        case Print(x) => Q_Print(rename(x, merge(lScope, pScope)))
-        case Println(x) => Q_Println(rename(x, merge(lScope, pScope)))
-        case If(cond, body, el) => 
+        case asgn@Asgn(l, r) => Q_Asgn(rename(l, merge(lScope, pScope)), rename(r, merge(lScope, pScope)), asgn.pos)
+        case read@Read(l) => Q_Read(rename(l, merge(lScope, pScope)), read.pos)
+        case free@Free(x) => Q_Free(rename(x, merge(lScope, pScope)), free.pos)
+        case ret@Return(x) => Q_Return(rename(x, merge(lScope, pScope)), ret.pos)
+        case ex@Exit(x) => Q_Exit(rename(x, merge(lScope, pScope)), ex.pos)
+        case pr@Print(x) => Q_Print(rename(x, merge(lScope, pScope)), pr.pos)
+        case prl@Println(x) => Q_Println(rename(x, merge(lScope, pScope)), prl.pos)
+        case ifEl@If(cond, body, el) => 
             val (_body, scopedBody) = rename(body, merge(lScope, pScope), Set())
             val (_el, scopedEl) = rename(el, merge(lScope, pScope), Set())
-            Q_If(rename(cond, merge(lScope, pScope)), _body, scopedBody, _el, scopedEl)
-        case While(cond, body) => 
+            Q_If(rename(cond, merge(lScope, pScope)), _body, scopedBody, _el, scopedEl, ifEl.pos)
+        case whl@While(cond, body) => 
             val (_body, scoped) = rename(body, lScope ++ pScope, Set())
-            Q_While(rename(cond, merge(lScope, pScope)), _body, scoped)
-        case CodeBlock(body) =>
+            Q_While(rename(cond, merge(lScope, pScope)), _body, scoped, whl.pos)
+        case cBlock@CodeBlock(body) =>
             val (_body, scoped) = rename(body, merge(lScope, pScope), Set())
-            Q_CodeBlock(_body, scoped)
-        case Skip => Q_Skip()
+            Q_CodeBlock(_body, scoped, cBlock.pos)
+        case Skip(pos) => Q_Skip(pos)
     
     private def merge(scope1: Set[Q_Name], scope2: Set[Q_Name]): Set[Q_Name] = 
         val scope = MutableSet[Q_Name]()

@@ -21,7 +21,7 @@ class rename_func_test extends AnyFlatSpec {
                     List(Return(IntLiteral(0)))  // return 0
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
@@ -49,7 +49,7 @@ class rename_func_test extends AnyFlatSpec {
                     List(Return(IntLiteral(0)))
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
@@ -85,7 +85,7 @@ class rename_func_test extends AnyFlatSpec {
                     List(Return(IntLiteral(0)))
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
@@ -133,7 +133,7 @@ class rename_func_test extends AnyFlatSpec {
                     )
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
@@ -175,7 +175,7 @@ class rename_func_test extends AnyFlatSpec {
                     )
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
@@ -219,7 +219,7 @@ class rename_func_test extends AnyFlatSpec {
                     )
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
@@ -267,7 +267,7 @@ class rename_func_test extends AnyFlatSpec {
                     )
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
@@ -316,7 +316,7 @@ class rename_func_test extends AnyFlatSpec {
                     )
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         a [ScopeException] should be thrownBy rename(prog)
@@ -348,7 +348,7 @@ class rename_func_test extends AnyFlatSpec {
                     )
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         a [ScopeException] should be thrownBy rename(prog)
@@ -392,7 +392,7 @@ class rename_func_test extends AnyFlatSpec {
                     List(Return(IntLiteral(0)))
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
@@ -430,7 +430,7 @@ class rename_func_test extends AnyFlatSpec {
                     )
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
@@ -472,7 +472,7 @@ class rename_func_test extends AnyFlatSpec {
                     )
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
@@ -514,7 +514,7 @@ class rename_func_test extends AnyFlatSpec {
                     )
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(

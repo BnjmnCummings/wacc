@@ -12,7 +12,7 @@ class rename_prog_test extends AnyFlatSpec {
     "rename" should "be able to rename basic programs" in {
         val prog = Prog(
             List(),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
@@ -30,7 +30,7 @@ class rename_prog_test extends AnyFlatSpec {
                     List(Return(IntLiteral(0)))  // return 0
                 )
             ),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(

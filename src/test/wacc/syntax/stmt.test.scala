@@ -9,7 +9,7 @@ import wacc.lexer.fully
 
 class stmt_test extends AnyFlatSpec {
     "skip" should "parse a skip statement" in {
-        parser.skip.parse("skip") shouldBe Success(Skip)
+        parser.skip.parse("skip") shouldBe Success(Skip((1,1)))
     }
 
     "decl" should "parse a valid declaration" in {
@@ -235,8 +235,8 @@ class stmt_test extends AnyFlatSpec {
         } shouldBe Success(
             If(
                 BoolLiteral(true), 
-                List(Skip),
-                List(Skip)
+                List(Skip((1, 16))),
+                List(Skip((1, 26)))
             )
         )
     }
@@ -260,11 +260,11 @@ class stmt_test extends AnyFlatSpec {
                 List(
                     If(
                         BoolLiteral(false), 
-                        List(Skip),
-                        List(Skip)
+                        List(Skip((1, 32))),
+                        List(Skip((1, 42)))
                     )
                 ),
-                List(Skip),
+                List(Skip((1, 55))),
             )
         )
 
@@ -283,12 +283,12 @@ class stmt_test extends AnyFlatSpec {
         } shouldBe Success(
             If(
                 BoolLiteral(true), 
-                List(Skip),
+                List(Skip((1, 16))),
                 List(
                     If(
                         BoolLiteral(false), 
-                        List(Skip),
-                        List(Skip),
+                        List(Skip((1, 42))),
+                        List(Skip((1, 52))),
                     )
                 )
             )
@@ -312,7 +312,7 @@ class stmt_test extends AnyFlatSpec {
         } shouldBe Success(
             While(
                 BoolLiteral(true), 
-                List(Skip)
+                List(Skip((1, 17)))
             )
         )
     }
@@ -332,7 +332,7 @@ class stmt_test extends AnyFlatSpec {
                 List(
                     While(
                         BoolLiteral(true), 
-                        List(Skip)
+                        List(Skip((1, 33)))
                     )
                 )
             )
@@ -353,9 +353,9 @@ class stmt_test extends AnyFlatSpec {
                 List(
                     While(
                         BoolLiteral(true), 
-                        List(Skip)
+                        List(Skip((1, 33)))
                     ),
-                    Skip
+                    Skip((1, 44))
                 )
             )
         )
@@ -382,15 +382,15 @@ class stmt_test extends AnyFlatSpec {
                 List(
                     While(
                         BoolLiteral(true), 
-                        List(Skip)
+                        List(Skip((1,33)))
                     ),
                     CodeBlock(
-                        List(Skip)
+                        List(Skip((1, 50)))
                     ),
                     If(
                         BoolLiteral(true), 
-                        List(Skip),
-                        List(Skip)
+                        List(Skip((1, 75))),
+                        List(Skip((1, 85)))
                     )
                 )
             )
@@ -409,7 +409,7 @@ class stmt_test extends AnyFlatSpec {
         parser.codeblock.parse("begin skip end") shouldBe Success(
             CodeBlock(
                 List(
-                    Skip
+                    Skip((1, 7))
                 )
             )
         )
@@ -438,10 +438,10 @@ class stmt_test extends AnyFlatSpec {
 
     "stmts" should "parse a list of statements" in {
         fully(parser.stmts).parse("skip") shouldBe Success(
-            List(Skip)
+            List(Skip((1, 1)))
         )
-        fully(parser.stmts).parse("skip; skip; skip; skip") shouldBe Success(
-            List(Skip, Skip, Skip, Skip)
+        fully(parser.stmts).parse("skip; skip") shouldBe Success(
+            List(Skip((1, 1)), Skip((1, 7)))
         )
     }
 

@@ -14,7 +14,7 @@ class rename_decl_test extends AnyFlatSpec {
     "rename-decl" should "be able to rename basic programs" in {
         val prog = Prog(
             List(),
-            List(Skip)
+            List(Skip.instance())
         )
 
         rename(prog) shouldBe (Q_Prog(
