@@ -35,6 +35,7 @@ class TypeCheckerCtx(tyInfo: TypeInfo, errs: ListBuffer[Err], fnameIn: Option[St
 
     // This will get the type of variables
     def typeOf(id: Q_Name): KnownType = tyInfo.varTys(id)
+    def typeOfFunc(id: Q_Name): (KnownType, List[Q_Name]) = tyInfo.funcTys(id)
 
     def error(err: Err) = {
         errs += err

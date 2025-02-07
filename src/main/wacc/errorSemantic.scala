@@ -155,6 +155,42 @@ object InvalidReturn {
     )
 }
 
+object UnknownType {
+    def apply(pTypeIn: SemType)(using ctx: TypeCheckerCtx) = Err(
+        ctx.fname,
+        ctx.pos,
+        SpecializedError(
+            Set("Can't infer type of pair"),
+            getLineFromContext(ctx)
+        ),
+        ErrorType.SemanticError
+    )
+}
+
+object WrongNumberOfArgs {
+    def apply(unexpected: Int, expected: Int)(using ctx: TypeCheckerCtx) = Err(
+        ctx.fname,
+        ctx.pos,
+        SpecializedError(
+            Set(s"Wrong number of arguments, got $unexpected, expected $expected"),
+            getLineFromContext(ctx)
+        ),
+        ErrorType.SemanticError
+    )
+}
+
+object InvalidIndexing {
+    def apply()(using ctx: TypeCheckerCtx) = Err(
+        ctx.fname,
+        ctx.pos,
+        SpecializedError(
+            Set("Invalid array indexing"),
+            getLineFromContext(ctx)
+        ),
+        ErrorType.SemanticError
+    )
+}
+
 def getLineFromContext(ctx: ErrContext): String = {
     ctx.fname match
         case Some(filename) => {
@@ -166,9 +202,8 @@ def getLineFromContext(ctx: ErrContext): String = {
             }
 
             val curLine: String = contents.next()
-            val NUM_LINES_IN_FILE = contents.size
             var lineAfter: String = ""
-            if (ctx.pos._1 < NUM_LINES_IN_FILE) {
+            if (contents.hasNext) {
                 lineAfter = contents.next()
             }
 
