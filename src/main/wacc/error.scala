@@ -99,3 +99,21 @@ enum ErrorType {
     case SyntaxError
     case SemanticError
 }
+
+def generateErrorMessageCodeBlock(
+    line: String,
+    linesBefore: Seq[String],
+    linesAfter: Seq[String],
+    errorPointsAt: Int, 
+    errorWidth: Int
+): String = {
+    val sb = StringBuilder()
+    sb ++= s"${codeIndent}> "
+    linesBefore.map(_ + s"\n${codeIndent}> ").foreach{sb ++= _}
+    sb ++= line
+    sb ++= s"\n${codeIndent}> "
+    sb ++= " ".repeat(errorPointsAt) + "^".repeat(errorWidth) + s"\n${codeIndent}> "
+    linesAfter.map(_ + s"\n${codeIndent}> ").foreach{sb ++= _}
+    // remove extra newline
+    sb.dropRight(3 + codeIndent.length()).toString()
+}
