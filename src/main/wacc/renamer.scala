@@ -123,58 +123,58 @@ object renamer {
 
     private def rename(lvalue: LValue, scope: Set[Q_Name]): Q_LValue = lvalue match
         /* if the identity for an l-value doesn't yet exist, complain. */
-        case Ident(v) => rename(v, scope)
-        case ArrayElem(v, indicies) => {
+        case id@Ident(v) => rename(v, scope, id.pos)
+        case arr@ArrayElem(v, indicies) => {
             if (!scope.exists(_.name == v)) then{
                 throw ScopeException(s"variable $v not declared in scope")
             }
-            Q_ArrayElem(updateName(v, scope), indicies.map(rename(_, scope)))
+            Q_ArrayElem(updateName(v, scope), indicies.map(rename(_, scope)), arr.pos)
         }
         /* recursively called on the contained l-value */
-        case PairElem(index, v) => Q_PairElem(index, rename(v, scope))
+        case pElem@PairElem(index, v) => Q_PairElem(index, rename(v, scope), pElem.pos)
 
     
     private def rename(rvalue: RValue, scope: Set[Q_Name]): Q_RValue = rvalue match
         case expr: Expr => rename(expr, scope)
-        case FuncCall(v, args) => Q_FuncCall(updateName(v, scope), args.map(rename(_, scope)))
-        case ArrayLiteral(xs) => Q_ArrayLiteral(xs.map(rename(_, scope)))
-        case NewPair(x1, x2) => Q_NewPair(rename(x1, scope), rename(x2, scope))
+        case fCall@FuncCall(v, args) => Q_FuncCall(updateName(v, scope), args.map(rename(_, scope)), fCall.pos)
+        case aLit@ArrayLiteral(xs) => Q_ArrayLiteral(xs.map(rename(_, scope)), aLit.pos)
+        case nPair@NewPair(x1, x2) => Q_NewPair(rename(x1, scope), rename(x2, scope), nPair.pos)
 
     private def rename(expr: Expr, scope: Set[Q_Name]): Q_Expr = expr match
-        case Mul(x, y) => Q_Mul(rename(x, scope), rename(y, scope))
-        case Mod(x, y) => Q_Mod(rename(x, scope), rename(y, scope))
-        case Add(x, y) => Q_Add(rename(x, scope), rename(y, scope))
-        case Div(x, y) => Q_Div(rename(x, scope), rename(y, scope))
-        case Sub(x, y) => Q_Sub(rename(x, scope), rename(y, scope))
-        case GreaterThan(x, y) => Q_GreaterThan(rename(x, scope), rename(y, scope))
-        case GreaterThanEq(x, y) => Q_GreaterThanEq(rename(x, scope), rename(y, scope))
-        case LessThan(x, y) => Q_LessThan(rename(x, scope), rename(y, scope))
-        case LessThanEq(x, y) => Q_LessThanEq(rename(x, scope), rename(y, scope))
-        case Eq(x, y) => Q_Eq(rename(x, scope), rename(y, scope))
-        case NotEq(x, y) => Q_NotEq(rename(x, scope), rename(y, scope))
-        case And(x, y) => Q_And(rename(x, scope), rename(y, scope))
-        case Or(x, y) => Q_Or(rename(x, scope), rename(y, scope))
-        case Not(x) => Q_Not(rename(x, scope))
-        case Neg(x) => Q_Neg(rename(x, scope))
-        case Len(x) => Q_Len(rename(x, scope))
-        case Ord(x) => Q_Ord(rename(x, scope))
-        case Chr(x) => Q_Chr(rename(x, scope))
-        case IntLiteral(v) => Q_IntLiteral(v)
-        case BoolLiteral(v) => Q_BoolLiteral(v)
-        case CharLiteral(v) => Q_CharLiteral(v)
-        case StringLiteral(v) => Q_StringLiteral(v)
-        case ArrayElem(v, indicies) => Q_ArrayElem(updateName(v, scope), indicies.map(rename(_, scope)))
-        case PairElem(index, v) => Q_PairElem(index, rename(v, scope))
+        case mul@Mul(x, y) => Q_Mul(rename(x, scope), rename(y, scope), mul.pos)
+        case mod@Mod(x, y) => Q_Mod(rename(x, scope), rename(y, scope), mod.pos)
+        case add@Add(x, y) => Q_Add(rename(x, scope), rename(y, scope), add.pos)
+        case div@Div(x, y) => Q_Div(rename(x, scope), rename(y, scope), div.pos)
+        case sub@Sub(x, y) => Q_Sub(rename(x, scope), rename(y, scope), sub.pos)
+        case gt@GreaterThan(x, y) => Q_GreaterThan(rename(x, scope), rename(y, scope), gt.pos)
+        case gte@GreaterThanEq(x, y) => Q_GreaterThanEq(rename(x, scope), rename(y, scope), gte.pos)
+        case lt@LessThan(x, y) => Q_LessThan(rename(x, scope), rename(y, scope), lt.pos)
+        case lte@LessThanEq(x, y) => Q_LessThanEq(rename(x, scope), rename(y, scope), lte.pos)
+        case eq@Eq(x, y) => Q_Eq(rename(x, scope), rename(y, scope), eq.pos)
+        case neq@NotEq(x, y) => Q_NotEq(rename(x, scope), rename(y, scope), neq.pos)
+        case and@And(x, y) => Q_And(rename(x, scope), rename(y, scope), and.pos)
+        case or@Or(x, y) => Q_Or(rename(x, scope), rename(y, scope), or.pos)
+        case not@Not(x) => Q_Not(rename(x, scope), not.pos)
+        case neg@Neg(x) => Q_Neg(rename(x, scope), neg.pos)
+        case l@Len(x) => Q_Len(rename(x, scope), l.pos)
+        case o@Ord(x) => Q_Ord(rename(x, scope), o.pos)
+        case c@Chr(x) => Q_Chr(rename(x, scope), c.pos)
+        case il@IntLiteral(v) => Q_IntLiteral(v, il.pos)
+        case bl@BoolLiteral(v) => Q_BoolLiteral(v, bl.pos)
+        case cl@CharLiteral(v) => Q_CharLiteral(v, cl.pos)
+        case sl@StringLiteral(v) => Q_StringLiteral(v, sl.pos)
+        case arr@ArrayElem(v, indicies) => Q_ArrayElem(updateName(v, scope), indicies.map(rename(_, scope)), arr.pos)
+        case pairE@PairElem(index, v) => Q_PairElem(index, rename(v, scope), pairE.pos)
         case PairNullLiteral => Q_PairNullLiteral
         /* valid idents must be in scope */
-        case Ident(v) => rename(v, scope)
+        case id@Ident(v) => rename(v, scope, id.pos)
 
 
-    private def rename(ident: String, scope: Set[Q_Name]): Q_Ident = 
+    private def rename(ident: String, scope: Set[Q_Name], pos: (Int, Int)): Q_Ident = 
         if (!scope.exists(_.name == ident)) then 
             throw ScopeException(s"variable ${ident} not declared in scope")
 
-        Q_Ident(updateName(ident, scope))
+        Q_Ident(updateName(ident, scope), pos)
 
     private def newVar(name: String, t: Option[Type]): Q_Name = 
         val _name = genName(name)
