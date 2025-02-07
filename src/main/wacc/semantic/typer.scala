@@ -26,7 +26,7 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo): Option[List[Error]] = {
 
 def check(stmt: Q_Stmt, isFunc: Boolean)(using ctx: TypeCheckerCtx[?]): Unit =
     stmt match {
-    case s@Q_Decl(id: Q_Name, r: Q_RValue, _) =>
+    case Q_Decl(id: Q_Name, r: Q_RValue, _) =>
         check(r, Constraint.Is(ctx.typeOf(id))) // This will check the type of r compared to given type t
     // Check the type of the LValue matches that of the RValue
     case Q_Asgn(l: Q_LValue, r: Q_RValue, _) => check(r, Constraint.Is(check(l, Constraint.Unconstrained).getOrElse(?)))
@@ -178,7 +178,7 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemT
     case Q_ArrayLiteral(xs: List[Q_Expr], _) =>
         val ty = xs
             .map(x => check(x, Constraint.Unconstrained))
-            .fold(Some(?))((t1, t2) => t1.getOrElse(?).satisfies(Constraint.Is(t2.getOrElse(?)))).getOrElse(X)
+            .fold(Some(?))((t1, t2) => t2.getOrElse(?).satisfies(Constraint.Is(t1.getOrElse(?)))).getOrElse(X)
         KnownType.Array(ty).satisfies(c)
     case Q_PairElem(index: PairIndex, v: Q_LValue, _) =>  
         val pairType: SemType = check(v, Constraint.Is(KnownType.Pair(?, ?))).getOrElse(?)
@@ -235,9 +235,7 @@ extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) mat
     case (ty, refTy) if ty == refTy => Some(ty)
     case (KnownType.Array(KnownType.Char), KnownType.String) => Some(KnownType.String)
     case (KnownType.Array(ty), KnownType.Array(refTy)) =>
-        ty ~ refTy match
-            case Some(t) => Some(KnownType.Array(t))
-            case _ => Some(KnownType.Array(?))
+        ty ~ refTy
     case (KnownType.Pair(ty1, ty2), KnownType.Pair(refTy1, refTy2)) =>
         val newTy1 = ty1 ~ refTy1
         val newTy2 = ty2 ~ refTy2
