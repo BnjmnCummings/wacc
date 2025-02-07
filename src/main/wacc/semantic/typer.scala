@@ -235,7 +235,9 @@ extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) mat
     case (ty, refTy) if ty == refTy => Some(ty)
     case (KnownType.Array(KnownType.Char), KnownType.String) => Some(KnownType.String)
     case (KnownType.Array(ty), KnownType.Array(refTy)) =>
-        ty ~ refTy
+        ty ~ refTy match
+            case Some(t) => Some(KnownType.Array(t))
+            case _ => Some(KnownType.Array(?))
     case (KnownType.Pair(ty1, ty2), KnownType.Pair(refTy1, refTy2)) =>
         val newTy1 = ty1 ~ refTy1
         val newTy2 = ty2 ~ refTy2
