@@ -38,7 +38,7 @@ object NonExitableType {
         VanillaError(
             Some(toErrorItem(unexpected)),
             Set(toErrorItem(KnownType.Int)),
-            Set(s"${toErrorItem(unexpected)} is not a valid exit code type"),
+            Set(s"${typeToString(unexpected)} is not a valid exit code type"),
             getLineFromContext(ctx)
         ),
         ErrorType.SemanticError
@@ -52,7 +52,7 @@ object NonFreeableType {
         VanillaError(
             Some(toErrorItem(unexpected)),
             Set(toErrorItem(KnownType.Array(?)), toErrorItem(KnownType.Pair(?, ?))),
-            Set(s"can't free objects of type ${toErrorItem(unexpected)}"),
+            Set(s"can't free objects of type ${typeToString(unexpected)}"),
             getLineFromContext(ctx)
         ),
         ErrorType.SemanticError
@@ -66,7 +66,7 @@ object NonNumericType {
         VanillaError(
             Some(toErrorItem(unexpected)),
             Set(toErrorItem(KnownType.Int)),
-            Set(s"${toErrorItem(unexpected)} is not a numeric type"),
+            Set(s"${typeToString(unexpected)} is not a numeric type"),
             getLineFromContext(ctx)
         ),
         ErrorType.SemanticError
@@ -80,7 +80,7 @@ object NonCharacterType {
         VanillaError(
             Some(toErrorItem(unexpected)),
             Set(toErrorItem(KnownType.Char)),
-            Set(s"${toErrorItem(unexpected)} is not a character type"),
+            Set(s"${typeToString(unexpected)} is not a character type"),
             getLineFromContext(ctx)
         ),
         ErrorType.SemanticError
@@ -94,7 +94,7 @@ object NonNumericCharacterType {
         VanillaError(
             Some(toErrorItem(unexpected)),
             Set(toErrorItem(KnownType.Char),toErrorItem(KnownType.Int)),
-            Set(s"${toErrorItem(unexpected)} is not a character or numeric type"),
+            Set(s"${typeToString(unexpected)} is not a character or numeric type"),
             getLineFromContext(ctx)
         ),
         ErrorType.SemanticError
@@ -108,7 +108,7 @@ object NonBooleanType {
         VanillaError(
             Some(toErrorItem(unexpected)),
             Set(toErrorItem(KnownType.Boolean)),
-            Set(s"${toErrorItem(unexpected)} is not a boolean"),
+            Set(s"${typeToString(unexpected)} is not a boolean"),
             getLineFromContext(ctx)
         ),
         ErrorType.SemanticError
@@ -122,7 +122,7 @@ object NonStringType {
         VanillaError(
             Some(toErrorItem(unexpected)),
             Set(toErrorItem(KnownType.String)),
-            Set(s"${toErrorItem(unexpected)} is not a string"),
+            Set(s"${typeToString(unexpected)} is not a string"),
             getLineFromContext(ctx)
         ),
         ErrorType.SemanticError
@@ -136,7 +136,7 @@ object NonReadableType {
         VanillaError(
             Some(toErrorItem(unexpected)),
             Set(toErrorItem(KnownType.Int), toErrorItem(KnownType.Char)),
-            Set(s"can\'t read items of type ${toErrorItem(unexpected)}"),
+            Set(s"can\'t read items of type ${typeToString(unexpected)}"),
             getLineFromContext(ctx)
         ),
         ErrorType.SemanticError
