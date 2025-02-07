@@ -167,16 +167,7 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[Sem
     case Q_Ident(v: Q_Name, _) => ctx.typeOf(v).satisfies(c)
     case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) => checkArray(indices, v, c)
     case Q_PairNullLiteral => KnownType.Pair(?, ?).satisfies(c)
-    case Q_PairElem(index: PairIndex, v: Q_LValue, _) =>  
-        val pairType: SemType = check(v, Constraint.Is(KnownType.Pair(?, ?))).getOrElse(?)
-        val kt: KnownType.Pair = pairType.asInstanceOf[KnownType.Pair]
-
-        index match {
-            case PairIndex.First  => 
-                kt.ty1.satisfies(c)
-            case PairIndex.Second => 
-                kt.ty2.satisfies(c)
-        }
+    case Q_PairElem(index: PairIndex, v: Q_LValue, _) => checkPairElem(v, c)
 }
 
 def checkArray(indices: List[Q_Expr], v: Q_Name, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] =
@@ -220,8 +211,15 @@ def checkBooleanExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
 
 def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] = l match {
     case Q_Ident(v: Q_Name, _) => ctx.typeOf(v).satisfies(c)
+    case Q_PairElem(index: PairIndex, v: Q_LValue, _) => checkPairElem(l, c)
+    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) => checkArray(indices, v, c)
+}
+
+def checkPairElem(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] = l match {
     case Q_PairElem(index: PairIndex, v: Q_LValue, _) => 
         val pairType: SemType = check(v, Constraint.Is(KnownType.Pair(?, ?))).getOrElse(?)
+        if pairType == KnownType.Pair(?, ?) then
+            return ctx.error(Error.UnknownType(pairType))
         val kt: KnownType.Pair = pairType.asInstanceOf[KnownType.Pair]
 
         index match {
@@ -230,7 +228,6 @@ def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemT
             case PairIndex.Second => 
                 kt.ty2.satisfies(c)
         }
-    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) => checkArray(indices, v, c)
 }
 
 def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] =
@@ -377,6 +374,7 @@ enum Error {
     case InvalidIndexing()
     case InvalidReturn()
     case WrongNumberOfArgs(actual: Int, expected: Int)
+    case UnknownType(actual: SemType)
 }
 
 enum Constraint {
