@@ -44,16 +44,28 @@ object renamer {
         val lScope: MutableSet[Q_Name] = MutableSet()
         val _v: Q_Name = genName(func.v)
 
-        val _args = func.args.map(rename)
+        if gScope.exists(_.name == func.v) then
+            ctx.setPos(func.pos)
+            ctx.errors += ScopeError(s"function ${func.v} already declared in scope")
+            throw ScopeException(ctx.errors.toList)
+
+        val _args: ListBuffer[Q_Param] = ListBuffer()
+        for (arg <- func.args) 
+            val _arg = rename(arg, _args.map(_.v).toSet)
+            _args += _arg
         
-        newFunc(_v, func.t, _args.map(_.v))
+        newFunc(_v, func.t, _args.toList.map(_.v))
             
         val (_body, scoped) = rename(func.body, _args.map(_.v).toSet, lScope.toSet)
 
-        Q_Func(func.t, _v, _args, _body, scoped, func.pos)
+        Q_Func(func.t, _v, _args.toList, _body, scoped, func.pos)
     
     
-    private def rename(param: Param)(using ctx: RenamerContext): Q_Param = 
+    private def rename(param: Param, lScope: Set[Q_Name])(using ctx: RenamerContext): Q_Param = 
+        if lScope.exists(_.name == param.v) then
+            ctx.setPos(param.pos)
+            ctx.errors += ScopeError(s"variable ${param.v} already declared in scope")
+            throw ScopeException(ctx.errors.toList)
         Q_Param(param.t, newVar(param.v, Some(param.t)), param.pos)
     
     private def rename(stmts: List[Stmt], pScope: Set[Q_Name], lScope: Set[Q_Name])(using ctx: RenamerContext): (List[Q_Stmt], Set[Q_Name]) = 
