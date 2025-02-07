@@ -4,7 +4,6 @@ import wacc.semantic.*
 import wacc.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
-import wacc.TypeMismatch
 
 class binary_operator_type_check_test extends AnyFlatSpec {
     "arithmetic operators" should "accept integers on both sides" in {

@@ -2,7 +2,6 @@ package wacc.semantic
 
 import wacc.parser
 import wacc.renamer
-import wacc.typeChecker
 import wacc.ScopeException
 
 import wacc.utilities.searchDir

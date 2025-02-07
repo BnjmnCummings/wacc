@@ -5,9 +5,6 @@ import wacc.*
 import wacc.q_ast.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
-import wacc.TypeMismatch
-import parsley.Failure
-import parsley.Success
 
 class types_test extends AnyFlatSpec {
     "basic type declaration" should "be semantically valid" in {

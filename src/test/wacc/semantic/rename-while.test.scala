@@ -6,7 +6,6 @@ import org.scalatest.matchers.should.Matchers.*
 import wacc.ast.*
 import wacc.q_ast.*
 import wacc.renamer.*
-import wacc.ScopeException
 import wacc.*
 
 class rename_while_test extends AnyFlatSpec{
