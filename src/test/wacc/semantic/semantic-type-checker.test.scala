@@ -235,10 +235,8 @@ class types_test extends AnyFlatSpec {
         parseAndTypeCheckStr("begin string s = \"a\"; char[] s2 = s end") `shouldBe` a [Some[?]]
     }
 
-    it should "not allow string[] to take the place of char[][]" in {
-        parseAndTypeCheckStr("begin char[] s0 = [\'a\']; string[] s = [s0]; char[][] s2 = s end") `shouldBe` a [Some[?]]
-        // Original test case below, I believe this is incorrect?
-        // parseAndTypeCheckStr("begin char[] s0 = [\'a\']; char[][] s = [s0]; string[] s2 = s end") `shouldBe` a [Some[?]]
+    it should "not allow char[][] to take the place of string[]" in {
+        parseAndTypeCheckStr("begin char[] s0 = [\'a\']; char[][] s = [s0]; string[] s2 = s end") `shouldBe` a [Some[?]]
     }
     it should "allow a char[] to be put in a string[]" in {
         parseAndTypeCheckStr("begin char[] s0 = [\'a\']; string[] s2 = [s0] end") `shouldBe` a [None.type]
