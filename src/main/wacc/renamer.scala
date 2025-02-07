@@ -32,33 +32,41 @@ object renamer {
         (Q_Prog(_funcs, _body, scoped ++ gScope), TypeInfo(_varTypes, _funcTypes))
 
     private def rename(funcs: List[Func])(using ctx: RenamerContext): List[Q_Func] = 
+
+        val data: List[(Q_Name, List[Q_Param])] = funcs.map(initialiseFunc)
+
         val _funcs: ListBuffer[Q_Func] = ListBuffer()
-        for (func <- funcs) {
-            val _func = rename(func)
-            gScope += _func.v
-            _funcs += _func
+
+        funcs.zip(data).foreach {
+            case (func, (v, args)) => {
+                val _func = rename(func, v, args)
+                gScope += _func.v
+                _funcs += _func
+            }
         }
+
         _funcs.toList
 
-    private def rename(func: Func)(using ctx: RenamerContext): Q_Func = 
-        val lScope: MutableSet[Q_Name] = MutableSet()
-        val _v: Q_Name = genName(func.v)
-
+    private def initialiseFunc(func: Func)(using ctx: RenamerContext): (Q_Name, List[Q_Param]) =
         if gScope.exists(_.name == func.v) then
             ctx.setPos(func.pos)
             ctx.errors += ScopeError(s"function ${func.v} already declared in scope")
             throw ScopeException(ctx.errors.toList)
 
+        val _v: Q_Name = genName(func.v)
         val _args: ListBuffer[Q_Param] = ListBuffer()
         for (arg <- func.args) 
             val _arg = rename(arg, _args.map(_.v).toSet)
             _args += _arg
         
         newFunc(_v, func.t, _args.toList.map(_.v))
-            
-        val (_body, scoped) = rename(func.body, _args.map(_.v).toSet, lScope.toSet)
 
-        Q_Func(func.t, _v, _args.toList, _body, scoped, func.pos)
+        (_v, _args.toList)
+
+    private def rename(func: Func, v: Q_Name, args: List[Q_Param])(using ctx: RenamerContext): Q_Func =             
+        val (body, scoped) = rename(func.body, args.map(_.v).toSet, Set())
+
+        Q_Func(func.t, v, args.toList, body, scoped, func.pos)
     
     
     private def rename(param: Param, lScope: Set[Q_Name])(using ctx: RenamerContext): Q_Param = 
@@ -122,7 +130,7 @@ object renamer {
             Q_CodeBlock(_body, scoped, cBlock.pos)
         case Skip(pos) => Q_Skip(pos)
     
-    private def merge(scope1: Set[Q_Name], scope2: Set[Q_Name])(using ctx: RenamerContext): Set[Q_Name] = 
+    private def merge(scope1: Set[Q_Name], scope2: Set[Q_Name]): Set[Q_Name] = 
         val scope = MutableSet[Q_Name]()
         for (name <- scope1) {
             scope += name
@@ -150,7 +158,7 @@ object renamer {
     
     private def rename(rvalue: RValue, scope: Set[Q_Name])(using ctx: RenamerContext): Q_RValue = rvalue match
         case expr: Expr => rename(expr, scope)
-        case fCall@FuncCall(v, args) => Q_FuncCall(updateFuncName(v, scope), args.map(rename(_, scope)), fCall.pos)
+        case fCall@FuncCall(v, args) => Q_FuncCall(updateFuncName(v), args.map(rename(_, scope)), fCall.pos)
         case aLit@ArrayLiteral(xs) => Q_ArrayLiteral(xs.map(rename(_, scope)), aLit.pos)
         case nPair@NewPair(x1, x2) => Q_NewPair(rename(x1, scope), rename(x2, scope), nPair.pos)
 
@@ -192,20 +200,21 @@ object renamer {
 
         Q_Ident(updateName(ident, scope), pos)
 
-    private def newVar(name: String, t: Option[Type])(using ctx: RenamerContext): Q_Name = 
+    private def newVar(name: String, t: Option[Type]): Q_Name = 
         val _name = genName(name)
         varTypes(_name) = t match
             case Some(t) => toSemType(t)
             case None => ?
         _name
     
-    private def updateType(name: Q_Name, t: SemType)(using ctx: RenamerContext) = 
+    private def updateType(name: Q_Name, t: SemType) = 
         varTypes(name) = t
 
-    private def newFunc(name: Q_Name, t: Type, args: List[Q_Name])(using ctx: RenamerContext) =
+    private def newFunc(name: Q_Name, t: Type, args: List[Q_Name]) =
+        gScope += name
         funcTypes(name) = (toSemType(t), args)
 
-    private def genName(name: String)(using ctx: RenamerContext): Q_Name = 
+    private def genName(name: String): Q_Name = 
         val count = name_gen_table.getOrElse(name, 0)
         name_gen_table(name) = count + 1
         Q_Name(name, count)
@@ -216,11 +225,12 @@ object renamer {
         else
             newVar(name, None)
     
-    private def updateFuncName(name: String, lScope: Set[Q_Name])(using ctx: RenamerContext): Q_Name = 
+    private def updateFuncName(name: String)(using ctx: RenamerContext): Q_Name = 
         if gScope.exists(_.name == name) then
             gScope.find(_.name == name).get 
         else
-            newVar(name, None)
+            ctx.errors += ScopeError(s"function $name not declared in scope")
+            throw ScopeException(ctx.errors.toList)
     
     private def verifyTyped(varTypes: MutableMap[Q_Name, SemType], funcTypes: MutableMap[Q_Name, (SemType, List[Q_Name])])(using ctx: RenamerContext): (Map[Q_Name, KnownType], Map[Q_Name, (KnownType, List[Q_Name])]) = 
         val _varTypes = varTypes.map((n, t) => (n, verifyTyped(t))).toMap
