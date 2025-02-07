@@ -14,43 +14,44 @@ import collection.mutable.Map as MutableMap
 */
 
 object renamer {
-    private var globalScope: MutableSet[Q_Name] = MutableSet()
+    private var gScope: MutableSet[Q_Name] = MutableSet()
     private var name_gen_table: MutableMap[String, Int] = MutableMap[String, Int]()
+
     private var varTypes: MutableMap[Q_Name, SemType] = MutableMap[Q_Name, SemType]()
     private var funcTypes: MutableMap[Q_Name, (SemType, List[Q_Name])] = MutableMap[Q_Name, (SemType, List[Q_Name])]()
 
     def rename(prog: Prog): (Q_Prog, TypeInfo) = 
-        globalScope = MutableSet()
+        gScope = MutableSet()
         name_gen_table = MutableMap[String, Int]()
         varTypes = MutableMap[Q_Name, SemType]()
         funcTypes = MutableMap[Q_Name, (SemType, List[Q_Name])]()
 
-        // it is important this occurs first as it adds functions to globalScope
+        // it is important this occurs first as it adds functions to gScope
         val _funcs = rename(prog.funcs)
         val (_body, scoped) = rename(prog.body, Set(), Set())
 
         val (_varTypes, _funcTypes) = verifyTyped(varTypes, funcTypes)
 
-        (Q_Prog(_funcs, _body, scoped ++ globalScope), TypeInfo(_varTypes, _funcTypes))
+        (Q_Prog(_funcs, _body, scoped ++ gScope), TypeInfo(_varTypes, _funcTypes))
 
     private def rename(funcs: List[Func]): List[Q_Func] = 
         val _funcs: ListBuffer[Q_Func] = ListBuffer()
         for (func <- funcs) {
             val _func = rename(func)
-            globalScope += _func.v
+            gScope += _func.v
             _funcs += _func
         }
         _funcs.toList
 
     private def rename(func: Func): Q_Func = 
-        val localScope: MutableSet[Q_Name] = MutableSet()
+        val lScope: MutableSet[Q_Name] = MutableSet()
         val _v: Q_Name = genName(func.v)
 
         val _args = func.args.map(rename)
         
         newFunc(_v, func.t, _args.map(_.v))
             
-        val (_body, scoped) = rename(func.body, _args.map(_.v).toSet, localScope.toSet)
+        val (_body, scoped) = rename(func.body, _args.map(_.v).toSet, lScope.toSet)
 
         Q_Func(func.t, _v, _args, _body, scoped)
     
@@ -58,56 +59,67 @@ object renamer {
     private def rename(param: Param): Q_Param = 
         Q_Param(param.t, newVar(param.v, Some(param.t)))
     
-    private def rename(stmts: List[Stmt], parScope: Set[Q_Name], localScope: Set[Q_Name]): (List[Q_Stmt], Set[Q_Name]) = 
-        val _localScope: MutableSet[Q_Name] = MutableSet()
-        _localScope ++= localScope
+    private def rename(stmts: List[Stmt], pScope: Set[Q_Name], lScope: Set[Q_Name]): (List[Q_Stmt], Set[Q_Name]) = 
+        val _lScope: MutableSet[Q_Name] = MutableSet()
+        _lScope ++= lScope
 
         val _stmts: ListBuffer[Q_Stmt] = ListBuffer()
         for (stmt <- stmts) {
-            val _stmt = rename(stmt, parScope, _localScope.toSet)
+            val _stmt = rename(stmt, pScope, _lScope.toSet)
             _stmts += _stmt
             _stmt match {
-                case Q_Decl(v, _) => {
-                    _localScope += v
+                case Q_Decl(v, _, _) => {
+                    _lScope += v
                 }
                 case _ => ()
             }
         }
             
-        (_stmts.toList, _localScope.toSet)
+        (_stmts.toList, _lScope.toSet)
     
     
-    private def rename(stmt: Stmt, parScope: Set[Q_Name], localScope: Set[Q_Name]): Q_Stmt = stmt match
+    private def rename(stmt: Stmt, pScope: Set[Q_Name], lScope: Set[Q_Name]): Q_Stmt = stmt match
         case Decl(t, Ident(v), r) => 
             /* need to evaluate r-value first so that we can't declare an ident as itself */
-            val rvalue = rename(r, parScope ++ localScope)
+            val rvalue = rename(r, merge(lScope, pScope))
             
-            if localScope.exists(_.name == v) then
-                val var_name = localScope.find(_.name == v).get
+            if lScope.exists(_.name == v) then
+                val var_name = lScope.find(_.name == v).get
                 if varTypes(var_name) == ? then
                     updateType(var_name, toSemType(t))
                 else
                     throw ScopeException(s"variable $v already declared in scope")
             Q_Decl(newVar(v, Some(t)), rvalue)
         
-        case Asgn(l, r) => Q_Asgn(rename(l, parScope ++ localScope), rename(r, parScope ++ localScope))
-        case Read(l) => Q_Read(rename(l, parScope ++ localScope))
-        case Free(x) => Q_Free(rename(x, parScope ++ localScope))
-        case Return(x) => Q_Return(rename(x, parScope ++ localScope))
-        case Exit(x) => Q_Exit(rename(x, parScope ++ localScope))
-        case Print(x) => Q_Print(rename(x, parScope ++ localScope))
-        case Println(x) => Q_Println(rename(x, parScope ++ localScope))
+        case Asgn(l, r) => Q_Asgn(rename(l, merge(lScope, pScope)), rename(r, merge(lScope, pScope)))
+        case Read(l) => Q_Read(rename(l, merge(lScope, pScope)))
+        case Free(x) => Q_Free(rename(x, merge(lScope, pScope)))
+        case Return(x) => Q_Return(rename(x, merge(lScope, pScope)))
+        case Exit(x) => Q_Exit(rename(x, merge(lScope, pScope)))
+        case Print(x) => Q_Print(rename(x, merge(lScope, pScope)))
+        case Println(x) => Q_Println(rename(x, merge(lScope, pScope)))
         case If(cond, body, el) => 
-            val (_body, scopedBody) = rename(body, parScope ++ localScope, Set())
-            val (_el, scopedEl) = rename(el, parScope ++ localScope, Set())
-            Q_If(rename(cond, parScope ++ localScope), _body, scopedBody, _el, scopedEl)
+            val (_body, scopedBody) = rename(body, merge(lScope, pScope), Set())
+            val (_el, scopedEl) = rename(el, merge(lScope, pScope), Set())
+            Q_If(rename(cond, merge(lScope, pScope)), _body, scopedBody, _el, scopedEl)
         case While(cond, body) => 
-            val (_body, scoped) = rename(body, parScope ++ localScope, Set())
-            Q_While(rename(cond, parScope ++ localScope), _body, scoped)
+            val (_body, scoped) = rename(body, lScope ++ pScope, Set())
+            Q_While(rename(cond, merge(lScope, pScope)), _body, scoped)
         case CodeBlock(body) =>
-            val (_body, scoped) = rename(body, parScope ++ localScope, Set())
+            val (_body, scoped) = rename(body, merge(lScope, pScope), Set())
             Q_CodeBlock(_body, scoped)
-        case Skip => Q_Skip
+        case Skip => Q_Skip()
+    
+    private def merge(scope1: Set[Q_Name], scope2: Set[Q_Name]): Set[Q_Name] = 
+        val scope = MutableSet[Q_Name]()
+        for (name <- scope1) {
+            scope += name
+        }
+        for (name <- scope2) {
+            if !scope.exists(_.name == name.name) then
+                scope += name
+        }
+        scope.toSet
 
     private def rename(lvalue: LValue, scope: Set[Q_Name]): Q_LValue = lvalue match
         /* if the identity for an l-value doesn't yet exist, complain. */
@@ -182,11 +194,11 @@ object renamer {
         name_gen_table(name) = count + 1
         Q_Name(name, count)
 
-    private def updateName(name: String, localScope: Set[Q_Name]): Q_Name = 
-        if localScope.exists(_.name == name) then
-            localScope.find(_.name == name).get
-        else if globalScope.exists(_.name == name) then
-            globalScope.find(_.name == name).get 
+    private def updateName(name: String, lScope: Set[Q_Name]): Q_Name = 
+        if lScope.exists(_.name == name) then
+            lScope.find(_.name == name).get
+        else if gScope.exists(_.name == name) then
+            gScope.find(_.name == name).get 
         else
             newVar(name, None)
     
@@ -197,7 +209,6 @@ object renamer {
     
     private def verifyTyped(t: SemType): KnownType = t match
         case ? => throw ScopeException("Variable not typed")
-        case KnownType.Array(t) => verifyTyped(t)
+        case KnownType.Array(t) => KnownType.Array(verifyTyped(t))
         case _ => t.asInstanceOf[KnownType]
-    
 }

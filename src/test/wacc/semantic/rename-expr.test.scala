@@ -1,12 +1,12 @@
-// package test.wacc.semantic
+package test.wacc.semantic
 
-// import wacc.ast.*
-// import wacc.q_ast.*
-// import wacc.renamer.*
-// import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers.*
 
-// class rename_expr_test extends AnyFlatSpec {
-//     "renameExpr" should "be able to rename basic expressions" in {
-//         rename(IntLiteral(5)) shouldBe 
-//     }
-// }
+import wacc.ast.*
+import wacc.q_ast.*
+import wacc.renamer.*
+
+class rename_expr_test extends AnyFlatSpec {
+    
+}

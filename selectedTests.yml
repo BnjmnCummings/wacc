@@ -22,10 +22,14 @@ syntax:
 
 # Tests which check the AST semantic checking step of the compiler
 semantic:
-  - rename_prog
+  - rename_if
+  - rename_codeblock
+  - rename_decl
   - rename_expr
   - rename_func
-  - rename_stmt
+  - rename_prog
+  - rename_while
+  # - types_tst
   # - semantic_integration
 
 # Tests which check the AST -> Machine Code step of the compiler
