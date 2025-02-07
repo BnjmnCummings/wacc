@@ -181,10 +181,8 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[Sem
 
 def checkArray(indices: List[Q_Expr], v: Q_Name, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] =
     indices.map(expr => check(expr, Constraint.IsNumeric))
-    println(indices)
     var t: SemType = ctx.typeOf(v) 
     for _ <- 1 to indices.length do
-        println(t)
         t match
             case KnownType.Array(_t) => t = _t
             case _ => 
