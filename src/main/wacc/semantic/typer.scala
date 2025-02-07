@@ -164,11 +164,7 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemT
         KnownType.Array(ty).satisfies(c)
     case Q_PairElem(index: PairIndex, v: Q_LValue, _) => check(v, c).getOrElse(?).satisfies(c)
     case Q_NewPair(x: Q_Expr, y: Q_Expr, _) =>
-        val xTy = check(x, Constraint.Unconstrained)
-        val yTy = check(y, Constraint.Is(xTy.getOrElse(?)))
-        mostSpecific(xTy, yTy) match
-            case ? => None
-            case value => Some(Pair(value, value))
+        KnownType.Pair(check(x, Constraint.Unconstrained).getOrElse(?), check(y, Constraint.Unconstrained).getOrElse(?)).satisfies(c)
     case e: Q_Expr => check(e, c)
 }
 
