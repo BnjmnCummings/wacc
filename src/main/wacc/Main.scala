@@ -15,15 +15,12 @@ def main(args: Array[String]): Unit = {
             val f = new File(fname)
             parser.parseF(f) match
                 case Success(t) => {
-                    println(t)
                     try {
                         val (q_t, tyInfo) = renamer.rename(t)
                         typeCheck(q_t, tyInfo) match {
-                            case Left(_) => sys.exit(200)
-                            case Right(_) => sys.exit(0) 
+                            case Some(_) => sys.exit(200)
+                            case None => sys.exit(0) 
                         }
-                        
-                        println(q_t)
                         sys.exit(0)
                     } catch {
                         case e: ScopeException => {
