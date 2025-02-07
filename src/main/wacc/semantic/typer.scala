@@ -7,6 +7,7 @@ import collection.mutable
 import scala.annotation.targetName
 import wacc.KnownType.Pair
 import wacc.semantic.Error.TypeMismatch
+import wacc.semantic.Error.WrongNumberOfArgs
 
 def typeCheck(prog: Q_Prog, tyInfo: TypeInfo): Option[List[Error]] = {
     // Note this List[Error] is non-empty. NonEmptyList import won't work
@@ -239,7 +240,20 @@ def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemT
 
 def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] =
     r match {
-    case Q_FuncCall(v: Q_Name, args: List[Q_Expr], _) => check(args, c)
+    case Q_FuncCall(v: Q_Name, args: List[Q_Expr], _) =>
+        val returnType: KnownType = ctx.typeOfFunc(v)._1
+        val argNames: List[Q_Name] = ctx.typeOfFunc(v)._2
+
+        if (args.length != argNames.length) then
+            ctx.error(WrongNumberOfArgs(args.length, argNames.length))
+        else
+            for (i <- 0 to args.length - 1) {
+                val expectedType: KnownType = ctx.typeOf(argNames(i))
+                
+                check(args(i), Constraint.Is(expectedType))
+            }
+
+        Some(returnType)
     case Q_ArrayLiteral(xs: List[Q_Expr], _) =>
         val ty = xs
             .map(check(_, Constraint.Unconstrained))
@@ -343,6 +357,7 @@ class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
 
     // This will get the type of variables
     def typeOf(id: Q_Name): KnownType = tyInfo.varTys(id)
+    def typeOfFunc(id: Q_Name): (KnownType, List[Q_Name]) = tyInfo.funcTys(id)
 
     def error(err: Error) = {
         errs += err
@@ -361,6 +376,7 @@ enum Error {
     case NonStringType(actual: SemType)
     case NonReadableType(actual: SemType)
     case InvalidReturn()
+    case WrongNumberOfArgs(actual: Int, expected: Int)
 }
 
 enum Constraint {
