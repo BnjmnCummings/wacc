@@ -17,10 +17,10 @@ class rename_if_test extends AnyFlatSpec{
                 If(
                     BoolLiteral(true),
                     List(
-                        Skip
+                        Skip.instance()
                     ),
                     List(
-                        Skip
+                        Skip.instance()
                     )
                 )
             )

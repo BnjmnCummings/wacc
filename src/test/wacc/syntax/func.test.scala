@@ -9,31 +9,31 @@ import wacc.lexer.fully
 
 class prog_test extends AnyFlatSpec {
     "prog" should "be able to parse a program with no functions" in {
-        parser.parse("begin skip end") shouldBe Success(
+        parser.parse("begin exit 0 end") shouldBe Success(
             Prog(
                 Nil,
-                List(Skip)
+                List(Exit(IntLiteral(0)))
             )
         )
     }
 
     it should "be able to parse a program with one function" in {
-        parser.parse("begin int fun() is return 0 end skip end") shouldBe Success(
+        parser.parse("begin int fun() is return 0 end exit 0 end") shouldBe Success(
             Prog(
                 List(Func(BaseType.Int, "fun", List(), List(Return(IntLiteral(0))))),
-                List(Skip)
+                List(Exit(IntLiteral(0)))
             )
         )
     }
 
     it should "be able to parse a program with more than one function" in {
-        parser.parse("begin int fun() is return 0 end int fun() is return 0 end skip end") shouldBe Success(
+        parser.parse("begin int fun() is return 0 end int fun() is return 0 end exit 0 end") shouldBe Success(
             Prog(
                 List(
                     Func(BaseType.Int, "fun", List(), List(Return(IntLiteral(0)))),
                     Func(BaseType.Int, "fun", List(), List(Return(IntLiteral(0))))
                 ),
-                List(Skip)
+                List(Exit(IntLiteral(0)))
             )
         )
     }

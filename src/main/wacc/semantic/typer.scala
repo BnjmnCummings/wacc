@@ -16,7 +16,7 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo): Option[List[Error]] = {
 
     val progFuncs: List[Q_Func] = prog.funcs
     val progStmts: List[Q_Stmt] = prog.body
-
+    
     progFuncs.map(check(_, Constraint.Unconstrained))
     progStmts.map(check(_, isFunc = false))
 
@@ -34,14 +34,14 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo): Option[List[Error]] = {
 
 // TODO: change function name
 
-def checkArrayTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx[?]): Option[SemType] = {
+def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx[?]): Option[SemType] = {
     (l, r) match {
         // this breaks into inner of array then maps
         case (KnownType.Array(arrT@KnownType.Array(_)), Q_ArrayLiteral(xs: List[Q_Expr], _)) => 
             // l = array, r = array literal
             // so check each member of r is arrT
             // we can do this by calling checkArrayTypes with arrT and each member type of r
-            val opts = xs.map(checkArrayTypes(arrT, _))
+            val opts = xs.map(checkDeclTypes(arrT, _))
 
             val semOpt: Option[SemType] = opts.fold(Some(?))(_.getOrElse(?) ~ _.getOrElse(?)) // ? could get changed for arrT potentially!
 
@@ -93,7 +93,7 @@ def check(stmt: Q_Stmt, isFunc: Boolean)(using ctx: TypeCheckerCtx[?]): Unit =
     stmt match {
     case Q_Decl(id: Q_Name, r: Q_RValue, _) =>
         //check(r, Constraint.Is(ctx.typeOf(id))) // This will check the type of r compared to given type t
-        checkArrayTypes(ctx.typeOf(id), r)
+        checkDeclTypes(ctx.typeOf(id), r)
     // Check the type of the LValue matches that of the RValue
     case Q_Asgn(l: Q_LValue, r: Q_RValue, _) => check(r, Constraint.Is(check(l, Constraint.Unconstrained).getOrElse(?)))
     case Q_Read(l: Q_LValue, _) => check(l, Constraint.IsReadable) // Only need to  verify the LValue is actually LValue - no constraint needed? Or create constraint for IsLValue?
@@ -165,16 +165,7 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[Sem
     case Q_CharLiteral(v: Char, _) => KnownType.Char.satisfies(c)
     case Q_StringLiteral(v: String, _) => KnownType.String.satisfies(c)
     case Q_Ident(v: Q_Name, _) => ctx.typeOf(v).satisfies(c)
-    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) =>
-        indices.map(expr => check(expr, Constraint.IsNumeric))
-        var t: SemType = ctx.typeOf(v)
-        for _ <- indices.length to 1 do
-            t = t match
-                case KnownType.Array(t) => t
-                case _ => ?
-        t match
-            case ? => None
-            case t => t.satisfies(c)
+    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) => checkArray(indices, v, c)
     case Q_PairNullLiteral => KnownType.Pair(?, ?).satisfies(c)
     case Q_PairElem(index: PairIndex, v: Q_LValue, _) =>  
         val pairType: SemType = check(v, Constraint.Is(KnownType.Pair(?, ?))).getOrElse(?)
@@ -187,6 +178,21 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[Sem
                 kt.ty2.satisfies(c)
         }
 }
+
+def checkArray(indices: List[Q_Expr], v: Q_Name, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] =
+    indices.map(expr => check(expr, Constraint.IsNumeric))
+    println(indices)
+    var t: SemType = ctx.typeOf(v) 
+    for _ <- 1 to indices.length do
+        println(t)
+        t match
+            case KnownType.Array(_t) => t = _t
+            case _ => 
+                ctx.error(Error.InvalidIndexing())
+    
+    t.satisfies(c)
+
+    
 
 def checkArithmeticExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
                        (using TypeCheckerCtx[?]): Option[SemType] =
@@ -226,16 +232,7 @@ def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemT
             case PairIndex.Second => 
                 kt.ty2.satisfies(c)
         }
-    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) =>
-        indices.map(expr => check(expr, Constraint.IsNumeric))
-        var t: SemType = ctx.typeOf(v)
-        for _ <- indices.length to 1 do
-            t = t match
-                case KnownType.Array(t) => t
-                case _ => ?
-        t match
-            case ? => None
-            case t => t.satisfies(c)
+    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) => checkArray(indices, v, c)
 }
 
 def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] =
@@ -352,8 +349,12 @@ extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[
     case (kty, Constraint.IsReadable) => ctx.error(Error.NonReadableType(kty))
 }
 
-class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C]) {
+class TypeCheckerCtx[C](tyInfo: TypeInfo, errs: mutable.Builder[Error, C], fnameIn: Option[String] = None, posIn: (Int, Int) = (0,0)) extends ErrContext{
     def errors: C = errs.result()
+
+    def fname: Option[String] = fnameIn
+
+    def pos: (Int, Int) = posIn
 
     // This will get the type of variables
     def typeOf(id: Q_Name): KnownType = tyInfo.varTys(id)
@@ -375,6 +376,7 @@ enum Error {
     case NonBooleanType(actual: SemType)
     case NonStringType(actual: SemType)
     case NonReadableType(actual: SemType)
+    case InvalidIndexing()
     case InvalidReturn()
     case WrongNumberOfArgs(actual: Int, expected: Int)
 }

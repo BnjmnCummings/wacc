@@ -15,7 +15,7 @@ abstract class MyErrorBuilder extends ErrorBuilder[Err] {
         expected: Set[ErrorItem],
         reasons: Set[String],
         line: String
-    ): ErrorInfoLines = VanillaError(unexpected, expected, reasons, line)
+    ): ErrorLines = VanillaError(unexpected, expected, reasons, line)
 
     override def specializedError(
         msgs: Set[String],
@@ -41,17 +41,13 @@ abstract class MyErrorBuilder extends ErrorBuilder[Err] {
         linesBefore: Seq[String],
         linesAfter: Seq[String],
         lineNum: Int, errorPointsAt: Int, errorWidth: Int
-        ): String = {
-            val sb = StringBuilder()
-            sb ++= s"${codeIndent}> "
-            linesBefore.map(_ + s"\n${codeIndent}> ").foreach{sb ++= _}
-            sb ++= line
-            sb ++= s"\n${codeIndent}> "
-            sb ++= " ".repeat(errorPointsAt) + "^".repeat(errorWidth) + s"\n${codeIndent}> "
-            linesAfter.map(_ + s"\n${codeIndent}> ").foreach{sb ++= _}
-            // remove extra newline
-            sb.dropRight(3 + codeIndent.length()).toString()
-        }
+        ): String = generateErrorMessageCodeBlock(
+            line = line, 
+            linesBefore = linesBefore, 
+            linesAfter = linesAfter,
+            errorPointsAt = errorPointsAt,
+            errorWidth = errorWidth
+        )
 
     type Position = (Int, Int)
     type Source = Option[String]
