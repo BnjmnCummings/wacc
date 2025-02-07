@@ -178,7 +178,7 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemT
     case Q_ArrayLiteral(xs: List[Q_Expr], _) =>
         val ty = xs
             .map(x => check(x, Constraint.Unconstrained))
-            .fold(Some(?))((t1, t2) => t2.getOrElse(?).satisfies(Constraint.Is(t1.getOrElse(?)))).getOrElse(X)
+            .fold(Some(?))((t1, t2) => t1.getOrElse(?).satisfies(Constraint.Is(t2.getOrElse(?)))).getOrElse(X)
         KnownType.Array(ty).satisfies(c)
     case Q_PairElem(index: PairIndex, v: Q_LValue, _) =>  
         val pairType: SemType = check(v, Constraint.Is(KnownType.Pair(?, ?))).getOrElse(?)
