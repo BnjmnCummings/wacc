@@ -7,10 +7,13 @@ import scala.io.Source
 trait semanticErr
 
 object ScopeError {
-    def apply() = Err(
+    def apply(msg: String)(using ctx: RenamerContext) = Err(
         None,
-        ???,
-        ???,
+        ctx.pos,
+        SpecializedError(
+            Set(msg),
+            getLineFromContext(ctx)
+        ),
         ErrorType.SemanticError
     )
 }
@@ -153,7 +156,7 @@ object InvalidReturn {
     )
 }
 
-def getLineFromContext(ctx: TypeCheckerCtx[?]): String = {
+def getLineFromContext(ctx: ErrContext): String = {
     ctx.fname match
         case Some(filename) => {
             val f: File = File(filename)
@@ -194,4 +197,4 @@ def typeToString(t: SemType): String = t match
     case KnownType.Array(t) => s"array of ${typeToString(t)}"
     case KnownType.Pair(t1, t2) => s"pair of ${typeToString(t1)} and ${typeToString(t2)}"
     case X => "confused type (oh dear)"
-    case ? => "any" 
+    case ? => "any"
