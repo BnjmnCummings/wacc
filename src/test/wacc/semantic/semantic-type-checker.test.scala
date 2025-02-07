@@ -9,7 +9,7 @@ import wacc.semantic.Error.TypeMismatch
 import parsley.Failure
 import parsley.Success
 
-class types_tst extends AnyFlatSpec {
+class types_test extends AnyFlatSpec {
     "basic type declaration" should "be semantically valid" in {
         val funcs: List[Q_Func] = List[Q_Func]()
 
@@ -188,7 +188,7 @@ class types_tst extends AnyFlatSpec {
     }*/
 }
 
-class types_test extends AnyFlatSpec {
+class types_test2 extends AnyFlatSpec {
     "free" should "be able to free arrays" in {
         val funcs: List[Q_Func] = List[Q_Func]()
 
