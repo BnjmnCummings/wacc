@@ -138,7 +138,7 @@ object renamer {
     
     private def rename(rvalue: RValue, scope: Set[Q_Name])(using ctx: RenamerContext): Q_RValue = rvalue match
         case expr: Expr => rename(expr, scope)
-        case fCall@FuncCall(v, args) => Q_FuncCall(updateName(v, scope), args.map(rename(_, scope)), fCall.pos)
+        case fCall@FuncCall(v, args) => Q_FuncCall(updateFuncName(v, scope), args.map(rename(_, scope)), fCall.pos)
         case aLit@ArrayLiteral(xs) => Q_ArrayLiteral(xs.map(rename(_, scope)), aLit.pos)
         case nPair@NewPair(x1, x2) => Q_NewPair(rename(x1, scope), rename(x2, scope), nPair.pos)
 
@@ -201,7 +201,11 @@ object renamer {
     private def updateName(name: String, lScope: Set[Q_Name])(using ctx: RenamerContext): Q_Name = 
         if lScope.exists(_.name == name) then
             lScope.find(_.name == name).get
-        else if gScope.exists(_.name == name) then
+        else
+            newVar(name, None)
+    
+    private def updateFuncName(name: String, lScope: Set[Q_Name])(using ctx: RenamerContext): Q_Name = 
+        if gScope.exists(_.name == name) then
             gScope.find(_.name == name).get 
         else
             newVar(name, None)
