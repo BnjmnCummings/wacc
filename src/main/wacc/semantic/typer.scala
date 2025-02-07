@@ -11,7 +11,7 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo): Option[List[Error]] = {
     // Note this List[Error] is non-empty. NonEmptyList import won't work
     // We will just return Right if there is no error hence avoids returning Left with an empty list!
     given ctx: TypeCheckerCtx[List[Error]] = TypeCheckerCtx(tyInfo, List.newBuilder)
-    
+
     val progFuncs: List[Q_Func] = prog.funcs
     val progStmts: List[Q_Stmt] = prog.body
 
@@ -108,14 +108,15 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[Sem
 }
 
 def checkArithmeticExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
-                      (using TypeCheckerCtx[?]): Option[SemType] =
+                       (using TypeCheckerCtx[?]): Option[SemType] =
     val xTy = check(x, Constraint.IsNumeric)
     val yTy = check(y, Constraint.Is(xTy.getOrElse(?)))
     mostSpecific(xTy, yTy).satisfies(c)
 
 def checkComparisonExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
                        (using TypeCheckerCtx[?]): Option[SemType] =
-    val xTy = check(x, Constraint.IsNumeric)
+    check(x, Constraint.IsNumericOrCharacter)
+    val xTy = check(x, Constraint.IsNumericNoError)
     if (xTy.getOrElse(?) == ?) {
         // X is not an int - it should be a character
         check(x, Constraint.IsCharacter)
@@ -125,10 +126,9 @@ def checkComparisonExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
         check(y, Constraint.Is(xTy.getOrElse(?)))
     }
     KnownType.Boolean.satisfies(c)
-    
 
 def checkBooleanExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
-                      (using TypeCheckerCtx[?]): Option[SemType] =
+                    (using TypeCheckerCtx[?]): Option[SemType] =
     val xTy = check(x, Constraint.IsBoolean)
     val yTy = check(y, Constraint.Is(xTy.getOrElse(?)))
     mostSpecific(xTy, yTy).satisfies(c)
@@ -143,7 +143,7 @@ def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemT
             .satisfies(c)
 }
 
-def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] = 
+def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] =
     r match {
     case Q_FuncCall(v: Q_Name, args: List[Q_Expr], _) => check(args, c)
     case Q_ArrayLiteral(xs: List[Q_Expr], _) =>
@@ -155,15 +155,16 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemT
     case Q_NewPair(x: Q_Expr, y: Q_Expr, _) =>
         val xTy = check(x, Constraint.Unconstrained)
         val yTy = check(y, Constraint.Is(xTy.getOrElse(?)))
-        mostSpecific(xTy, yTy).satisfies(c)
-        
+        mostSpecific(xTy, yTy) match
+            case ? => None
+            case value => Some(Pair(value, value))
     case e: Q_Expr => check(e, c)
 }
 
 def checkReturnType(t: Type, stmt: Q_Stmt)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (stmt, t) match {
     case (Q_Return(x: Q_Expr, _), ty) => check(x, Constraint.Is(toSemType(ty)))
     case (Q_Exit(x: Q_Expr, _), _) => check(x, Constraint.Is(KnownType.Int))
-    case (Q_If(cond: Q_Expr, body: List[Q_Stmt], _, el: List[Q_Stmt], _, _), t) => 
+    case (Q_If(cond: Q_Expr, body: List[Q_Stmt], _, el: List[Q_Stmt], _, _), t) =>
         Some(mostSpecific(checkReturnType(t, body.last), checkReturnType(t, el.last)))
     case (Q_CodeBlock(stmts: List[Q_Stmt], _, _), t) => checkReturnType(t, stmts.last)
     case (_, _) => throw SyntaxFailureException("Last statement is not a return/if. This should be dealt with in parsing")
@@ -198,6 +199,17 @@ extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) mat
     case (?, refTy) => Some(refTy)
     case (ty, ?) => Some(ty)
     case (ty, refTy) if ty == refTy => Some(ty)
+    case (KnownType.Array(KnownType.Char), KnownType.String) => Some(KnownType.String)
+    case (KnownType.Array(ty), KnownType.Array(refTy)) =>
+        ty ~ refTy
+    case (KnownType.Pair(ty1, ty2), KnownType.Pair(refTy1, refTy2)) =>
+        val newTy1 = ty1 ~ refTy1
+        val newTy2 = ty2 ~ refTy2
+        (newTy1, newTy2) match
+            case (Some(t1), Some(t2)) => Some(KnownType.Pair(t1, t2))
+            case _ => None
+    case (X, _) => None
+    case (_, X) => None
     case _ => None
 
 extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] = (ty, c) match {
@@ -207,8 +219,13 @@ extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx[
     case (?, _) => Some(?)
     case (kty@KnownType.Int, Constraint.IsNumeric) => Some(kty)
     case (kty, Constraint.IsNumeric) => ctx.error(Error.NonNumericType(kty))
+    case (kty@KnownType.Int, Constraint.IsNumericNoError) => Some(kty)
+    case (kty, Constraint.IsNumericNoError) => None
     case (kty@KnownType.Char, Constraint.IsCharacter) => Some(kty)
     case (kty, Constraint.IsCharacter) => ctx.error(Error.NonCharacterType(kty))
+    case (kty@KnownType.Int, Constraint.IsNumericOrCharacter) => Some(kty)
+    case (kty@KnownType.Char, Constraint.IsNumericOrCharacter) => Some(kty)
+    case (kty, Constraint.IsNumericOrCharacter) => ctx.error(Error.NonNumericType(kty))
     case (kty@KnownType.Boolean, Constraint.IsBoolean) => Some(kty)
     case (kty, Constraint.IsBoolean) => ctx.error(Error.NonBooleanType(kty))
     case (kty@KnownType.String, Constraint.IsString) => Some(kty)
@@ -239,6 +256,7 @@ enum Error {
     case NonFreeableType(actual: SemType)
     case NonNumericType(actual: SemType)
     case NonCharacterType(actual: SemType)
+    case NonNumericCharacterType(actual: SemType)
     case NonBooleanType(actual: SemType)
     case NonStringType(actual: SemType)
     case NonReadableType(actual: SemType)
@@ -248,7 +266,9 @@ enum Error {
 enum Constraint {
     case Is(refTy: SemType)
     case IsNumeric
+    case IsNumericNoError
     case IsCharacter
+    case IsNumericOrCharacter
     case IsBoolean
     case IsExitable
     case IsFreeable

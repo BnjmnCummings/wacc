@@ -8,6 +8,9 @@ case object ? extends SemType
 // ? represents an unknown type
 // This type checks with anything so can be used to replace errors to find other errors
 
+// used to portray a confused type (e.g. Array[X] is an array of multiple types)
+case object X extends SemType
+
 enum KnownType extends SemType {
     case Int
     case Boolean
