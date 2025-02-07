@@ -16,8 +16,7 @@ def main(args: Array[String]): Unit = {
             parser.parseF(f) match
                 case Success(t) => {
                     try {
-                        given filename: Option[String] = Some(fname)
-                        val (q_t, tyInfo) = renamer.rename(t)
+                        val (q_t, tyInfo) = renamer.rename(t, Some(fname))
                         typeCheck(q_t, tyInfo) match {
                             case Some(e: List[Err]) => 
                                 e.foreach {

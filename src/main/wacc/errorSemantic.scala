@@ -7,7 +7,7 @@ trait semanticErr
 
 object ScopeError {
     def apply(msg: String)(using ctx: RenamerContext) = Err(
-        None,
+        ctx.fname,
         ctx.pos,
         SpecializedError(
             Set(msg),
@@ -176,7 +176,7 @@ def getLineFromContext(ctx: ErrContext): String = {
                 curLine,
                 List(lineBefore),
                 List(lineAfter),
-                ctx.pos._2,
+                ctx.pos._2 - 1,
                 1
                 )
         }

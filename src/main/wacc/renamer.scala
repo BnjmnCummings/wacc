@@ -16,7 +16,7 @@ object renamer {
     private var varTypes: MutableMap[Q_Name, SemType] = MutableMap[Q_Name, SemType]()
     private var funcTypes: MutableMap[Q_Name, (SemType, List[Q_Name])] = MutableMap[Q_Name, (SemType, List[Q_Name])]()
 
-    def rename(prog: Prog)(using filename: Option[String] = None): (Q_Prog, TypeInfo) =
+    def rename(prog: Prog, filename: Option[String] = None): (Q_Prog, TypeInfo) =
         given ctx: RenamerContext = RenamerContext(fnameIn = filename)
         gScope = MutableSet()
         name_gen_table = MutableMap[String, Int]()
