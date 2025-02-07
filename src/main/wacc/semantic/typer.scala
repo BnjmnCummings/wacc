@@ -110,7 +110,16 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[Sem
             case ? => None
             case t => t.satisfies(c)
     case Q_PairNullLiteral => KnownType.Pair(?, ?).satisfies(c)
-    case Q_PairElem(index: PairIndex, v: Q_LValue, _) => check(v, c).getOrElse(?).satisfies(c)
+    case Q_PairElem(index: PairIndex, v: Q_LValue, _) =>  
+        val pairType: SemType = check(v, Constraint.Is(KnownType.Pair(?, ?))).getOrElse(?)
+        val kt: KnownType.Pair = pairType.asInstanceOf[KnownType.Pair]
+
+        index match {
+            case PairIndex.First  => 
+                kt.ty1.satisfies(c)
+            case PairIndex.Second => 
+                kt.ty2.satisfies(c)
+        }
 }
 
 def checkArithmeticExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
@@ -141,7 +150,16 @@ def checkBooleanExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
 
 def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemType] = l match {
     case Q_Ident(v: Q_Name, _) => ctx.typeOf(v).satisfies(c)
-    case Q_PairElem(index: PairIndex, v: Q_LValue, _) => check(v, c).getOrElse(?).satisfies(c)
+    case Q_PairElem(index: PairIndex, v: Q_LValue, _) => 
+        val pairType: SemType = check(v, Constraint.Is(KnownType.Pair(?, ?))).getOrElse(?)
+        val kt: KnownType.Pair = pairType.asInstanceOf[KnownType.Pair]
+
+        index match {
+            case PairIndex.First  => 
+                kt.ty1.satisfies(c)
+            case PairIndex.Second => 
+                kt.ty2.satisfies(c)
+        }
     case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], _) =>
         indices.map(expr => check(expr, Constraint.IsNumeric))
         var t: SemType = ctx.typeOf(v)
@@ -162,7 +180,16 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx[?]): Option[SemT
             .map(x => check(x, Constraint.Unconstrained))
             .fold(Some(?))((t1, t2) => t2.getOrElse(?).satisfies(Constraint.Is(t1.getOrElse(?)))).getOrElse(X)
         KnownType.Array(ty).satisfies(c)
-    case Q_PairElem(index: PairIndex, v: Q_LValue, _) => check(v, c).getOrElse(?).satisfies(c)
+    case Q_PairElem(index: PairIndex, v: Q_LValue, _) =>  
+        val pairType: SemType = check(v, Constraint.Is(KnownType.Pair(?, ?))).getOrElse(?)
+        val kt: KnownType.Pair = pairType.asInstanceOf[KnownType.Pair]
+
+        index match {
+            case PairIndex.First  => 
+                kt.ty1.satisfies(c)
+            case PairIndex.Second => 
+                kt.ty2.satisfies(c)
+        }
     case Q_NewPair(x: Q_Expr, y: Q_Expr, _) =>
         KnownType.Pair(check(x, Constraint.Unconstrained).getOrElse(?), check(y, Constraint.Unconstrained).getOrElse(?)).satisfies(c)
     case e: Q_Expr => check(e, c)
