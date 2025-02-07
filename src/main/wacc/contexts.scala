@@ -10,7 +10,7 @@ trait ErrContext {
 }
 
 
-class RenamerContext(val errors: ListBuffer[Err] = ListBuffer[Err](), fnameIn: Option[String] = None, var posVal: (Int, Int) = (0, 0)) extends ErrContext {
+class RenamerContext(val errors: ListBuffer[Err] = ListBuffer[Err](), fnameIn: Option[String] = None, var posVal: (Int, Int) = (1, 1)) extends ErrContext {
     def fname: Option[String] = fnameIn
 
     def pos: (Int, Int) = posVal
@@ -22,7 +22,7 @@ class RenamerContext(val errors: ListBuffer[Err] = ListBuffer[Err](), fnameIn: O
     def getErrors: List[Err] = errors.toList
 }
 
-class TypeCheckerCtx(tyInfo: TypeInfo, errs: ListBuffer[Err], fnameIn: Option[String] = None, var posVal: (Int, Int) = (0,0)) extends ErrContext{
+class TypeCheckerCtx(tyInfo: TypeInfo, errs: ListBuffer[Err], fnameIn: Option[String] = None, var posVal: (Int, Int) = (1, 1)) extends ErrContext{
     def errors: List[Err] = errs.toList
 
     def fname: Option[String] = fnameIn
