@@ -15,11 +15,12 @@ import lexer.LexErrorBuilder
 import java.io.File
 import scala.util.Success
 import scala.util.Failure
+import java.io.FileNotFoundException
 
 object parser {
     def parseF(input: File): Result[Err, Prog] = parser.parseFile(input) match
         case Success(res) => res
-        case Failure(e) => throw(e)
+        case Failure(e) => throw(FileNotFoundException())
 
     def parse(input: String): Result[String, Prog] = parser.parse(input)
 
