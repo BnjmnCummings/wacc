@@ -219,7 +219,7 @@ object renamer {
         name_gen_table(name) = count + 1
         Q_Name(name, count)
 
-    private def updateName(name: String, lScope: Set[Q_Name])(using ctx: RenamerContext): Q_Name = 
+    private def updateName(name: String, lScope: Set[Q_Name]): Q_Name = 
         if lScope.exists(_.name == name) then
             lScope.find(_.name == name).get
         else

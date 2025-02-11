@@ -1,8 +1,5 @@
 package wacc.q_ast
 
-import wacc.ast.*
-import parsley.generic
-
 sealed trait Q_Stmt
 case class Q_Decl(v: Q_Name, r: Q_RValue, pos: (Int, Int) = (0, 0)) extends Q_Stmt
 case class Q_Asgn(l: Q_LValue, r: Q_RValue, pos: (Int, Int) = (0, 0)) extends Q_Stmt

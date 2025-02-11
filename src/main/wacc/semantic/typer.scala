@@ -303,6 +303,8 @@ def checkPairElem(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx): Option
             case PairIndex.Second => 
                 kt.ty2.satisfies(c)
         }
+    // This case should never be reached as we call checkPairElem on pair elems only
+    case _ => throw Exception("tried to use checkPairElem on something other than a Q_PairElem")
 }
 
 def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx): Option[SemType] =

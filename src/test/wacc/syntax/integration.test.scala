@@ -12,7 +12,6 @@ import parsley.{Success, Failure}
 import collection.mutable.ListBuffer
 
 import java.io.File
-import wacc.utilities.searchDir
 
 class syntax_integration_test extends AnyFlatSpec {
     val validPaths: List[String] = getValidPaths()

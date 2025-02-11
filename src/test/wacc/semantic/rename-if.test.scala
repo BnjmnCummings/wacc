@@ -9,7 +9,7 @@ import wacc.renamer.*
 import wacc.*
 
 class rename_if_test extends AnyFlatSpec{
-     "rename-if" should "be able to rename basic if statements" in {
+    "rename-if" should "be able to rename basic if statements" in {
         val prog = Prog(
             List(),
             List(
