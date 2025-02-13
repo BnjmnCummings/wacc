@@ -1,38 +1,22 @@
-package wacc
-
-case class A_Prog(instrs: List[A_Instr])
-
-sealed trait A_Instr
-
-sealed trait A_ArithmeticOp(opS: A_NumOperand, opD: A_RegDeref, opSize: A_OperandSize) extends A_Instr
-
-case class A_Add(opS: A_NumOperand, opD: A_RegDeref, opSize: A_OperandSize) extends A_ArithmeticOp 
-case class A_Sub(opS: A_NumOperand, opD: A_RegDeref, opSize: A_OperandSize) extends A_ArithmeticOp
-case class A_Mul(opS: A_NumOperand, opD: A_RegDeref, opSize: A_OperandSize) extends A_ArithmeticOp
-case class A_Div(opS: A_NumOperand, opD: A_RegDeref, opSize: A_OperandSize) extends A_ArithmeticOp
-
-case class A_Cmp(op: A_Operand, op: A_NumOperand) extends A_Instr
-case class A_Jmp(label: A_Lbl) extends A_Instr
-
-case class A_StoredStr(name: String, str: String) extends A_Instr
-
-case class A_Lbl(name: String)
-
-
-case object A_Ret extends A_Instr
+package wacc.assemblyIR
 
 sealed trait A_Operand
 
-sealed trait A_NumOperand extends A_Operand
+sealed trait A_CmpOperand extends A_Operand
 
-sealed trait A_RegDeref extends A_NumOperand
+sealed trait A_NumOperand extends A_CmpOperand
+sealed trait A_ChrOperand extends A_CmpOperand
+
+sealed trait A_BoolOperand extends A_Operand
+
+sealed trait A_RegDeref extends A_NumOperand, A_ChrOperand, A_BoolOperand
 
 case class A_RegDerefSimple(opSize: A_OperandSize, reg: A_Reg) extends A_RegDeref
 case class A_RegDerefPlusImm(opSize: A_OperandSize, reg: A_Reg, imm: BigInt) extends A_RegDeref
 case class A_RegDerefPlusReg(opSize: A_OperandSize, reg: A_Reg, reg2: A_Reg) extends A_RegDeref
 case class A_RegDerefPlusScaledReg(opSize: A_OperandSize, reg: A_Reg, reg2: A_Reg, imm: BigInt) extends A_RegDeref
 
-sealed abstract class A_Reg(regSize: A_OperandSize, regName: A_RegName)
+case class A_Reg(regSize: A_OperandSize, regName: A_RegName)
 
 /* 
 caller save - if you need to preserve the values of these before a function call, push and pop them on the stack
@@ -68,3 +52,4 @@ enum A_OperandSize {
 
 sealed trait A_Imm extends A_Operand
 
+// TODO: fill out trait for representation of immediate operands
