@@ -2,14 +2,12 @@ package wacc.assemblyIR
 
 sealed trait A_Operand
 
-sealed trait A_CmpOperand extends A_Operand
+// TODO: since only ints are allowed as immediates, will num operand and cmp operand just be the same as operand?
 
-sealed trait A_NumOperand extends A_CmpOperand
-sealed trait A_ChrOperand extends A_CmpOperand
+sealed trait A_NumOperand extends A_Operand
+sealed trait A_ChrOperand extends A_Operand
 
-sealed trait A_BoolOperand extends A_Operand
-
-sealed trait A_RegDeref extends A_NumOperand, A_ChrOperand, A_BoolOperand
+sealed trait A_RegDeref extends A_NumOperand, A_ChrOperand
 
 case class A_RegDerefSimple(opSize: A_OperandSize, reg: A_Reg) extends A_RegDeref
 case class A_RegDerefPlusImm(opSize: A_OperandSize, reg: A_Reg, imm: BigInt) extends A_RegDeref
@@ -50,4 +48,4 @@ enum A_OperandSize {
     case A_64
 }
 
-case class A_Imm(n: Integer) extends A_Operand
+case class A_Imm(n: BigInt) extends A_Operand
