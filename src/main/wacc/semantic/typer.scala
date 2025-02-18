@@ -55,17 +55,14 @@ def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx): Option[S
                     xs
                         .map(check(_, Constraint.Unconstrained))
                         .fold(Some(?))((t1, t2) => t1.getOrElse(?).satisfies(Constraint.Is(t2.getOrElse(?)))).getOrElse(?)
+            
             arrT match
                 case KnownType.String =>
                     if semOpt == KnownType.String | semOpt == KnownType.Array(KnownType.Char) then
                         Some(t)
                     else
                         ctx.error(TypeMismatch(KnownType.Array(semOpt), t))
-                case _ =>
-                    if semOpt == arrT then
-                        Some(t)
-                    else
-                        ctx.error(TypeMismatch(KnownType.Array(semOpt), t))
+                case _ => semOpt.satisfies(Constraint.Is(arrT))
         case (_, Q_Ident(n, pos)) => 
             ctx.setPos(pos)
             val t = ctx.typeOf(n)
@@ -92,6 +89,14 @@ def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: 
     // Check the type of the LValue matches that of the RValue
     case Q_Asgn(l: Q_LValue, r: Q_RValue, pos) => 
         ctx.setPos(pos)
+
+        val lTy: SemType = check(l, Constraint.Unconstrained).getOrElse(?)
+        val rTy: SemType = check(r, Constraint.Unconstrained).getOrElse(?)
+
+        if (lTy == ? && rTy == ?) { // TODO: CHANGE THIS TO A SWITCH
+            ctx.error(NonNumericType(?)) // TODO: CREATE NEW ERROR FOR THIS
+        }
+
         check(r, Constraint.Is(check(l, Constraint.Unconstrained).getOrElse(?)))
     // Only need to  verify the LValue is actually LValue - no constraint needed? Or create constraint for IsLValue?
     case Q_Read(l: Q_LValue, pos) => 
@@ -165,11 +170,15 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx): Option[SemTyp
     // The below work on two of the same type
     case Q_Eq(x: Q_Expr, y: Q_Expr, pos) => 
         ctx.setPos(pos)
-        check(y, Constraint.Is(check(x, Constraint.Is(?)).getOrElse(?)))
+        check(y, Constraint.Is(check(x, Constraint.Unconstrained).getOrElse(?)))
+        
+        Some(KnownType.Boolean)
+
     case Q_NotEq(x: Q_Expr, y: Q_Expr, pos) => 
         ctx.setPos(pos)
         check(y, Constraint.Is(check(x, Constraint.Is(?)).getOrElse(?)))
 
+        Some(KnownType.Boolean)
     // The below only work on two bools
     case Q_And(x: Q_Expr, y: Q_Expr, pos) => 
         ctx.setPos(pos)
@@ -271,6 +280,7 @@ def checkBooleanExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
                     (using TypeCheckerCtx): Option[SemType] =
     val xTy = check(x, Constraint.IsBoolean)
     val yTy = check(y, Constraint.Is(xTy.getOrElse(?)))
+    
     mostSpecific(xTy, yTy).satisfies(c)
 
 def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx): Option[SemType] = l match {
@@ -288,8 +298,7 @@ def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx): Option[SemType
 def checkPairElem(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx): Option[SemType] = l match {
     case Q_PairElem(index: PairIndex, v: Q_LValue, _) => 
         val pairType: SemType = check(v, Constraint.Is(KnownType.Pair(?, ?))).getOrElse(?)
-        if pairType == KnownType.Pair(?, ?) then
-            return ctx.error(UnknownType(pairType))
+        
         val kt: KnownType.Pair = pairType.asInstanceOf[KnownType.Pair]
 
         index match {
@@ -400,10 +409,12 @@ extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) mat
     case _ => None
 
 extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx): Option[SemType] = (ty, c) match {
+    case (Pair(?, ?), Constraint.Is(KnownType.Pair(_, _))) => Some(Pair(?, ?))
     case (ty, Constraint.Is(refTy)) => (ty ~ refTy).orElse {
         ctx.error(TypeMismatch(ty, refTy))
     }
     case (ty, Constraint.IsExactly(refTy)) => if (ty == refTy) then Some(ty) else None 
+    case (?, Constraint.IsReadable) => ctx.error(NonReadableType(?))
     case (?, _) => Some(?)
     case (kty@KnownType.Int, Constraint.IsNumeric) => Some(kty)
     case (kty, Constraint.IsNumeric) => ctx.error(NonNumericType(kty))
