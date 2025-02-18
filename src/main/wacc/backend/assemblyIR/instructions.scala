@@ -15,8 +15,8 @@ case class A_Div(opD: A_RegDeref, opS: A_NumOperand, opSize: A_OperandSize) exte
 case class A_Cmp(op1: A_RegDeref, op2: A_Operand, opSize: A_OperandSize) extends A_Instr
 case class A_Jmp(label: A_Lbl, condition: A_Cond) extends A_Instr
 // setcc on felixcloutier
-// TODO: how do we encode the fact that the operand register needs to be size byte?
-case class A_Set(op: A_RegDeref)
+// TODO: how do we encode the fact that the operand register needs to be size byte here?
+case class A_Set(op: A_RegDeref, condition: A_Cond)
 
 case class A_And(opD: A_RegDeref, opS: A_Operand, opSize: A_OperandSize) extends A_BitwiseOp
 case class A_Or(opD: A_RegDeref, opS: A_Operand, opSize: A_OperandSize) extends A_BitwiseOp
