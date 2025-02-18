@@ -84,22 +84,10 @@ def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx): Option[S
     }
 }
 
-def foo(l: SemType, t: SemType): Boolean = (l, t) match
-    case (KnownType.String, KnownType.Array(KnownType.Char)) =>
-        true
-    case _ =>
-        false
-
-
-//def checkArrayTypes(l: SemType, r: SemType): Option[SemType] = (l, r) match {
-//    ??? // Not sure if this part is necessary
-//}
-
 def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: TypeCheckerCtx): Unit =
     stmt match {
     case Q_Decl(id: Q_Name, r: Q_RValue, pos) =>
         ctx.setPos(pos)
-        //check(r, Constraint.Is(ctx.typeOf(id))) // This will check the type of r compared to given type t
         checkDeclTypes(ctx.typeOf(id), r)
     // Check the type of the LValue matches that of the RValue
     case Q_Asgn(l: Q_LValue, r: Q_RValue, pos) => 
@@ -111,7 +99,7 @@ def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: 
         check(l, Constraint.IsReadable) 
     case Q_Free(x: Q_Expr, pos) => 
         ctx.setPos(pos)
-        check(x, Constraint.IsFreeable) // ADD THE CONSTRANTS FOR FREEABLE, EXITABLE
+        check(x, Constraint.IsFreeable)
     case Q_Return(x: Q_Expr, pos) => 
         ctx.setPos(pos)
         if isFunc then 
@@ -130,15 +118,15 @@ def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: 
     case Q_If(cond: Q_Expr, body: List[Q_Stmt], _, el: List[Q_Stmt], _, pos) =>
         ctx.setPos(pos)
         check(cond, Constraint.IsBoolean)
-        check(body, isFunc, funcConstraint) // Think this can remain as Unconstrained
-        check(el, isFunc, funcConstraint) // As above
+        check(body, isFunc, funcConstraint)
+        check(el, isFunc, funcConstraint)
     case Q_While(cond: Q_Expr, body: List[Q_Stmt], scopedBody: Set[Q_Name], pos) =>
         ctx.setPos(pos)
         check(cond, Constraint.IsBoolean)
-        check(body, isFunc, funcConstraint) // Think this can remain as Unconstrained
+        check(body, isFunc, funcConstraint)
     case Q_CodeBlock(body: List[Q_Stmt], scopedBody: Set[Q_Name], pos) =>
         ctx.setPos(pos)
-        check(body, isFunc, funcConstraint) // Don't see why this should be anything other than Unconstrained
+        check(body, isFunc, funcConstraint)
     case _ => ()
 }
 
@@ -239,18 +227,25 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx): Option[SemTyp
         checkPairElem(v, c)
 }
 
+def getBaseType(ty: SemType, idxRem: Integer)(using ctx: TypeCheckerCtx): Option[SemType] = (idxRem, ty) match {
+    // Hit the base type
+    case (0, t) => Some(t)
+    // We have an array so get its type & check that
+    case (n, KnownType.Array(_t)) => getBaseType(_t, n - 1)
+    // We have another index but not for an array e.g. int i = 2 ; i[3]
+    case (_, t) => ctx.error(InvalidIndexing())
+}
+
 def checkArray(indices: List[Q_Expr], v: Q_Name, c: Constraint)(using ctx: TypeCheckerCtx): Option[SemType] =
+    // Indices should evaluate to a numberic index
     indices.map(expr => check(expr, Constraint.IsNumeric))
-    var t: SemType = ctx.typeOf(v) 
-    for _ <- 1 to indices.length do
-        t match
-            case KnownType.Array(_t) => t = _t
-            case _ => 
-                ctx.error(InvalidIndexing())
+
+    val t: SemType = ctx.typeOf(v) 
+
+    // Get the base type of the array e.g. Array[Array[Bool]] -> Bool
+    val checkedT = getBaseType(t, indices.length).getOrElse(?)
     
-    t.satisfies(c)
-
-
+    checkedT.satisfies(c)
 
 def checkArithmeticExpr(x: Q_Expr, y: Q_Expr, c: Constraint)
                        (using TypeCheckerCtx): Option[SemType] =
