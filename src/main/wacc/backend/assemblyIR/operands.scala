@@ -2,7 +2,7 @@ package wacc.assemblyIR
 
 sealed trait A_Operand
 
-// TODO: since only ints are allowed as immediates, will num operand and cmp operand just be the same as operand?
+// TODO: since only ints are allowed as immediates, will num operand just be the same as operand?
 
 sealed trait A_NumOperand extends A_Operand
 sealed trait A_ChrOperand extends A_Operand
@@ -38,7 +38,6 @@ enum A_RegName {
     case R13      // r15 - callee
     case StackPtr // rsp - callee
     case BasePtr  // rbp - callee
-
 }
 
 enum A_OperandSize {
@@ -49,3 +48,8 @@ enum A_OperandSize {
 }
 
 case class A_Imm(n: BigInt) extends A_Operand
+
+// TODO: typing out RHS every time is way too long - need to rethink how we represent registers a bit
+// we will need some shortcuts for commonly used registers
+val rax = A_Reg(A_OperandSize.A_64, A_RegName.RetReg)
+val rbx = A_Reg(A_OperandSize.A_64, A_RegName.R9)
