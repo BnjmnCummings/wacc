@@ -50,6 +50,4 @@ enum A_OperandSize {
     case A_64
 }
 
-sealed trait A_Imm extends A_Operand
-
-// TODO: fill out trait for representation of immediate operands
+case class A_Imm(n: Integer) extends A_Operand
