@@ -149,6 +149,7 @@ def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: 
     case Q_CodeBlock(body: List[Q_Stmt], scopedBody: Set[Q_Name], pos) =>
         ctx.setPos(pos)
         T_CodeBlock(check(body, isFunc, funcConstraint), scopedBody.map(n => T_Name(n.name, n.num)))
+    case Q_Skip(_) => T_Skip()
 }
 
 def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemType], T_Expr) = expr match {
