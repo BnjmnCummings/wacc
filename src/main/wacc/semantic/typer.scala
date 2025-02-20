@@ -60,12 +60,12 @@ def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx): (Option[
 
 def checkArrayDeclType(l: SemType, r: Q_ArrayLiteral)(using ctx: TypeCheckerCtx): (Option[SemType], T_ArrayLiteral) = {
     (l, r) match {
-        case (KnownType.Array(KnownType.Array(_)), Q_ArrayLiteral(xs: List[Q_Expr], pos)) =>
+        case (KnownType.Array(t@KnownType.Array(_)), Q_ArrayLiteral(xs: List[Q_Expr], pos)) =>
             // l = array, r = array literal
             // so check each member of r is arrT
             // we can do this by calling checkArrayTypes with arrT and each member type of r
             ctx.setPos(pos)
-            val (xsTys, xsTyped) = xs.map(check(_, Constraint.Is(l))).unzip
+            val (xsTys, xsTyped) = xs.map(check(_, Constraint.Is(t))).unzip
 
             val semOpt: Option[SemType] = xsTys.fold(Some(?))(_.getOrElse(?) ~ _.getOrElse(?)) // ? could get changed for arrT potentially!
 
