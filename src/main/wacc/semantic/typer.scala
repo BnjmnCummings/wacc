@@ -31,7 +31,7 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo, fname: Option[String] = None): Eit
 def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx): (Option[SemType], T_RValue) = {
     (l, r) match {
         // this breaks into inner of array then maps
-        case (KnownType.Array(_), _) => checkArrayDeclType(l, r.asInstanceOf[Q_ArrayLiteral])
+        case (KnownType.Array(_), Q_ArrayLiteral(_, _)) => checkArrayDeclType(l, r.asInstanceOf[Q_ArrayLiteral])
         
         case (_, Q_Ident(n, pos)) => 
             ctx.setPos(pos)
