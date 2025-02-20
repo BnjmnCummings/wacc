@@ -42,7 +42,7 @@ def frontend(fname: String): (Q_Prog, TypeInfo) = {
                         }
                         sys.exit(EXIT_SEMANTIC_ERR)
                     // successfully parsed - return the qualified ast and type info to main
-                    case Right => return (q_t, tyInfo)
+                    case Right(_) => return (q_t, tyInfo)
                 }
                 sys.exit(0)
             } catch {
