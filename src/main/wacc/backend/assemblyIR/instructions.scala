@@ -20,9 +20,6 @@ case class A_Cmp(op1: A_RegDeref, op2: A_Operand, opSize: A_OperandSize) extends
 case class A_Jmp(label: A_InstrLabel, condition: A_Cond) extends A_Instr
 case class A_LabelStart(label: A_InstrLabel) extends A_Instr
 
-case class A_And(opD: A_RegDeref, opS: A_Operand, opSize: A_OperandSize) extends A_BitwiseOp
-case class A_Or(opD: A_RegDeref, opS: A_Operand, opSize: A_OperandSize) extends A_BitwiseOp
-
 case class A_Push(op: A_Reg) extends A_Instr
 case class A_Pop(op: A_Reg) extends A_Instr
 case class A_Mov(opD: A_RegDerefSimple, opS: A_Operand) extends A_Instr
