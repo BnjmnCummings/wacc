@@ -284,9 +284,12 @@ def checkArithmeticExpr(x: Q_Expr, y: Q_Expr, c: Constraint, result_expr: (T_Exp
 def checkComparisonExpr(x: Q_Expr, y: Q_Expr, c: Constraint, result_expr: (T_Expr, T_Expr) => T_Expr)
                        (using TypeCheckerCtx): (Option[SemType], T_Expr) =
     val (xTy, xTyped) = check(x, Constraint.IsNumericOrCharacter)
+    
     val (yTy, yTyped) = xTy match {
         case Some(KnownType.Int) => check(y, Constraint.Is(KnownType.Int))
         case Some(KnownType.Char) => check(y, Constraint.Is(KnownType.Char))
+        case None => (None, result_expr(xTyped, xTyped)) 
+        // Note: The above result_expr can be any T_Expr - it will be disregarded as we throw an error checking xTy
     }
     (KnownType.Boolean.satisfies(c), result_expr(xTyped, yTyped))
 
