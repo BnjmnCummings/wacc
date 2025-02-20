@@ -2,47 +2,47 @@ package wacc.t_ast
 
 import wacc.ast.PairIndex
 
-sealed trait Q_Expr extends Q_RValue
-sealed trait Q_LValue
-sealed trait Q_RValue
+sealed trait T_Expr extends T_RValue
+sealed trait T_LValue
+sealed trait T_RValue
 
-case class Q_Name(name: String, num: Int)
+case class T_Name(name: String, num: Int)
 
 // Binary operators
-sealed trait Q_BinaryOper extends Q_Expr
-case class Q_Mul(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_Div(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_Mod(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_Add(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_Sub(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_GreaterThan(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_GreaterThanEq(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_LessThan(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_LessThanEq(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_Eq(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_NotEq(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_And(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
-case class Q_Or(x: Q_Expr, y: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_BinaryOper
+sealed trait T_BinaryOper extends T_Expr
+case class T_Mul(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_Div(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_Mod(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_Add(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_Sub(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_GreaterThan(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_GreaterThanEq(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_LessThan(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_LessThanEq(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_Eq(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_NotEq(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_And(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
+case class T_Or(x: T_Expr, y: T_Expr, pos: (Int, Int) = (0, 0)) extends T_BinaryOper
 
 // Unary operators
-sealed trait Q_UnaryOper extends Q_Expr
-case class Q_Not(x: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_UnaryOper
-case class Q_Neg(x: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_UnaryOper
-case class Q_Len(x: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_UnaryOper
-case class Q_Ord(x: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_UnaryOper
-case class Q_Chr(x: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_UnaryOper
+sealed trait T_UnaryOper extends T_Expr
+case class T_Not(x: T_Expr, pos: (Int, Int) = (0, 0)) extends T_UnaryOper
+case class T_Neg(x: T_Expr, pos: (Int, Int) = (0, 0)) extends T_UnaryOper
+case class T_Len(x: T_Expr, pos: (Int, Int) = (0, 0)) extends T_UnaryOper
+case class T_Ord(x: T_Expr, pos: (Int, Int) = (0, 0)) extends T_UnaryOper
+case class T_Chr(x: T_Expr, pos: (Int, Int) = (0, 0)) extends T_UnaryOper
 
 // Atoms
-case class Q_IntLiteral(v: BigInt, pos: (Int, Int) = (0, 0)) extends Q_Expr
-case class Q_BoolLiteral(v: Boolean, pos: (Int, Int) = (0, 0)) extends Q_Expr
-case class Q_CharLiteral(v: Char, pos: (Int, Int) = (0, 0)) extends Q_Expr
-case class Q_StringLiteral(v: String, pos: (Int, Int) = (0, 0)) extends Q_Expr
-case class Q_Ident(v: Q_Name, pos: (Int, Int) = (0, 0)) extends Q_Expr, Q_LValue
-case class Q_ArrayElem(v: Q_Name, indicies: List[Q_Expr], pos: (Int, Int) = (0, 0)) extends Q_Expr, Q_LValue
-object Q_PairNullLiteral extends Q_Expr
+case class T_IntLiteral(v: BigInt, pos: (Int, Int) = (0, 0)) extends T_Expr
+case class T_BoolLiteral(v: Boolean, pos: (Int, Int) = (0, 0)) extends T_Expr
+case class T_CharLiteral(v: Char, pos: (Int, Int) = (0, 0)) extends T_Expr
+case class T_StringLiteral(v: String, pos: (Int, Int) = (0, 0)) extends T_Expr
+case class T_Ident(v: T_Name, pos: (Int, Int) = (0, 0)) extends T_Expr, T_LValue
+case class T_ArrayElem(v: T_Name, indicies: List[T_Expr], pos: (Int, Int) = (0, 0)) extends T_Expr, T_LValue
+object T_PairNullLiteral extends T_Expr
 
 // RValues
-case class Q_FuncCall(v: Q_Name, args: List[Q_Expr], pos: (Int, Int) = (0, 0)) extends Q_RValue
-case class Q_ArrayLiteral(xs: List[Q_Expr], pos: (Int, Int) = (0, 0)) extends Q_RValue // TODO: Add type
-case class Q_PairElem(index: PairIndex, v: Q_LValue, pos: (Int, Int) = (0, 0)) extends Q_Expr, Q_LValue
-case class Q_NewPair(x1: Q_Expr, x2: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_RValue
+case class T_FuncCall(v: T_Name, args: List[T_Expr], pos: (Int, Int) = (0, 0)) extends T_RValue
+case class T_ArrayLiteral(xs: List[T_Expr], pos: (Int, Int) = (0, 0)) extends T_RValue // TODO: Add type
+case class T_PairElem(index: PairIndex, v: T_LValue, pos: (Int, Int) = (0, 0)) extends T_Expr, T_LValue
+case class T_NewPair(x1: T_Expr, x2: T_Expr, pos: (Int, Int) = (0, 0)) extends T_RValue
