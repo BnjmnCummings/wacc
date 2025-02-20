@@ -214,7 +214,7 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemTy
     case Q_Chr(x: Q_Expr, pos) =>
         ctx.setPos(pos)
         val (xTy, xTyped) = check(x, Constraint.IsNumeric)
-        (xTy.getOrElse(?).satisfies(c), T_Chr(xTyped))
+        (KnownType.Char.satisfies(c), T_Chr(xTyped))
     // Bool:
     case Q_Not(x: Q_Expr, pos) =>
         ctx.setPos(pos)
