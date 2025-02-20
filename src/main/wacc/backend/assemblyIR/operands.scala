@@ -2,10 +2,7 @@ package wacc.assemblyIR
 
 sealed trait A_Operand
 
-sealed trait A_NumOperand extends A_Operand
-sealed trait A_ChrOperand extends A_Operand
-
-sealed trait A_RegDeref extends A_NumOperand, A_ChrOperand
+sealed trait A_RegDeref
 
 case class A_RegDerefSimple(opSize: A_OperandSize, reg: A_Reg) extends A_RegDeref
 case class A_RegDerefPlusImm(opSize: A_OperandSize, reg: A_Reg, imm: BigInt) extends A_RegDeref
@@ -46,8 +43,3 @@ enum A_OperandSize {
 }
 
 case class A_Imm(n: BigInt) extends A_Operand
-
-// TODO: typing out RHS every time is way too long - need to rethink how we represent registers a bit
-// we will need some shortcuts for commonly used registers
-val rax = A_Reg(A_OperandSize.A_64, A_RegName.RetReg)
-val rbx = A_Reg(A_OperandSize.A_64, A_RegName.R9)

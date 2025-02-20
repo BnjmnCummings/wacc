@@ -11,10 +11,10 @@ sealed trait A_Instr
 sealed trait A_ArithmeticOp extends A_Instr
 sealed trait A_BitwiseOp extends A_Instr
 
-case class A_Add(opD: A_RegDeref, opS: A_NumOperand, opSize: A_OperandSize) extends A_ArithmeticOp 
-case class A_Sub(opD: A_RegDeref, opS: A_NumOperand, opSize: A_OperandSize) extends A_ArithmeticOp
-case class A_Mul(opD: A_RegDeref, opS: A_NumOperand, opSize: A_OperandSize) extends A_ArithmeticOp
-case class A_Div(opD: A_RegDeref, opS: A_NumOperand, opSize: A_OperandSize) extends A_ArithmeticOp
+case class A_Add(opD: A_RegDeref, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp 
+case class A_Sub(opD: A_RegDeref, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp
+case class A_Mul(opD: A_RegDeref, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp
+case class A_Div(opD: A_RegDeref, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp
 
 case class A_Cmp(op1: A_RegDeref, op2: A_Operand, opSize: A_OperandSize) extends A_Instr
 case class A_Jmp(label: A_Lbl, condition: A_Cond) extends A_Instr
