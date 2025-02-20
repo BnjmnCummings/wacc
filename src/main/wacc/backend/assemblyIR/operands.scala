@@ -2,14 +2,18 @@ package wacc.assemblyIR
 
 sealed trait A_Operand
 
-sealed trait A_RegDeref
+case class A_Imm(n: BigInt) extends A_Operand
+case class A_RegDeref(opSize: A_OperandSize, mem: A_MemOffset) extends A_Operand
+case class A_MemOffset(opSize: A_OperandSize, reg: A_Reg, offset: A_Offset) extends A_Operand
+case class A_Reg(regSize: A_OperandSize, regName: A_RegName) extends A_Operand
 
-case class A_RegDerefSimple(opSize: A_OperandSize, reg: A_Reg) extends A_RegDeref
-case class A_RegDerefPlusImm(opSize: A_OperandSize, reg: A_Reg, imm: BigInt) extends A_RegDeref
-case class A_RegDerefPlusReg(opSize: A_OperandSize, reg: A_Reg, reg2: A_Reg) extends A_RegDeref
-case class A_RegDerefPlusScaledReg(opSize: A_OperandSize, reg: A_Reg, reg2: A_Reg, imm: BigInt) extends A_RegDeref
+sealed trait A_Offset
+case class A_OffsetImm(n: BigInt) extends A_Offset
+case class A_OffsetReg(reg: A_Reg) extends A_Offset
+// case class A_OffsetScaledReg(reg: A_Reg, scale: Int) extends A_Offset
 
-case class A_Reg(regSize: A_OperandSize, regName: A_RegName)
+/* cheeky macro for 0 offset */
+inline def noOffset: A_Offset = A_OffsetImm(0)
 
 /* 
 caller save - if you need to preserve the values of these before a function call, push and pop them on the stack
@@ -41,5 +45,3 @@ enum A_OperandSize {
     case A_32
     case A_64
 }
-
-case class A_Imm(n: BigInt) extends A_Operand
