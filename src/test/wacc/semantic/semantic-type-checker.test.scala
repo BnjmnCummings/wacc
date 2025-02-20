@@ -161,7 +161,7 @@ class types_test extends AnyFlatSpec {
         //     TypeMismatch(KnownType.Array(KnownType.Char), KnownType.Array(KnownType.Int))
         // ))
 
-        wacc.semantic.typeCheck(prog, tyInfo) shouldBe a [Some[List[Err]]]
+        wacc.semantic.typeCheck(prog, tyInfo) shouldBe a [Left[?, ?]]
     }
 
     /*"array declaration with mixed types" should "be semantically invalid" in {
