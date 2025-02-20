@@ -93,11 +93,10 @@ def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: 
         val lTy: SemType = check(l, Constraint.Unconstrained).getOrElse(?)
         val rTy: SemType = check(r, Constraint.Unconstrained).getOrElse(?)
 
-        if (lTy == ? && rTy == ?) { // TODO: CHANGE THIS TO A SWITCH
-            ctx.error(NonNumericType(?)) // TODO: CREATE NEW ERROR FOR THIS
+        (lTy, rTy) match {
+            case (?, ?) => ctx.error(NonNumericType(?))
+            case (_, _) => check(r, Constraint.Is(lTy))
         }
-
-        check(r, Constraint.Is(check(l, Constraint.Unconstrained).getOrElse(?)))
     // Only need to  verify the LValue is actually LValue - no constraint needed? Or create constraint for IsLValue?
     case Q_Read(l: Q_LValue, pos) => 
         ctx.setPos(pos)
@@ -244,7 +243,7 @@ def getBaseType(ty: SemType, idxRem: Integer)(using ctx: TypeCheckerCtx): Option
     // We have another index but not for an array e.g. int i = 2 ; i[3]
     case (_, t) => ctx.error(InvalidIndexing())
 }
-
+ 
 def checkArray(indices: List[Q_Expr], v: Q_Name, c: Constraint)(using ctx: TypeCheckerCtx): Option[SemType] =
     // Indices should evaluate to a numberic index
     indices.map(expr => check(expr, Constraint.IsNumeric))
