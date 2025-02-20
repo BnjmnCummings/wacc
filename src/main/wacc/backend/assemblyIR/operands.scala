@@ -2,8 +2,6 @@ package wacc.assemblyIR
 
 sealed trait A_Operand
 
-// TODO: since only ints are allowed as immediates, will num operand just be the same as operand?
-
 sealed trait A_NumOperand extends A_Operand
 sealed trait A_ChrOperand extends A_Operand
 
