@@ -28,9 +28,11 @@ case class A_Lea(opD: A_RegDerefSimple, opS: A_RegDeref) extends A_Instr
 // clib is accessed using call
 case class A_Call(label: A_Label) extends A_Instr
 
-sealed trait A_Label
-case class A_DataLabel(name: String) extends A_Label 
-case class A_InstrLabel(name: String) extends A_Label 
+sealed trait A_Label:
+    val name: String
+
+case class A_DataLabel(val name: String) extends A_Label 
+case class A_InstrLabel(val name: String) extends A_Label 
 
 case object A_Ret extends A_Instr
 
@@ -43,6 +45,7 @@ enum A_Cond {
     case LEq
     case Overflow
     case NOverflow
+    case Uncond
 }
 
 
