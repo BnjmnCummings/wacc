@@ -4,24 +4,27 @@ import wacc.*
 import wacc.ast.*
 import wacc.q_ast.*
 import wacc.t_ast.*
+import wacc.t_ast.*
 import collection.mutable
 import scala.annotation.targetName
 import wacc.KnownType.Pair
 
-def typeCheck(prog: Q_Prog, tyInfo: TypeInfo, fname: Option[String] = None): Option[List[Err]] = {
+def typeCheck(prog: Q_Prog, tyInfo: TypeInfo, fname: Option[String] = None): Either[List[Err], T_Prog] = {
     // Note this List[Error] is non-empty. NonEmptyList import won't work
     // We will just return Right if there is no error hence avoids returning Left with an empty list!
     given ctx: TypeCheckerCtx = TypeCheckerCtx(tyInfo, mutable.ListBuffer(), fname)
 
     val progFuncs: List[Q_Func] = prog.funcs
     val progStmts: List[Q_Stmt] = prog.body
+    val progScoped: Set[Q_Name] = prog.scoped
     
-    progFuncs.map(check(_, Constraint.Unconstrained))
-    progStmts.map(check(_, isFunc = false, Constraint.Unconstrained))
+    val typedFuncs = progFuncs.map(check(_, Constraint.Unconstrained)._2)
+    val typedStmts = progStmts.map(check(_, isFunc = false, Constraint.Unconstrained))
+    val typedScoped = progScoped.map(q_name => T_Name(q_name.name, q_name.num))
 
     ctx.errors.match {
-        case err :: errs => Some(err :: errs)
-        case Nil         => None
+        case err :: errs => Left(err :: errs)
+        case Nil         => Right(T_Prog(typedFuncs, typedStmts, typedScoped))
     }
 }
 
@@ -29,6 +32,7 @@ def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx): (Option[
     (l, r) match {
         // this breaks into inner of array then maps
         case (KnownType.Array(_), _) => checkArrayDeclType(l, r.asInstanceOf[Q_ArrayLiteral])
+        
         case (_, Q_Ident(n, pos)) => 
             ctx.setPos(pos)
             val t = ctx.typeOf(n)
@@ -381,9 +385,11 @@ def checkReturnType(t: Type, stmt: Q_Stmt)(using ctx: TypeCheckerCtx): Option[Se
     case (_, _) => throw SyntaxFailureException("Last statement is not a return/if. This should be dealt with in parsing")
 }
 
-def check(func: Q_Func, c: Constraint)(using ctx: TypeCheckerCtx): Option[SemType] = {
-    func.body.map(check(_, isFunc = true, Constraint.Is(toSemType(func.t))))
-    checkReturnType(func.t, func.body.last)
+def check(func: Q_Func, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemType], T_Func) = {
+    val typedArgs = func.args.map(q_param => T_Param(q_param.t, T_Name(q_param.v.name, q_param.v.num)))
+    val typedBody = func.body.map(check(_, isFunc = true, Constraint.Is(toSemType(func.t))))
+
+    (checkReturnType(func.t, func.body.last), T_Func(func.t, T_Name(func.v.name, func.v.num), typedArgs, typedBody, func.scoped.map(q_name => T_Name(q_name.name, q_name.num))))
 }
 
 @targetName("checkStmts")

@@ -36,13 +36,13 @@ def frontend(fname: String): (Q_Prog, TypeInfo) = {
             try {
                 val (q_t, tyInfo) = renamer.rename(t, Some(fname))
                 typeCheck(q_t, tyInfo, Some(fname)) match {
-                    case Some(e: List[Err]) => 
+                    case Left(e: List[Err]) => 
                         e.foreach {
                             er => println(er.format())
                         }
                         sys.exit(EXIT_SEMANTIC_ERR)
                     // successfully parsed - return the qualified ast and type info to main
-                    case None => return (q_t, tyInfo)
+                    case Right => return (q_t, tyInfo)
                 }
                 sys.exit(0)
             } catch {
