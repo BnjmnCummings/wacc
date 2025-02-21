@@ -89,7 +89,7 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generateCodeBlock(body: List[T_Stmt], scoped: Set[T_Name]): List[A_Instr] = ???
 
-    private def generateSkip(): List[A_Instr] = ???
+    private def generateSkip(): List[A_Instr] = List()
 
     private def generateMul(x: T_Expr, y: T_Expr): List[A_Instr] = ???
 
