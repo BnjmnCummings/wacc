@@ -6,9 +6,10 @@ import wacc.TypeInfo
 import wacc.ast.PairIndex
 
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 
 class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
-    private val storedStrings: ListBuffer[A_StoredStr] = ListBuffer()
+    private val storedStrings: mutable.Set[A_StoredStr] = mutable.Set()
 
     def generate(): A_Prog = ???
 
@@ -97,11 +98,18 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
     private def generateMod(x: T_Expr, y: T_Expr): List[A_Instr] = ???
 
     private def generateAdd(x: T_Expr, y: T_Expr): List[A_Instr] = 
-        generate(x) ++ 
-        (A_Push(A_Reg(intSize, A_RegName.RetReg)) :: 
-        generate(y)) ++ 
-        (A_Pop(A_Reg(intSize, A_RegName.R1)) ::
-        A_Add(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1), intSize) :: Nil)
+        val builder = new ListBuffer[A_Instr]
+
+        builder ++= generate(x)
+        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+        builder ++= generate(y)
+        builder += A_Pop(A_Reg(intSize, A_RegName.R1))
+        builder += A_Add(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1), intSize)
+        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+        // TODO @Aidan: Overflow can occur here - add flag system etc.
+
+        builder.toList
+
 
     private def generateSub(x: T_Expr, y: T_Expr): List[A_Instr] = ???
 
