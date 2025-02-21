@@ -35,5 +35,12 @@ semantic:
 # Tests which check the AST -> Machine Code step of the compiler
 generation:
 
+# Tests which check the IR -> String step of the compiler
+formatting:
+  - format_operand
+  - format_reg
+  - format_mem_offset
+  - format_offset
+
 # Tests which check the end-to-end functionality of the compiler
 full:
