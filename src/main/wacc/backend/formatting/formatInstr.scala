@@ -1,6 +1,6 @@
 package wacc.formatting
 
-import wacc.assemblyIR._
+import wacc.assemblyIR.*
 
 def formatInstr(instr: A_Instr): String = instr match
     case A_Add(opD, opS, _) => s"add ${formatReg(opD)}, ${formatOperand(opS)}"
