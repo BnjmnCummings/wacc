@@ -4,7 +4,6 @@ import wacc.*
 import wacc.ast.*
 import wacc.q_ast.*
 import wacc.t_ast.*
-import wacc.t_ast.*
 import collection.mutable
 import scala.annotation.targetName
 import wacc.KnownType.Pair
