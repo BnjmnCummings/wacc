@@ -29,6 +29,7 @@ case class A_LabelStart(label: A_InstrLabel) extends A_Instr
 case class A_Push(op: A_Reg) extends A_Instr
 case class A_Pop(op: A_Reg) extends A_Instr
 case class A_Mov(opD: A_Reg, opS: A_Operand) extends A_Instr
+case class A_Movzx(opD: A_Reg, opS: A_Reg) extends A_Instr
 case class A_Lea(opD: A_Reg, opS: A_MemOffset) extends A_Instr
 
 // clib is accessed using call

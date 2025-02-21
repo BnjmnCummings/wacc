@@ -21,6 +21,7 @@ def formatInstr(instr: A_Instr): String = instr match
     case A_Push(op) => s"push ${formatReg(op)}"
     case A_Pop(op) => s"pop ${formatReg(op)}"
     case A_Mov(opD, opS) => s"mov ${formatReg(opD)}, ${formatOperand(opS)}"
+    case A_Movzx(opD, opS) => s"movzx ${formatReg(opD)}, ${formatReg(opS)}"
     case A_Lea(opD, opS) => s"lea ${formatReg(opD)}, ${formatMemOffset(opS)}"
     
     case A_Call(label) => s"call ${label.name}"
