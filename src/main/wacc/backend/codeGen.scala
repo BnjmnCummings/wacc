@@ -10,11 +10,14 @@ import scala.collection.mutable
 import wacc.parser.bool
 
 val TRUE = 1
+val FALSE = 0
 val ZERO_IMM = 0
 val CHR_MASK = -128
 
 class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
     private val storedStrings: mutable.Set[A_StoredStr] = mutable.Set()
+
+    // TODO @Jack : Create a function that maps a KnownType to a size - this is useful for things like read (char/int)
 
     def generate(): A_Prog = ???
 
@@ -156,6 +159,8 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generateSub(x: T_Expr, y: T_Expr): List[A_Instr] = generateAddSub(x, y, A_Sub.apply)
 
+
+    // TODO @Jack : Merge type changes into this branch and do the following:
     private def generateGreaterThan(x: T_Expr, y: T_Expr): List[A_Instr] = ???
 
     private def generateGreaterThanEq(x: T_Expr, y: T_Expr): List[A_Instr] = ???
@@ -233,11 +238,11 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
         builder.toList
 
-    private def generateIntLiteral(v: BigInt): List[A_Instr] = ???
+    private def generateIntLiteral(v: BigInt): List[A_Instr] = List(A_Mov(A_Reg(intSize, A_RegName.RetReg), A_Imm(v)))
 
-    private def generateBoolLiteral(v: Boolean): List[A_Instr] = ???
+    private def generateBoolLiteral(v: Boolean): List[A_Instr] = List(A_Mov(A_Reg(boolSize, A_RegName.RetReg), A_Imm(if v then TRUE else FALSE)))
 
-    private def generateCharLiteral(v: Char): List[A_Instr] = ???
+    private def generateCharLiteral(v: Char): List[A_Instr] = List(A_Mov(A_Reg(charSize, A_RegName.RetReg), A_Imm(v.toInt)))
 
     private def generateStringLiteral(v: String): List[A_Instr] = ???
 
