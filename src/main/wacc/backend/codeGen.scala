@@ -91,11 +91,69 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generateSkip(): List[A_Instr] = List()
 
-    private def generateMul(x: T_Expr, y: T_Expr): List[A_Instr] = ???
+    private def generateMul(x: T_Expr, y: T_Expr): List[A_Instr] =
+        val builder = new ListBuffer[A_Instr]
 
-    private def generateDiv(x: T_Expr, y: T_Expr): List[A_Instr] = ???
+        builder ++= generate(x)
+        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+        builder ++= generate(y)
+        builder += A_Pop(A_Reg(intSize, A_RegName.R1))
+        builder += A_IMul(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1), intSize)
+        // TODO @Aidan: Overflow can occur here - add flag system etc.
+        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
 
-    private def generateMod(x: T_Expr, y: T_Expr): List[A_Instr] = ???
+        builder.toList
+
+    private def generateDiv(x: T_Expr, y: T_Expr): List[A_Instr] =
+        val builder = new ListBuffer[A_Instr]
+
+        // Note: With idiv, we need the numerator to be stored in eax and then we can divide by a given register
+
+        builder ++= generate(x)
+        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+        builder ++= generate(y)
+        builder += A_Mov(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1))
+
+        // Compare denominator with 0
+        builder += A_Cmp(A_Reg(intSize, A_RegName.R1), A_Imm(0), intSize)
+        builder += A_Jmp(???, A_Cond.Eq)
+        // Above is a comparison of y (denominator) with 0
+        // TODO @Aidan: Add a divide by 0 flag + label
+
+        builder += A_Pop(A_Reg(intSize, A_RegName.RetReg))
+        builder += A_IDiv(A_Reg(intSize, A_RegName.R1), intSize)
+        // TODO @Aidan: Overflow can occur here - add flag system etc.
+        // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
+
+        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+
+        builder.toList
+
+    private def generateMod(x: T_Expr, y: T_Expr): List[A_Instr] =
+        val builder = new ListBuffer[A_Instr]
+
+        // Note: See note from generate IDiv
+        // Note: IDiv stores remainder in edx(32bit) - R3
+
+        builder ++= generate(x)
+        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+        builder ++= generate(y)
+        builder += A_Mov(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1))
+
+        // Compare denominator with 0
+        builder += A_Cmp(A_Reg(intSize, A_RegName.R1), A_Imm(0), intSize)
+        builder += A_Jmp(???, A_Cond.Eq)
+        // Above is a comparison of y (denominator) with 0
+        // TODO @Aidan: Add a divide by 0 flag + label
+
+        builder += A_Pop(A_Reg(intSize, A_RegName.RetReg))
+        builder += A_IDiv(A_Reg(intSize, A_RegName.R1), intSize)
+        // TODO @Aidan: Overflow can occur here - add flag system etc.
+        // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
+
+        builder += A_Push(A_Reg(intSize, A_RegName.R3))
+
+        builder.toList
 
     private def generateAdd(x: T_Expr, y: T_Expr): List[A_Instr] = 
         val builder = new ListBuffer[A_Instr]
@@ -111,7 +169,19 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         builder.toList
 
 
-    private def generateSub(x: T_Expr, y: T_Expr): List[A_Instr] = ???
+    private def generateSub(x: T_Expr, y: T_Expr): List[A_Instr] = 
+        val builder = new ListBuffer[A_Instr]
+
+        builder ++= generate(x)
+        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+        builder ++= generate(y)
+        builder += A_Pop(A_Reg(intSize, A_RegName.R1))
+        builder += A_Sub(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1), intSize)
+        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+        // TODO @Aidan: Overflow can occur here - add flag system etc.
+
+        builder.toList
+
 
     private def generateGreaterThan(x: T_Expr, y: T_Expr): List[A_Instr] = ???
 
