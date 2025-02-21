@@ -14,12 +14,17 @@ def formatRegDeref(op: A_RegDeref): String = op.opSize match
     case A_OperandSize.A_32 => s"dword ptr ${formatMemOffset(op.mem)}"
     case A_OperandSize.A_64 => s"qword ptr ${formatMemOffset(op.mem)}"
 
-def formatMemOffset(op: A_MemOffset): String = s"[${formatReg(op.reg)} + ${formatOffset(op.offset)}]"
+def formatMemOffset(op: A_MemOffset): String = s"[${formatReg(op.reg)} ${formatOffset(op.offset)}]"
 
 def formatOffset(op: A_Offset): String = op match
-    case A_OffsetImm(n) => n.toString
-    case A_OffsetReg(reg) => formatReg(reg)
-    // case A_OffsetScaledReg(reg, scale) => s"${formatReg(reg)} * $scale"
+    case A_OffsetImm(n) => {
+        if (n >= 0) 
+            s"+ $n"
+        else
+            s"- ${-n}"
+    }
+    case A_OffsetReg(reg) => s"+ ${formatReg(reg)}"
+    // case A_OffsetScaledReg(reg, scale) => s"+ ${formatReg(reg)} * $scale"
 
 def formatReg(op: A_Reg): String = op.regSize match
     case A_OperandSize.A_8 => op.regName match
