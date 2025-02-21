@@ -9,8 +9,8 @@ def main():
     with open(yaml_file, 'r') as file:
         data = yaml.safe_load(file)
 
-    # Extract the tests
-    tests = extract_tests(data)
+    # Extract the tests and run syntax/semantic
+    tests = extract_tests(data) + ["syntax", "semantic"]
 
     # Run each test
     processes = list(map(run_test, tests))
