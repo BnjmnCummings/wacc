@@ -7,6 +7,9 @@ import wacc.ast.PairIndex
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable
+import wacc.parser.bool
+
+val TRUE = 1
 
 class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
     private val storedStrings: mutable.Set[A_StoredStr] = mutable.Set()
@@ -163,11 +166,30 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generateNotEq(x: T_Expr, y: T_Expr): List[A_Instr] = ???
 
-    private def generateAnd(x: T_Expr, y: T_Expr): List[A_Instr] = ???
+    private def generateBitwiseOp(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr)): List[A_Instr] =
+        val builder = new ListBuffer[A_Instr]
 
-    private def generateOr(x: T_Expr, y: T_Expr): List[A_Instr] = ???
+        builder ++= generate(x)
+        builder += A_Push(A_Reg(boolSize, A_RegName.RetReg))
+        builder ++= generate(y)
+        builder += A_Pop(A_Reg(boolSize, A_RegName.R1))
+        builder += instrApply(A_Reg(boolSize, A_RegName.RetReg), A_Reg(boolSize, A_RegName.R1), boolSize)
+        builder += A_Push(A_Reg(boolSize, A_RegName.RetReg))
 
-    private def generateNot(x: T_Expr): List[A_Instr] = ???
+        builder.toList
+
+    private def generateAnd(x: T_Expr, y: T_Expr): List[A_Instr] = generateBitwiseOp(x, y, A_And.apply)
+
+    private def generateOr(x: T_Expr, y: T_Expr): List[A_Instr] = generateBitwiseOp(x, y, A_Or.apply)
+
+    private def generateNot(x: T_Expr): List[A_Instr] = 
+        val builder = new ListBuffer[A_Instr]
+
+        builder ++= generate(x)
+        builder += A_Xor(A_Reg(boolSize, A_RegName.RetReg), A_Imm(TRUE), boolSize)
+        builder += A_Push(A_Reg(boolSize, A_RegName.RetReg))
+
+        builder.toList
 
     private def generateNeg(x: T_Expr): List[A_Instr] = ???
 

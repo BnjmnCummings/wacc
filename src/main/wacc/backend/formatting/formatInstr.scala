@@ -14,6 +14,10 @@ def formatInstr(instr: A_Instr): String = instr match
     case A_Jmp(label, cond) => s"j${formatCond(cond)} ${label.name}"
     case A_LabelStart(label) => s"${label.name}:"
 
+    case A_And(opD, opS, _) => s"and ${formatReg(opD)}, ${formatOperand(opS)}"
+    case A_Or(opD, opS, _) => s"or ${formatReg(opD)}, ${formatOperand(opS)}"
+    case A_Xor(opD, opS, _) => s"xor ${formatReg(opD)}, ${formatOperand(opS)}"
+
     case A_Push(op) => s"push ${formatReg(op)}"
     case A_Pop(op) => s"pop ${formatReg(op)}"
     case A_Mov(opD, opS) => s"mov ${formatReg(opD)}, ${formatOperand(opS)}"
