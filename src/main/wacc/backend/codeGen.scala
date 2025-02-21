@@ -10,6 +10,7 @@ import scala.collection.mutable
 import wacc.parser.bool
 
 val TRUE = 1
+val NEG_MOV_VAL = 0
 
 class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
     private val storedStrings: mutable.Set[A_StoredStr] = mutable.Set()
@@ -191,7 +192,18 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
         builder.toList
 
-    private def generateNeg(x: T_Expr): List[A_Instr] = ???
+    private def generateNeg(x: T_Expr): List[A_Instr] =
+        val builder = new ListBuffer[A_Instr]
+
+        builder ++= generate(x)
+
+        // CONSIDER: DO WE NEED TO SAVE R1 BEFORE THIS?
+        builder += A_Mov(A_Reg(intSize, A_RegName.R1), A_Imm(NEG_MOV_VAL))
+        builder += A_Sub(A_Reg(intSize, A_RegName.R1), A_Reg(intSize, A_RegName.RetReg), intSize)
+        // check overflow -2^32 case! TODO @Aidan
+        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+
+        builder.toList
 
     private def generateLen(x: T_Expr): List[A_Instr] = ???
 
