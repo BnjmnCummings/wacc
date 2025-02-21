@@ -1,6 +1,5 @@
-// package test.wacc.semantic
+package wacc.semantic
 
-import wacc.semantic.*
 import wacc.*
 import wacc.q_ast.*
 import org.scalatest.flatspec.AnyFlatSpec
