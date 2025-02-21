@@ -9,7 +9,9 @@ import wacc.Err
 import wacc.renamer
 import wacc.ScopeException
 
-def parseAndTypeCheckStr(inpString: String): Option[List[Err]] = {
+import wacc.t_ast.T_Prog
+
+def parseAndTypeCheckStr(inpString: String): Either[List[Err], T_Prog] = {
     parser.parse(inpString) match
         case Failure(msg) => throw new Exception(s"didn't parse syntactically for some reason, here is the message:\n $msg")
         case Success(x) => {
