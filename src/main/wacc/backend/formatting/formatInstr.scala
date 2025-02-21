@@ -7,7 +7,9 @@ def formatInstr(instr: A_Instr): String = instr match
     case A_Sub(opD, opS, _) => s"sub ${formatReg(opD)}, ${formatOperand(opS)}"
     case A_Mul(opD, opS, _) => s"mul ${formatReg(opD)}, ${formatOperand(opS)}"
     case A_Div(opD, opS, _) => s"div ${formatReg(opD)}, ${formatOperand(opS)}"
-    
+    case A_IMul(opD, op1, op2, _) => s"imul ${formatReg(opD)}, ${formatOperand(op1)}, ${formatOperand(op2)}"
+    case A_IDiv(opD, _) => s"idiv ${formatReg(opD)}"
+
     case A_Cmp(op1, op2, _) => s"cmp ${formatReg(op1)}, ${formatOperand(op2)}"
     case A_Jmp(label, cond) => s"j${formatCond(cond)} ${label.name}"
     case A_LabelStart(label) => s"${label.name}:"
@@ -19,6 +21,8 @@ def formatInstr(instr: A_Instr): String = instr match
     
     case A_Call(label) => s"call ${label.name}"
     case A_Ret => "ret"
+
+    case A_CDQ => "cdq"
 
 def formatCond(cond: A_Cond): String = cond match
     case A_Cond.Eq => "e"
