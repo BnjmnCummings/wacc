@@ -30,7 +30,7 @@ semantic:
   - rename_prog
   - rename_while
   - types_test
-  # - semantic_integration
+  - semantic_integration
 
 # Tests which check the AST -> Machine Code step of the compiler
 generation:

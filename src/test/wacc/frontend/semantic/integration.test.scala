@@ -14,7 +14,7 @@ import collection.mutable.ListBuffer
 
 import java.io.File
 
-class semantic_integration_test extends AnyFlatSpec {
+class integration_test extends AnyFlatSpec {
     val validPaths: List[String] = getValidPaths()
 
     val invalidPaths: List[String] = getInvalidPaths()

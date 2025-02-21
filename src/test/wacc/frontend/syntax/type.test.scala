@@ -1,4 +1,6 @@
-package wacc.ast
+package wacc.syntax
+
+import wacc.ast.*
 
 import wacc.parser
 
