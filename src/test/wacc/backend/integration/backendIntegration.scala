@@ -1,47 +1,80 @@
 package wacc
 
-import sys.process._
-import java.io.FileNotFoundException
-import scala.io.Source
 import wacc.utilities.searchDir
+import wacc.semantic.typeCheck
+import wacc.renamer
+
+import java.io.FileNotFoundException
 import java.io.File
+import parsley.Success
 import org.scalatest.flatspec.AnyFlatSpec
+import sys.process._
+import scala.io.Source
 import scala.collection.mutable.ListBuffer
 
 class backend_integration_test extends AnyFlatSpec {
     
     "backend" should "successfully produce the desired output and exit code" in {
         runAssembly("andExpr")
-        val failures: ListBuffer[String] = ListBuffer.empty[String]
         val successes: ListBuffer[String] = ListBuffer.empty[String]
+        val backendFailures: ListBuffer[String] = ListBuffer.empty[String]
+        val synFailures: ListBuffer[String] = ListBuffer.empty[String]
+        val semFailures: ListBuffer[String] = ListBuffer.empty[String]
 
-        getFilePaths().foreach { 
-            fileName =>
-                //TODO: turn into an assembly file and put in src/test/wacc/backend/integration/assembly
-                val progName = fileName
-                    .split("/")
-                    .last
-                    .replace(".wacc","")
-                
-                if(runAssembly(progName) == getExpectedOutput(fileName)) {
-                    successes += fileName
-                } else {
-                    failures += fileName
+        getFilePaths().foreach { filePath => parser.parseF(File(filePath)) match 
+            case Success(t) => {
+                try {
+                    /* front end pipeline */
+                    val (q_t, tyInfo) = renamer.rename(t)
+                    typeCheck(q_t, tyInfo) match {
+                        case Right(t_prog) =>
+                            // TODO: generateAssembly(t_prog)
+                            val progName = filePath
+                                .split("/")
+                                .last
+                                .replace(".wacc","")
+
+                            if(runAssembly(progName) == getExpectedOutput(filePath))
+                                successes += filePath
+                            else 
+                                backendFailures += filePath
+                        
+                        case _ => semFailures += filePath
+                    }
+
+                } catch {
+                    case e: ScopeException => semFailures += filePath
                 }
+            }
+            case _ => synFailures += filePath
         }
 
-        val failList: List[String] = failures.toList
         val successList: List[String] = successes.toList
+        val synFailList: List[String] = synFailures.toList
+        val semFailList: List[String] = semFailures.toList
+        val backendFailList: List[String] = backendFailures.toList
 
         /* report successful test cases */
         info("correctly succeeding tests:\n")
         successList.map(s => s.split("valid/").last).foreach(info(_))
 
+        if (synFailList.length != 0) {
+            fail(
+                "some of the paths failed to parse (they are syntactically valid and should succeed):\n\n" 
+                + synFailList.map(s => s.split("syntaxErr/").last).mkString("\n")
+            )
+        }
+        if (semFailList.length != 0) {
+            fail(
+                "some of the paths failed to scope/type check (they are semantically valid and should succeed):\n\n" 
+                + semFailList.map(s => s.split("semanticErr/").last).mkString("\n")
+            )
+        }
         /* report failing test cases */
-        if (failList.length != 0) {
+        if (backendFailList.length != 0) {
             fail(
                 "some of the paths failed (they are valid and should succeed):\n\n" 
-                + failList.map(s => s.split("valid/").last).mkString("\n")
+                + backendFailList.map(s => s.split("valid/").last).mkString("\n")
             )
         }
     } 
