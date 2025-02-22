@@ -14,4 +14,5 @@ formatting:
   - format_cond_test
 
 # Tests which check the end-to-end functionality of the compiler
-full:
+integration:
+ - backend_integration_test
