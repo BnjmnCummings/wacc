@@ -3,12 +3,12 @@ package wacc.semantic
 import wacc.*
 import wacc.ast.*
 import wacc.q_ast.*
-import wacc.t_ast.*
+// import wacc.t_ast.*
 import wacc.t_ast.*
 import collection.mutable
 import scala.annotation.targetName
 import wacc.KnownType.Pair
-import wacc.parser.func
+// import wacc.parser.func
 
 def typeCheck(prog: Q_Prog, tyInfo: TypeInfo, fname: Option[String] = None): Either[List[Err], T_Prog] = {
     // Note this List[Error] is non-empty. NonEmptyList import won't work

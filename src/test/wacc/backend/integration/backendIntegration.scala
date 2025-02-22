@@ -1,8 +1,10 @@
-package wacc
+package wacc.integration
 
 import wacc.utilities.searchDir
 import wacc.semantic.typeCheck
 import wacc.renamer
+import wacc.parser
+import wacc.ScopeException
 
 import java.io.FileNotFoundException
 import java.io.File
