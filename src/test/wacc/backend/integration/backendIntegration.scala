@@ -1,6 +1,5 @@
 package wacc.integration
 
-import wacc.utilities.searchDir
 import wacc.semantic.typeCheck
 import wacc.renamer
 import wacc.parser
