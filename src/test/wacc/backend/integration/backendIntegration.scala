@@ -16,33 +16,39 @@ import scala.collection.mutable.ListBuffer
 class backend_integration_test extends AnyFlatSpec {
     
     "backend" should "successfully produce the desired output and exit code" in {
-        runAssembly("andExpr")
+        //runAssembly("andExpr")
         val successes: ListBuffer[String] = ListBuffer.empty[String]
-        val backendFailures: ListBuffer[String] = ListBuffer.empty[String]
+        val outputFailures: ListBuffer[String] = ListBuffer.empty[String]
+        val compileFailures: ListBuffer[String] = ListBuffer.empty[String]
         val synFailures: ListBuffer[String] = ListBuffer.empty[String]
         val semFailures: ListBuffer[String] = ListBuffer.empty[String]
 
+        //this is an absolute monstrosity but there's nothing I can really do about it
         getFilePaths().foreach { filePath => parser.parseF(File(filePath)) match 
             case Success(t) => {
                 try {
                     /* front end pipeline */
                     val (q_t, tyInfo) = renamer.rename(t)
                     typeCheck(q_t, tyInfo) match {
-                        case Right(t_prog) =>
+                        case Right(t_prog) => {
                             // TODO: generateAssembly(t_prog)
                             val progName = filePath
                                 .split("/")
                                 .last
                                 .replace(".wacc","")
 
-                            if(runAssembly(progName) == getExpectedOutput(filePath))
-                                successes += filePath
-                            else 
-                                backendFailures += filePath
-                        
+                            try {
+                                if(runAssembly(progName) == getExpectedOutput(filePath))
+                                    successes += filePath
+                                else 
+                                    outputFailures += filePath
+                            } catch {
+                                case e: InstantiationException => 
+                                    compileFailures += filePath
+                            }
+                        }
                         case _ => semFailures += filePath
                     }
-
                 } catch {
                     case e: ScopeException => semFailures += filePath
                 }
@@ -53,29 +59,36 @@ class backend_integration_test extends AnyFlatSpec {
         val successList: List[String] = successes.toList
         val synFailList: List[String] = synFailures.toList
         val semFailList: List[String] = semFailures.toList
-        val backendFailList: List[String] = backendFailures.toList
+        val outputFailList: List[String] = outputFailures.toList
+        val compileFailList: List[String] = compileFailures.toList
 
         /* report successful test cases */
         info("correctly succeeding tests:\n")
         successList.map(s => s.split("valid/").last).foreach(info(_))
 
-        if (synFailList.length != 0) {
+        /* report failing test cases */
+        if (!synFailList.isEmpty) {
             fail(
                 "some of the paths failed to parse (they are syntactically valid and should succeed):\n\n" 
                 + synFailList.map(s => s.split("syntaxErr/").last).mkString("\n")
             )
         }
-        if (semFailList.length != 0) {
+        if (!semFailList.isEmpty) {
             fail(
                 "some of the paths failed to scope/type check (they are semantically valid and should succeed):\n\n" 
                 + semFailList.map(s => s.split("semanticErr/").last).mkString("\n")
             )
         }
-        /* report failing test cases */
-        if (backendFailList.length != 0) {
+        if (!outputFailList.isEmpty) {
             fail(
-                "some of the paths failed (they are valid and should succeed):\n\n" 
-                + backendFailList.map(s => s.split("valid/").last).mkString("\n")
+                "some of the paths failed (assembly output did not mach expected output):\n\n" 
+                + outputFailList.map(s => s.split("valid/").last).mkString("\n")
+            )
+        }
+        if (!compileFailList.isEmpty) {
+            fail(
+                "some of the paths failed (assembly did not compile):\n\n" 
+                + compileFailList.map(s => s.split("valid/").last).mkString("\n")
             )
         }
     } 
@@ -137,17 +150,6 @@ class backend_integration_test extends AnyFlatSpec {
                 throw FileNotFoundException(s"File Not Found: $fileName")
             } 
         }
-
-    // def temp(fileName: String) = {
-    //     val progName = fileName
-    //         .split("/")
-    //         .last
-    //         .replace(".wacc","")
-        
-    //     println(getExpectedOutput(fileName))
-    //     println(runAssembly(progName))
-
-    // }
     
     /** 
      * Helper function to collect all the filepaths to valid wacc programs
