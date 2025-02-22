@@ -3,12 +3,10 @@ package wacc.semantic
 import wacc.*
 import wacc.ast.*
 import wacc.q_ast.*
-// import wacc.t_ast.*
 import wacc.t_ast.*
 import collection.mutable
 import scala.annotation.targetName
 import wacc.KnownType.Pair
-// import wacc.parser.func
 
 def typeCheck(prog: Q_Prog, tyInfo: TypeInfo, fname: Option[String] = None): Either[List[Err], T_Prog] = {
     // Note this List[Error] is non-empty. NonEmptyList import won't work
@@ -60,7 +58,7 @@ def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx): (Option[
 // break into inner of array, map function on each inner member of literal on right
 
 def checkArrayDeclType(l: SemType, r: Q_ArrayLiteral)(using ctx: TypeCheckerCtx): (Option[SemType], T_ArrayLiteral) = {
-    (l, r) match {
+    ((l, r): @unchecked) match {
         case (KnownType.Array(t@KnownType.Array(_)), Q_ArrayLiteral(xs: List[Q_Expr], pos)) =>
             // l = array, r = array literal
             // so check each member of r is arrT
@@ -70,7 +68,7 @@ def checkArrayDeclType(l: SemType, r: Q_ArrayLiteral)(using ctx: TypeCheckerCtx)
 
             val semOpt: Option[SemType] = xsTys.fold(Some(?))(_.getOrElse(?) ~ _.getOrElse(?)) // ? could get changed for arrT potentially!
 
-            semOpt match {
+            (semOpt: @unchecked) match {
                 case Some(?) => (None, T_ArrayLiteral(xsTyped, ?)) // most generic type is ? hence we don't have any common type within the right array?
                 case Some(t) => (semOpt, T_ArrayLiteral(xsTyped, t))
             }
@@ -303,7 +301,7 @@ def checkComparisonExpr(x: Q_Expr, y: Q_Expr, c: Constraint, result_expr: (T_Exp
                        (using TypeCheckerCtx): (Option[SemType], T_Expr) =
     val (xTy, xTyped) = check(x, Constraint.IsNumericOrCharacter)
     
-    val (yTy, yTyped) = xTy match {
+    val (yTy, yTyped) = (xTy: @unchecked) match {
         case Some(KnownType.Int) => check(y, Constraint.Is(KnownType.Int))
         case Some(KnownType.Char) => check(y, Constraint.Is(KnownType.Char))
         case None => (None, result_expr(xTyped, xTyped)) 
