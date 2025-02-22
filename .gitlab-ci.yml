@@ -24,7 +24,7 @@ test:
   before_script:
     - apt-get update
     - echo "Installing GCC..."
-    - apt-get install gcc
+    # - apt-get install gcc
     - echo "GCC Installed."
     - echo "Installing Python..."
     - apt-get install -y python3 python3-pip
