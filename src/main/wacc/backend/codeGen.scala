@@ -8,6 +8,7 @@ import wacc.ast.PairIndex
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable
 import wacc.parser.bool
+import wacc.SemType
 
 val TRUE = 1
 val FALSE = 0
@@ -22,14 +23,14 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
     def generate(): A_Prog = ???
 
     private def generate(t: T_Stmt): List[A_Instr] = t match
-        case T_Decl(v, r) => generateDecl(v, r)
-        case T_Asgn(l, r) => generateAsgn(l, r)
-        case T_Read(l) => generateRead(l)
-        case T_Free(x) => generateFree(x)
-        case T_Return(x) => generateReturn(x)
+        case T_Decl(v, r, ty) => generateDecl(v, r, ty)
+        case T_Asgn(l, r, ty) => generateAsgn(l, r, ty)
+        case T_Read(l, ty) => generateRead(l, ty)
+        case T_Free(x, ty) => generateFree(x, ty)
+        case T_Return(x, ty) => generateReturn(x, ty)
         case T_Exit(x) => generateExit(x)
-        case T_Print(x) => generatePrint(x)
-        case T_Println(x) => generatePrintln(x)
+        case T_Print(x, ty) => generatePrint(x, ty)
+        case T_Println(x, ty) => generatePrintln(x, ty)
         case T_If(cond, body, scopedBody, el, scopedEl) => generateIf(cond, body, scopedBody, el, scopedEl)
         case T_While(cond, body, scoped) => generateWhile(cond, body, scoped)
         case T_CodeBlock(body, scoped) => generateCodeBlock(body, scoped)
@@ -70,26 +71,26 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generate(t: T_RValue) = t match
         case T_FuncCall(v, args) => generateFuncCall(v, args)
-        case T_ArrayLiteral(xs) => generateArrayLiteral(xs)
-        case T_NewPair(x1, x2) => generateNewPair(x1, x2)
+        case T_ArrayLiteral(xs, ty) => generateArrayLiteral(xs, ty)
+        case T_NewPair(x1, x2, ty1, ty2) => generateNewPair(x1, x2, ty1, ty2)
 
     private def generate(t: T_Func): A_Func = ???
 
-    private def generateDecl(v: T_Name, r: T_RValue): List[A_Instr] = ???
+    private def generateDecl(v: T_Name, r: T_RValue, ty: SemType): List[A_Instr] = ???
 
-    private def generateAsgn(l: T_LValue, r: T_RValue): List[A_Instr] = ???
+    private def generateAsgn(l: T_LValue, r: T_RValue, ty: SemType): List[A_Instr] = ???
 
-    private def generateRead(l: T_LValue): List[A_Instr] = ???
+    private def generateRead(l: T_LValue, ty: SemType): List[A_Instr] = ???
 
-    private def generateFree(x: T_Expr): List[A_Instr] = ???
+    private def generateFree(x: T_Expr, ty: SemType): List[A_Instr] = ???
 
-    private def generateReturn(x: T_Expr): List[A_Instr] = ???
+    private def generateReturn(x: T_Expr, ty: SemType): List[A_Instr] = ???
 
     private def generateExit(x: T_Expr): List[A_Instr] = ???
 
-    private def generatePrint(x: T_Expr): List[A_Instr] = ???
+    private def generatePrint(x: T_Expr, ty: SemType): List[A_Instr] = ???
 
-    private def generatePrintln(x: T_Expr): List[A_Instr] = ???
+    private def generatePrintln(x: T_Expr, ty: SemType): List[A_Instr] = ???
 
     private def generateIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[T_Name], el: List[T_Stmt], scopedEl: Set[T_Name]): List[A_Instr] = ???
 
@@ -256,7 +257,7 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generateFuncCall(v: T_Name, args: List[T_Expr]): List[A_Instr] = ???
 
-    private def generateArrayLiteral(xs: List[T_Expr]): List[A_Instr] = ???
+    private def generateArrayLiteral(xs: List[T_Expr], ty: SemType): List[A_Instr] = ???
 
-    private def generateNewPair(x1: T_Expr, x2: T_Expr): List[A_Instr] = ???
+    private def generateNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType): List[A_Instr] = ???
 }
