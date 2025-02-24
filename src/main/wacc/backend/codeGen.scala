@@ -122,6 +122,8 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         // TODO @Aidan: Overflow can occur here - add flag system etc.
         // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
 
+        builder += A_Mov(A_Reg(intSize, A_RegName.RetReg), (A_Reg(intSize, divResultReg)))
+
         builder.toList
 
     private def generateAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr)) =
