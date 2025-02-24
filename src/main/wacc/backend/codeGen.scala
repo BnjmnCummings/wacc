@@ -71,7 +71,7 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generate(t: T_RValue) = t match
         case T_FuncCall(v, args) => generateFuncCall(v, args)
-        case T_ArrayLiteral(xs, ty) => generateArrayLiteral(xs, ty)
+        case T_ArrayLiteral(xs, ty, length) => generateArrayLiteral(xs, ty, length)
         case T_NewPair(x1, x2, ty1, ty2) => generateNewPair(x1, x2, ty1, ty2)
 
     private def generate(t: T_Func): A_Func = ???
@@ -257,7 +257,7 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generateFuncCall(v: T_Name, args: List[T_Expr]): List[A_Instr] = ???
 
-    private def generateArrayLiteral(xs: List[T_Expr], ty: SemType): List[A_Instr] = ???
+    private def generateArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt): List[A_Instr] = ???
 
     private def generateNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType): List[A_Instr] = ???
 }
