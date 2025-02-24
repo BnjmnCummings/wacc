@@ -109,7 +109,6 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         builder += A_Pop(A_Reg(intSize, A_RegName.R1))
         builder += A_IMul(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1), intSize)
         // TODO @Aidan: Overflow can occur here - add flag system etc.
-        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
 
         builder.toList
 
@@ -135,8 +134,6 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         // TODO @Aidan: Overflow can occur here - add flag system etc.
         // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
 
-        builder += A_Push(A_Reg(intSize, divResultReg))
-
         builder.toList
 
     private def generateDiv(x: T_Expr, y: T_Expr): List[A_Instr] = generateDivMod(x, y, A_RegName.RetReg)
@@ -151,7 +148,6 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         builder ++= generate(y)
         builder += A_Pop(A_Reg(intSize, A_RegName.R1))
         builder += instrApply(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1), intSize)
-        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
         // TODO @Aidan: Overflow can occur here - add flag system etc.
 
         builder.toList
@@ -182,7 +178,6 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         builder ++= generate(y)
         builder += A_Pop(A_Reg(boolSize, A_RegName.R1))
         builder += instrApply(A_Reg(boolSize, A_RegName.RetReg), A_Reg(boolSize, A_RegName.R1), boolSize)
-        builder += A_Push(A_Reg(boolSize, A_RegName.RetReg))
 
         builder.toList
 
@@ -195,7 +190,6 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
         builder ++= generate(x)
         builder += A_Xor(A_Reg(boolSize, A_RegName.RetReg), A_Imm(TRUE), boolSize)
-        builder += A_Push(A_Reg(boolSize, A_RegName.RetReg))
 
         builder.toList
 
@@ -208,7 +202,6 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         builder += A_Mov(A_Reg(intSize, A_RegName.R1), A_Imm(ZERO_IMM))
         builder += A_Sub(A_Reg(intSize, A_RegName.R1), A_Reg(intSize, A_RegName.RetReg), intSize)
         // check overflow -2^32 case! TODO @Aidan
-        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
 
         builder.toList
 
@@ -219,7 +212,6 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
         builder ++= generate(x)
         builder += A_Movzx(A_Reg(intSize, A_RegName.R1), A_Reg(charSize, A_RegName.RetReg))
-        builder += A_Push(A_Reg(intSize, A_RegName.R1))
 
         builder.toList
 
@@ -233,9 +225,6 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         builder += A_Cmp(A_Reg(intSize, A_RegName.R1), A_Imm(ZERO_IMM), intSize)
         builder += A_Jmp(???, A_Cond.NEq)
         // TODO: @Aidan Create bad character label - this is when you chr(x) |x| > 127 (0b1111111)
-
-        // Below: Rs has charSize as we only care about the 8 LSBs
-        builder += A_Push(A_Reg(charSize, A_RegName.RetReg))
 
         builder.toList
 
