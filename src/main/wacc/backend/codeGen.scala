@@ -38,18 +38,18 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generate(t: T_Expr): List[A_Instr] = t match
         case T_Mul(x, y) => generateMul(x, y)
-        case T_Div(x, y) => generateDiv(x, y)
-        case T_Mod(x, y) => generateMod(x, y)
-        case T_Add(x, y) => generateAdd(x, y)
-        case T_Sub(x, y) => generateSub(x, y)
+        case T_Div(x, y) => generateDivMod(x, y, A_RegName.RetReg)
+        case T_Mod(x, y) => generateDivMod(x, y, A_RegName.R3)
+        case T_Add(x, y) => generateAddSub(x, y, A_Add.apply)
+        case T_Sub(x, y) => generateAddSub(x, y, A_Sub.apply)
         case T_GreaterThan(x, y) => generateGreaterThan(x, y)
         case T_GreaterThanEq(x, y) => generateGreaterThanEq(x, y)
         case T_LessThan(x, y) => generateLessThan(x, y)
         case T_LessThanEq(x, y) => generateLessThanEq(x, y)
         case T_Eq(x, y) => generateEq(x, y)
         case T_NotEq(x, y) => generateNotEq(x, y)
-        case T_And(x, y) => generateAnd(x, y)
-        case T_Or(x, y) => generateOr(x, y)
+        case T_And(x, y) => generateBitwiseOp(x, y, A_And.apply)
+        case T_Or(x, y) => generateBitwiseOp(x, y, A_Or.apply)
         case T_Not(x) => generateNot(x)
         case T_Neg(x) => generateNeg(x)
         case T_Len(x) => generateLen(x)
@@ -100,18 +100,6 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generateSkip(): List[A_Instr] = List()
 
-    private def generateMul(x: T_Expr, y: T_Expr): List[A_Instr] =
-        val builder = new ListBuffer[A_Instr]
-
-        builder ++= generate(x)
-        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
-        builder ++= generate(y)
-        builder += A_Pop(A_Reg(intSize, A_RegName.R1))
-        builder += A_IMul(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1), intSize)
-        // TODO @Aidan: Overflow can occur here - add flag system etc.
-
-        builder.toList
-
     private def generateDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName): List[A_Instr] =
         val builder = new ListBuffer[A_Instr]
 
@@ -136,10 +124,6 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
         builder.toList
 
-    private def generateDiv(x: T_Expr, y: T_Expr): List[A_Instr] = generateDivMod(x, y, A_RegName.RetReg)
-
-    private def generateMod(x: T_Expr, y: T_Expr): List[A_Instr] = generateDivMod(x, y, A_RegName.R3)
-
     private def generateAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr)) =
         val builder = new ListBuffer[A_Instr]
 
@@ -152,9 +136,17 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
         builder.toList
 
-    private def generateAdd(x: T_Expr, y: T_Expr): List[A_Instr] = generateAddSub(x, y, A_Add.apply)
+    private def generateMul(x: T_Expr, y: T_Expr): List[A_Instr] = 
+        val builder = new ListBuffer[A_Instr]
 
-    private def generateSub(x: T_Expr, y: T_Expr): List[A_Instr] = generateAddSub(x, y, A_Sub.apply)
+        builder ++= generate(x)
+        builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+        builder ++= generate(y)
+        builder += A_Pop(A_Reg(intSize, A_RegName.R1))
+        builder += A_IMul(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1), intSize)
+        // TODO @Aidan: Overflow can occur here - add flag system etc.
+
+        builder.toList
 
 
     // TODO @Jack : Merge type changes into this branch and do the following:
@@ -180,10 +172,6 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         builder += instrApply(A_Reg(boolSize, A_RegName.RetReg), A_Reg(boolSize, A_RegName.R1), boolSize)
 
         builder.toList
-
-    private def generateAnd(x: T_Expr, y: T_Expr): List[A_Instr] = generateBitwiseOp(x, y, A_And.apply)
-
-    private def generateOr(x: T_Expr, y: T_Expr): List[A_Instr] = generateBitwiseOp(x, y, A_Or.apply)
 
     private def generateNot(x: T_Expr): List[A_Instr] = 
         val builder = new ListBuffer[A_Instr]
