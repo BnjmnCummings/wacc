@@ -1,5 +1,6 @@
-package wacc.ast
+package wacc.syntax
 
+import wacc.ast.*
 import wacc.parser
 
 import org.scalatest.flatspec.AnyFlatSpec

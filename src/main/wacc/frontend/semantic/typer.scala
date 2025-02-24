@@ -58,7 +58,7 @@ def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx): (Option[
 // break into inner of array, map function on each inner member of literal on right
 
 def checkArrayDeclType(l: SemType, r: Q_ArrayLiteral)(using ctx: TypeCheckerCtx): (Option[SemType], T_ArrayLiteral) = {
-    (l, r) match {
+    ((l, r): @unchecked) match {
         case (KnownType.Array(t@KnownType.Array(_)), Q_ArrayLiteral(xs: List[Q_Expr], pos)) =>
             // l = array, r = array literal
             // so check each member of r is arrT
@@ -68,9 +68,9 @@ def checkArrayDeclType(l: SemType, r: Q_ArrayLiteral)(using ctx: TypeCheckerCtx)
 
             val semOpt: Option[SemType] = xsTys.fold(Some(?))(_.getOrElse(?) ~ _.getOrElse(?)) // ? could get changed for arrT potentially!
 
-            semOpt match {
-                case Some(?) => (None, T_ArrayLiteral(xsTyped)) // most generic type is ? hence we don't have any common type within the right array?
-                case _ => (semOpt, T_ArrayLiteral(xsTyped))
+            (semOpt: @unchecked) match {
+                case Some(?) => (None, T_ArrayLiteral(xsTyped, ?)) // most generic type is ? hence we don't have any common type within the right array?
+                case Some(t) => (semOpt, T_ArrayLiteral(xsTyped, t))
             }
         case (t@KnownType.Array(arrT), Q_ArrayLiteral(xs, pos)) =>
             ctx.setPos(pos)
@@ -86,10 +86,10 @@ def checkArrayDeclType(l: SemType, r: Q_ArrayLiteral)(using ctx: TypeCheckerCtx)
             arrT match
                 case KnownType.String =>
                     if semOpt == KnownType.String | semOpt == KnownType.Array(KnownType.Char) then
-                        (Some(t), T_ArrayLiteral(xsTyped))
+                        (Some(t), T_ArrayLiteral(xsTyped, arrT))
                     else
-                        (ctx.error(TypeMismatch(KnownType.Array(semOpt), t)), T_ArrayLiteral(xsTyped))
-                case _ => (semOpt.satisfies(Constraint.Is(arrT)), T_ArrayLiteral(xsTyped))
+                        (ctx.error(TypeMismatch(KnownType.Array(semOpt), t)), T_ArrayLiteral(xsTyped, arrT))
+                case _ => (semOpt.satisfies(Constraint.Is(arrT)), T_ArrayLiteral(xsTyped, arrT))
     }
 }
 
@@ -115,26 +115,43 @@ def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: 
     // Only need to  verify the LValue is actually LValue - no constraint needed? Or create constraint for IsLValue?
     case Q_Read(l: Q_LValue, pos) => 
         ctx.setPos(pos)
-        T_Read(check(l, Constraint.IsReadable)._2) // TODO: SEE stmt.scala - we need to add the additional type info
+
+        val (lTy, lTyped) = check(l, Constraint.IsReadable)
+
+        T_Read(lTyped, lTy.getOrElse(?))
     case Q_Free(x: Q_Expr, pos) => 
         ctx.setPos(pos)
-        T_Free(check(x, Constraint.IsFreeable)._2)
+
+        val (lTy, lTyped) = check(x, Constraint.IsFreeable)
+
+        T_Free(lTyped, lTy.getOrElse(?))
     case Q_Return(x: Q_Expr, pos) => 
         ctx.setPos(pos)
         if isFunc then 
-            T_Return(check(x, funcConstraint)._2)
+            val (xTy, xTyped) = check(x, funcConstraint)
+
+            T_Return(xTyped, xTy.getOrElse(?))
         else
             ctx.error(InvalidReturn())
-            T_Return(check(x, Constraint.Unconstrained)._2)
+
+            val (xTy, xTyped) = check(x, Constraint.Unconstrained)
+
+            T_Return(xTyped, xTy.getOrElse(?))
     case Q_Exit(x: Q_Expr, pos) => 
         ctx.setPos(pos)
         T_Exit(check(x, Constraint.IsExitable)._2)
     case Q_Print(x: Q_Expr, pos) => 
         ctx.setPos(pos)
-        T_Print(check(x, Constraint.Unconstrained)._2)
+
+        val (xTy, xTyped) = check(x, Constraint.Unconstrained)
+
+        T_Print(xTyped, xTy.getOrElse(?))
     case Q_Println(x: Q_Expr, pos) => 
         ctx.setPos(pos)
-        T_Println(check(x, Constraint.Unconstrained)._2)
+
+        val (xTy, xTyped) = check(x, Constraint.Unconstrained)
+
+        T_Println(xTyped, xTy.getOrElse(?))
     case Q_If(cond: Q_Expr, body: List[Q_Stmt], scopedBody, el: List[Q_Stmt], scopedEl, pos) =>
         ctx.setPos(pos)
         val condTyped = check(cond, Constraint.IsBoolean)._2
@@ -284,7 +301,7 @@ def checkComparisonExpr(x: Q_Expr, y: Q_Expr, c: Constraint, result_expr: (T_Exp
                        (using TypeCheckerCtx): (Option[SemType], T_Expr) =
     val (xTy, xTyped) = check(x, Constraint.IsNumericOrCharacter)
     
-    val (yTy, yTyped) = xTy match {
+    val (yTy, yTyped) = (xTy: @unchecked) match {
         case Some(KnownType.Int) => check(y, Constraint.Is(KnownType.Int))
         case Some(KnownType.Char) => check(y, Constraint.Is(KnownType.Char))
         case None => (None, result_expr(xTyped, xTyped)) 
@@ -352,7 +369,7 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemTyp
         val xs_typed = xs_processed.map(_._2)
         val ty = xs_processed.map(_._1)
             .fold(Some(?))((t1, t2) => t1.getOrElse(?).satisfies(Constraint.Is(t2.getOrElse(?)))).getOrElse(X)
-        (KnownType.Array(ty).satisfies(c), T_ArrayLiteral(xs_typed))
+        (KnownType.Array(ty).satisfies(c), T_ArrayLiteral(xs_typed, KnownType.Int)) // remve knowntype.int for other - just temp to fix errror
     case Q_PairElem(index: PairIndex, v: Q_LValue, pos) =>
         ctx.setPos(pos)  
         val (pairTy, pair_typed): (Option[SemType], T_LValue) = check(v, Constraint.Is(KnownType.Pair(?, ?)))
@@ -368,7 +385,7 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemTyp
         ctx.setPos(pos)
         val (xTy, xTyped) = check(x, Constraint.Unconstrained)
         val (yTy, yTyped) = check(y, Constraint.Unconstrained)
-        (KnownType.Pair(xTy.getOrElse(?), yTy.getOrElse(?)).satisfies(c), T_NewPair(xTyped, yTyped))
+        (KnownType.Pair(xTy.getOrElse(?), yTy.getOrElse(?)).satisfies(c), T_NewPair(xTyped, yTyped, xTy.getOrElse(?), yTy.getOrElse(?)))
     case e: Q_Expr => check(e, c)
 }
 
@@ -450,6 +467,8 @@ extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx)
     case (kty, Constraint.IsFreeable) => ctx.error(NonFreeableType(kty))
     case (kty@(KnownType.Int | KnownType.Char), Constraint.IsReadable) => Some(kty)
     case (kty, Constraint.IsReadable) => ctx.error(NonReadableType(kty))
+    case (kty@KnownType.Pair(_, _), Constraint.IsPairNoError) => Some(kty)
+    case (kty, Constraint.IsPairNoError) => None
 }
 
 
@@ -465,6 +484,7 @@ enum Constraint {
     case IsFreeable
     case IsString
     case IsReadable
+    case IsPairNoError
 }
 
 object Constraint {

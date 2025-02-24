@@ -1,37 +1,3 @@
-# Tests which check the text -> AST step of the compiler
-# Match the names of the tests with syntax '<package>.<classname>'
-syntax:
-    - prog
-    - expr
-    - atom
-    - unary_oper
-    - binary_oper
-    - array_elem
-    - type_parent
-    - type_base
-    - type_array
-    - type_pair
-    - func
-    - param
-    - stmt
-    - lvalue
-    - rvalue
-    - pair_elem
-    - array_literal
-    - syntax_integration
-
-# Tests which check the AST semantic checking step of the compiler
-semantic:
-  - rename_if
-  - rename_codeblock
-  - rename_decl
-  - rename_expr
-  - rename_func
-  - rename_prog
-  - rename_while
-  - types_test
-  # - semantic_integration
-
 # Tests which check the AST -> Machine Code step of the compiler
 generation:
 
@@ -41,6 +7,12 @@ formatting:
   - format_reg
   - format_mem_offset
   - format_offset
+  - format_arithmetic_op_test
+  - format_branching_test
+  - format_memory_ops_test
+  - format_function_ops_test
+  - format_cond_test
 
 # Tests which check the end-to-end functionality of the compiler
-full:
+integration:
+ - backend_integration_test
