@@ -28,7 +28,7 @@ def extract_tests(data):
     return tests
 
 def run_test(test_name):
-    command = f'scala test . --test-only "*{test_name}*" --watch'
+    command = f'scala test . --test-only "*{test_name}*"'
     return subprocess.run(command, shell=True)
 
 main()
