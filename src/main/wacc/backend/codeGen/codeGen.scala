@@ -22,6 +22,13 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def addDefaultFunc(f: A_Func) = defaultFuncs.add(f)
 
+    private var strLabelCount = 0
+
+    def genNextStrLabel: A_DataLabel = {
+        val num = strLabelCount
+        strLabelCount += 1
+        A_DataLabel(s".S.str${num}")
+    }
     // TODO @Jack : Create a function that maps a KnownType to a size - this is useful for things like read (char/int)
 
     def generate(): A_Prog = {
@@ -230,7 +237,12 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generateCharLiteral(v: Char): List[A_Instr] = List(A_Mov(A_Reg(charSize, A_RegName.RetReg), A_Imm(v.toInt)))
 
-    private def generateStringLiteral(v: String): List[A_Instr] = ???
+    private def generateStringLiteral(v: String): List[A_Instr] = {
+        val lbl = strLabelGen()
+        storedStrings.add(A_StoredStr(lbl, v))
+
+        List(A_Mov())
+    }
 
     private def generateIdent(v: T_Name): List[A_Instr] = ???
 
@@ -249,4 +261,4 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
 private def funcLabelGen(f: T_Name): A_InstrLabel = A_InstrLabel(s".F.${f.name}")
 
-private def varLableGen(v: T_Name): A_DataLabel = A_DataLabel(s".V.${v.name}.${v.num}")
+private def strLabelGen(s: String): A_DataLabel = A_DataLabel(s".S.${s}")
