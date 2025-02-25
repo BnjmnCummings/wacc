@@ -2,7 +2,7 @@ package wacc.syntax
 
 import wacc.parser
 
-import wacc.utilities.searchDir
+import wacc.testUtils.searchDir
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*

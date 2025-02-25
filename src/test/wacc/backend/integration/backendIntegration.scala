@@ -4,6 +4,7 @@ import wacc.semantic.typeCheck
 import wacc.renamer
 import wacc.parser
 import wacc.ScopeException
+import wacc.testUtils.*
 
 import java.io.FileNotFoundException
 import java.io.File
@@ -13,9 +14,156 @@ import sys.process._
 import scala.io.Source
 import scala.collection.mutable.ListBuffer
 
-class backend_integration_test extends AnyFlatSpec {
-    
-    "backend" should "successfully produce the desired output and exit code" in {
+class backend_integration_test extends ConditionalRun {
+
+    runIfTrue(testSettings, "integration_exit", () => {
+        "exit" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/basic/exit"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_skip", () => {
+        "skip" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/basic/skip"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_advanced", () => {
+        "advanced" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/advanced"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_array", () => {
+        "array" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/array"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_expressions", () => {
+        "expressions" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/expressions"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_nested_functions", () => {
+        "nested_functions" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/function/nested_functions"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_simple_functions", () => {
+        "simple_functions" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/function/simple_functions"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_if", () => {
+        "if" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/if"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_IO_all", () => {
+        "IO_all" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/IO"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_IO_print", () => {
+        "IO_print" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/IO/print"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_IO_read", () => {
+        "IO_read" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/IO/read"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_pairs", () => {
+        "pairs" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/pairs"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_runtimeErr_arrayOutOfBounds", () => {
+        "runtimeErr_arrayOutOfBounds" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/runtimeErr/arrayOutOfBounds"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_runtimeErr_badChar", () => {
+        "runtimeErr_badChar" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/runtimeErr/badChar"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_runtimeErr_divideByZero", () => {
+        "runtimeErr_divideByZero" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/runtimeErr/divideByZero"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_runtimeErr_integerOverflow", () => {
+        "runtimeErr_integerOverflow" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/runtimeErr/integerOverflow"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_runtimeErr_nullDereference", () => {
+        "runtimeErr_nullDereference" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/runtimeErr/nullDereference"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_scope", () => {
+        "scope" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/scope"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_sequence", () => {
+        "sequence" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/sequence"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_variables", () => {
+        "variables" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/variables"))
+            runTests(paths)
+        }   
+    })
+
+    runIfTrue(testSettings, "integration_while", () => {
+        "while" should "successfully produce the desired output and exit code" in {
+            val paths: List[String] = searchDir(File("wacc-examples/valid/while"))
+            runTests(paths)
+        }   
+    })
+
+    def runTests(paths: List[String]) = {
         //runAssembly("andExpr")
         val successes: ListBuffer[String] = ListBuffer.empty[String]
         val outputFailures: ListBuffer[String] = ListBuffer.empty[String]
@@ -24,7 +172,7 @@ class backend_integration_test extends AnyFlatSpec {
         val semFailures: ListBuffer[String] = ListBuffer.empty[String]
 
         //this is an absolute monstrosity but there's nothing I can really do about it
-        getFilePaths().foreach { filePath => parser.parseF(File(filePath)) match 
+        paths.foreach { filePath => parser.parseF(File(filePath)) match 
             case Success(t) => {
                 try {
                     /* front end pipeline */
@@ -91,7 +239,7 @@ class backend_integration_test extends AnyFlatSpec {
                 + compileFailList.map(s => s.split("valid/").last).mkString("\n")
             )
         }
-    } 
+    }
 
     /**
     * 
@@ -155,10 +303,9 @@ class backend_integration_test extends AnyFlatSpec {
      * Helper function to collect all the filepaths to valid wacc programs
      * TODO: change back to all wacc programs
      */ 
-    def getFilePaths(): List[String] = {
-        // val fPathStart: String = "wacc-examples/valid/"
-        // searchDir(File(fPathStart))
-        return List("wacc-examples/valid/expressions/andExpr.wacc")
+    def getFilePaths(fPathStart: String): List[String] = {
+        //searchDir(File(fPathStart))
+        List("wacc-examples/valid/expressions/andExpr.wacc")
     }
 }
 

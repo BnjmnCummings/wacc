@@ -1,9 +1,8 @@
-package wacc.utilities
+package wacc.testUtils
 
 import java.io.File
 
 // Function to recursively find all files in the given directory
-// Written by chatgpt
 def searchDir(dir: File): List[String] = {
     if (dir.exists && dir.isDirectory) {
         // List to collect all file paths
