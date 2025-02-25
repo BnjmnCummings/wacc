@@ -111,17 +111,18 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
         builder ++= generate(cond)
         builder += A_Cmp(A_Reg(boolSize, A_RegName.RetReg), A_Imm(TRUE), boolSize)
-        builder += A_Jmp(???, A_Cond.Eq)
+        builder += A_Jmp(???, A_Cond.Eq) // L0
 
         el.foreach(builder ++= generate(_))
 
-        builder += A_Jmp(???, A_Cond.Uncond)
+        builder += A_Jmp(???, A_Cond.Uncond) // L1
 
         // builder += A_LabelStart([.L0:])
         body.foreach(builder ++= generate(_))
         // builder += A_LabelStart([.L1:])
         // builder.toList
 
+        // note: remainder of the program should be stored in L1
         // TODO: generate labels and add above
 
         builder.toList
@@ -145,7 +146,21 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
         builder.toList
 
-    private def generateWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[T_Name]): List[A_Instr] = ???
+    private def generateWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[T_Name]): List[A_Instr] =
+        val builder = new ListBuffer[A_Instr]
+
+        builder += A_Jmp(???, A_Cond.Uncond) // .L0
+        // builder += A_LabelStart([.L1:])
+        body.foreach(builder ++= generate(_)) 
+        // builder += A_LabelStart([.L0:])
+        builder ++= generate(cond)
+        builder += A_Cmp(A_Reg(boolSize, A_RegName.RetReg), A_Imm(TRUE), boolSize)
+        builder += A_Jmp(???, A_Cond.Eq) // .L1
+        // Add remainder of program (after while) to L0
+
+        // TODO: FILL IN ABOVE LABELS + IF
+
+        builder.toList
 
     private def generateCodeBlock(body: List[T_Stmt], scoped: Set[T_Name]): List[A_Instr] = ???
 
