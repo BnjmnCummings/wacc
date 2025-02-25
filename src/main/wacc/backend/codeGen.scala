@@ -18,10 +18,20 @@ val FALSE = 0
 val ZERO_IMM = 0
 val CHR_MASK = -128
 
+class CodeGenCtx() {
+    
+}
+
 class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
     private val storedStrings: mutable.Set[A_StoredStr] = mutable.Set()
 
-    // TODO @Jack : Create a function that maps a KnownType to a size - this is useful for things like read (char/int)
+    private var labelCount: Int = 0
+
+    def genNextLabel(): A_InstrLabel = {
+        val lbl = A_InstrLabel(s".L$labelCount")
+        labelCount += 1
+        lbl
+    }
 
     def sizeOf(ty: SemType): A_OperandSize = ty match
         case ? => throw Exception("Should not have semType ? in codeGen")
@@ -109,21 +119,20 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
     private def generateIfHelper(cond: T_Expr, body: List[T_Stmt], el: List[T_Stmt]): List[A_Instr] =
         val builder = new ListBuffer[A_Instr]
 
+        val bodyLabel = genNextLabel() // .L0
+        val restLabel = genNextLabel() // .L1
+
         builder ++= generate(cond)
         builder += A_Cmp(A_Reg(boolSize, A_RegName.RetReg), A_Imm(TRUE), boolSize)
-        builder += A_Jmp(???, A_Cond.Eq) // L0
+        builder += A_Jmp(bodyLabel, A_Cond.Eq)
 
         el.foreach(builder ++= generate(_))
 
-        builder += A_Jmp(???, A_Cond.Uncond) // L1
+        builder += A_Jmp(restLabel, A_Cond.Uncond) 
 
-        // builder += A_LabelStart([.L0:])
+        builder += A_LabelStart(bodyLabel)
         body.foreach(builder ++= generate(_))
-        // builder += A_LabelStart([.L1:])
-        // builder.toList
-
-        // note: remainder of the program should be stored in L1
-        // TODO: generate labels and add above
+        builder += A_LabelStart(restLabel)
 
         builder.toList
 
@@ -149,16 +158,18 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
     private def generateWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[T_Name]): List[A_Instr] =
         val builder = new ListBuffer[A_Instr]
 
-        builder += A_Jmp(???, A_Cond.Uncond) // .L0
-        // builder += A_LabelStart([.L1:])
+        val condLabel = genNextLabel() // .L0
+        val bodyLabel = genNextLabel() // .L1
+
+        builder += A_Jmp(condLabel, A_Cond.Uncond)
+        
+        builder += A_LabelStart(bodyLabel)
         body.foreach(builder ++= generate(_)) 
-        // builder += A_LabelStart([.L0:])
+
+        builder += A_LabelStart(condLabel)
         builder ++= generate(cond)
         builder += A_Cmp(A_Reg(boolSize, A_RegName.RetReg), A_Imm(TRUE), boolSize)
-        builder += A_Jmp(???, A_Cond.Eq) // .L1
-        // Add remainder of program (after while) to L0
-
-        // TODO: FILL IN ABOVE LABELS + IF
+        builder += A_Jmp(bodyLabel, A_Cond.Eq)
 
         builder.toList
 
