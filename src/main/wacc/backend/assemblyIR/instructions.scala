@@ -32,6 +32,8 @@ case class A_Mov(opD: A_Reg, opS: A_Operand) extends A_Instr
 case class A_Movzx(opD: A_Reg, opS: A_Reg) extends A_Instr
 case class A_Lea(opD: A_Reg, opS: A_MemOffset) extends A_Instr
 
+case class A_Set(op: A_Reg, condition: A_Cond) extends A_Instr
+
 // clib is accessed using call
 case class A_Call(label: A_Label) extends A_Instr
 

@@ -9,16 +9,40 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable
 import wacc.parser.bool
 import wacc.SemType
+import wacc.?
+import wacc.X
+import wacc.KnownType
 
 val TRUE = 1
 val FALSE = 0
 val ZERO_IMM = 0
 val CHR_MASK = -128
 
+class CodeGenCtx() {
+    
+}
+
 class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
     private val storedStrings: mutable.Set[A_StoredStr] = mutable.Set()
 
-    // TODO @Jack : Create a function that maps a KnownType to a size - this is useful for things like read (char/int)
+    private var labelCount: Int = 0
+
+    def genNextLabel(): A_InstrLabel = {
+        val lbl = A_InstrLabel(s".L$labelCount")
+        labelCount += 1
+        lbl
+    }
+
+    def sizeOf(ty: SemType): A_OperandSize = ty match
+        case ? => throw Exception("Should not have semType ? in codeGen")
+        case X => throw Exception("Should not have semType X in codeGen")
+        case wacc.KnownType.Int => A_OperandSize.A_32
+        case wacc.KnownType.Boolean => A_OperandSize.A_8
+        case wacc.KnownType.Char => A_OperandSize.A_8
+        case wacc.KnownType.String => ???
+        case wacc.KnownType.Array(ty) => ???
+        case KnownType.Pair(ty1, ty2) => ???
+        case KnownType.Ident => ???
 
     def generate(): A_Prog = ???
 
@@ -42,12 +66,12 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         case T_Mod(x, y) => generateDivMod(x, y, A_RegName.R3)
         case T_Add(x, y) => generateAddSub(x, y, A_Add.apply)
         case T_Sub(x, y) => generateAddSub(x, y, A_Sub.apply)
-        case T_GreaterThan(x, y) => generateGreaterThan(x, y)
-        case T_GreaterThanEq(x, y) => generateGreaterThanEq(x, y)
-        case T_LessThan(x, y) => generateLessThan(x, y)
-        case T_LessThanEq(x, y) => generateLessThanEq(x, y)
-        case T_Eq(x, y) => generateEq(x, y)
-        case T_NotEq(x, y) => generateNotEq(x, y)
+        case T_GreaterThan(x, y, ty) => generateComparison(x, y, ty, A_Cond.Gt)
+        case T_GreaterThanEq(x, y, ty) => generateComparison(x, y, ty, A_Cond.GEq)
+        case T_LessThan(x, y, ty) => generateComparison(x, y, ty, A_Cond.Lt)
+        case T_LessThanEq(x, y, ty) => generateComparison(x, y, ty, A_Cond.LEq)
+        case T_Eq(x, y, ty) => generateComparison(x, y, ty, A_Cond.Eq)
+        case T_NotEq(x, y, ty) => generateComparison(x, y, ty, A_Cond.NEq)
         case T_And(x, y) => generateBitwiseOp(x, y, A_And.apply)
         case T_Or(x, y) => generateBitwiseOp(x, y, A_Or.apply)
         case T_Not(x) => generateNot(x)
@@ -92,9 +116,62 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generatePrintln(x: T_Expr, ty: SemType): List[A_Instr] = ???
 
-    private def generateIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[T_Name], el: List[T_Stmt], scopedEl: Set[T_Name]): List[A_Instr] = ???
+    private def generateIfHelper(cond: T_Expr, body: List[T_Stmt], el: List[T_Stmt]): List[A_Instr] =
+        val builder = new ListBuffer[A_Instr]
 
-    private def generateWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[T_Name]): List[A_Instr] = ???
+        val bodyLabel = genNextLabel() // .L0
+        val restLabel = genNextLabel() // .L1
+
+        builder ++= generate(cond)
+        builder += A_Cmp(A_Reg(boolSize, A_RegName.RetReg), A_Imm(TRUE), boolSize)
+        builder += A_Jmp(bodyLabel, A_Cond.Eq)
+
+        el.foreach(builder ++= generate(_))
+
+        builder += A_Jmp(restLabel, A_Cond.Uncond) 
+
+        builder += A_LabelStart(bodyLabel)
+        body.foreach(builder ++= generate(_))
+        builder += A_LabelStart(restLabel)
+
+        builder.toList
+
+    private def generateIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[T_Name], el: List[T_Stmt], scopedEl: Set[T_Name]): List[A_Instr] = 
+        val builder = new ListBuffer[A_Instr]
+
+        cond match
+            case T_GreaterThan(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_GreaterThanEq(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_LessThan(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_LessThanEq(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_Eq(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_NotEq(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_And(x, y) => builder ++= generateIfHelper(cond, body, el)
+            case T_Or(x, y) => builder ++= generateIfHelper(cond, body, el)
+            case T_Not(x) => builder ++= generateIfHelper(cond, body, el)
+            case T_BoolLiteral(v) => builder ++= generateIfHelper(cond, body, el)
+            case T_Ident(v) => ???
+            case _ => throw Exception(s"Should not reach here. Got $cond")
+
+        builder.toList
+
+    private def generateWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[T_Name]): List[A_Instr] =
+        val builder = new ListBuffer[A_Instr]
+
+        val condLabel = genNextLabel() // .L0
+        val bodyLabel = genNextLabel() // .L1
+
+        builder += A_Jmp(condLabel, A_Cond.Uncond)
+        
+        builder += A_LabelStart(bodyLabel)
+        body.foreach(builder ++= generate(_)) 
+
+        builder += A_LabelStart(condLabel)
+        builder ++= generate(cond)
+        builder += A_Cmp(A_Reg(boolSize, A_RegName.RetReg), A_Imm(TRUE), boolSize)
+        builder += A_Jmp(bodyLabel, A_Cond.Eq)
+
+        builder.toList
 
     private def generateCodeBlock(body: List[T_Stmt], scoped: Set[T_Name]): List[A_Instr] = ???
 
@@ -122,6 +199,8 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         // TODO @Aidan: Overflow can occur here - add flag system etc.
         // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
 
+        builder += A_Mov(A_Reg(intSize, A_RegName.RetReg), (A_Reg(intSize, divResultReg)))
+
         builder.toList
 
     private def generateAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr)) =
@@ -148,19 +227,20 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
         builder.toList
 
+    private def generateComparison(x: T_Expr, y: T_Expr, ty: SemType, cond: A_Cond): List[A_Instr] =
+        val builder = new ListBuffer[A_Instr]
 
-    // TODO @Jack : Merge type changes into this branch and do the following:
-    private def generateGreaterThan(x: T_Expr, y: T_Expr): List[A_Instr] = ???
+        builder ++= generate(x)
+        
+        val sizeTy = sizeOf(ty)
 
-    private def generateGreaterThanEq(x: T_Expr, y: T_Expr): List[A_Instr] = ???
+        builder += A_Push(A_Reg(sizeTy, A_RegName.RetReg))
+        builder ++= generate(y)
+        builder += A_Pop(A_Reg(sizeTy, A_RegName.R1))
+        builder += A_Cmp(A_Reg(sizeTy, A_RegName.R1), A_Reg(sizeTy, A_RegName.RetReg), sizeTy)
+        builder += A_Set(A_Reg(boolSize, A_RegName.RetReg), cond)
 
-    private def generateLessThan(x: T_Expr, y: T_Expr): List[A_Instr] = ???
-
-    private def generateLessThanEq(x: T_Expr, y: T_Expr): List[A_Instr] = ???
-
-    private def generateEq(x: T_Expr, y: T_Expr): List[A_Instr] = ???
-
-    private def generateNotEq(x: T_Expr, y: T_Expr): List[A_Instr] = ???
+        builder.toList
 
     private def generateBitwiseOp(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr)): List[A_Instr] =
         val builder = new ListBuffer[A_Instr]

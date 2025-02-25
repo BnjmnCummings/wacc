@@ -212,14 +212,18 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemTy
         ctx.setPos(pos)
         val (xTy, xTyped) = check(x, Constraint.Unconstrained)
         val (yTy, yTyped) = check(y, Constraint.Is(xTy.getOrElse(?)))
+
+        val ty = mostSpecific(xTy, yTy)
         
-        (Some(KnownType.Boolean), T_Eq(xTyped, yTyped))
+        (Some(KnownType.Boolean), T_Eq(xTyped, yTyped, ty))
     case Q_NotEq(x: Q_Expr, y: Q_Expr, pos) => 
         ctx.setPos(pos)
         val (xTy, xTyped) = check(x, Constraint.Unconstrained)
         val (yTy, yTyped) = check(y, Constraint.Is(xTy.getOrElse(?)))
 
-        (Some(KnownType.Boolean), T_NotEq(xTyped, yTyped))
+        val ty = mostSpecific(xTy, yTy)
+
+        (Some(KnownType.Boolean), T_NotEq(xTyped, yTyped, ty))
     // The below only work on two bools
     case Q_And(x: Q_Expr, y: Q_Expr, pos) => 
         ctx.setPos(pos)
@@ -304,17 +308,20 @@ def checkArithmeticExpr(x: Q_Expr, y: Q_Expr, c: Constraint, result_expr: (T_Exp
     val (yTy, yTyped) = check(y, Constraint.Is(xTy.getOrElse(?)))
     (mostSpecific(xTy, yTy).satisfies(c), result_expr(xTyped, yTyped))
 
-def checkComparisonExpr(x: Q_Expr, y: Q_Expr, c: Constraint, result_expr: (T_Expr, T_Expr) => T_Expr)
+def checkComparisonExpr(x: Q_Expr, y: Q_Expr, c: Constraint, result_expr: (T_Expr, T_Expr, SemType) => T_Expr)
                        (using TypeCheckerCtx): (Option[SemType], T_Expr) =
     val (xTy, xTyped) = check(x, Constraint.IsNumericOrCharacter)
     
     val (yTy, yTyped) = (xTy: @unchecked) match {
         case Some(KnownType.Int) => check(y, Constraint.Is(KnownType.Int))
         case Some(KnownType.Char) => check(y, Constraint.Is(KnownType.Char))
-        case None => (None, result_expr(xTyped, xTyped)) 
+        case None => (None, result_expr(xTyped, xTyped, ?)) 
         // Note: The above result_expr can be any T_Expr - it will be disregarded as we throw an error checking xTy
     }
-    (KnownType.Boolean.satisfies(c), result_expr(xTyped, yTyped))
+
+    val ty: SemType = mostSpecific(xTy, yTy)
+
+    (KnownType.Boolean.satisfies(c), result_expr(xTyped, yTyped, ty))
 
 def checkBooleanExpr(x: Q_Expr, y: Q_Expr, c: Constraint, result_expr: (T_Expr, T_Expr) => T_Expr)
                     (using TypeCheckerCtx): (Option[SemType], T_Expr) =
