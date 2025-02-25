@@ -5,6 +5,17 @@ import wacc.renamer
 import wacc.parser
 import wacc.ScopeException
 import wacc.testUtils.*
+import wacc.frontend
+import wacc.backend
+import wacc.assemblyIR.A_Prog
+import wacc.codeGen.CodeGen
+
+
+
+
+
+
+
 
 import java.io.FileNotFoundException
 import java.io.File
@@ -171,37 +182,27 @@ class backend_integration_test extends ConditionalRun {
         val synFailures: ListBuffer[String] = ListBuffer.empty[String]
         val semFailures: ListBuffer[String] = ListBuffer.empty[String]
 
-        //this is an absolute monstrosity but there's nothing I can really do about it
-        paths.foreach { filePath => parser.parseF(File(filePath)) match 
-            case Success(t) => {
-                try {
-                    /* front end pipeline */
-                    val (q_t, tyInfo) = renamer.rename(t)
-                    typeCheck(q_t, tyInfo) match {
-                        case Right(t_prog) => {
-                            // TODO: generateAssembly(t_prog)
-                            val progName = filePath
-                                .split("/")
-                                .last
-                                .replace(".wacc","")
+        
+        paths.foreach {filePath => 
+            val (tProg, typeInfo) = frontend(filePath)
+            val codeGen = CodeGen(tProg, typeInfo)
+            val assembly: A_Prog = codeGen.generate()
+            // TODO: String output to file here @Zakk @Ben
+            // TODO: make sure she gets generated progname.s in test/wacc/backend/integration/assembly
+            val progName = filePath
+                .split("/")
+                .last
+                .replace(".wacc", "")
 
-                            try {
-                                if(runAssembly(progName) == getExpectedOutput(filePath))
-                                    successes += filePath
-                                else 
-                                    outputFailures += filePath
-                            } catch {
-                                case e: InstantiationException => 
-                                    compileFailures += filePath
-                            }
-                        }
-                        case _ => semFailures += filePath
-                    }
-                } catch {
-                    case e: ScopeException => semFailures += filePath
-                }
+            try {
+                if(runAssembly(progName) == getExpectedOutput(filePath))
+                    successes += filePath
+                else 
+                    outputFailures += filePath
+            } catch {
+                case e: InstantiationException => 
+                    compileFailures += filePath
             }
-            case _ => synFailures += filePath
         }
 
         val successList: List[String] = successes.toList
@@ -299,15 +300,12 @@ class backend_integration_test extends ConditionalRun {
             } 
         }
     
-    /** 
-     * Helper function to collect all the filepaths to valid wacc programs
-     * TODO: change back to all wacc programs
-     */ 
-    def getFilePaths(fPathStart: String): List[String] = {
-        //searchDir(File(fPathStart))
-        List("wacc-examples/valid/expressions/andExpr.wacc")
-    }
+    // /** 
+    //  * Helper function to collect all the filepaths to valid wacc programs
+    //  * TODO: change back to all wacc programs
+    //  */ 
+    // def getFilePaths(fPathStart: String): List[String] = {
+    //     //searchDir(File(fPathStart))
+    //     List("wacc-examples/valid/expressions/andExpr.wacc")
+    // }
 }
-
-
-
