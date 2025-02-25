@@ -140,16 +140,16 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
         val builder = new ListBuffer[A_Instr]
 
         cond match
-            case T_GreaterThan(x, y, ty) => generateIfHelper(cond, body, el)
-            case T_GreaterThanEq(x, y, ty) => generateIfHelper(cond, body, el)
-            case T_LessThan(x, y, ty) => generateIfHelper(cond, body, el)
-            case T_LessThanEq(x, y, ty) => generateIfHelper(cond, body, el)
-            case T_Eq(x, y, ty) => generateIfHelper(cond, body, el)
-            case T_NotEq(x, y, ty) => generateIfHelper(cond, body, el)
-            case T_And(x, y) => generateIfHelper(cond, body, el)
-            case T_Or(x, y) => generateIfHelper(cond, body, el)
-            case T_Not(x) => generateIfHelper(cond, body, el)
-            case T_BoolLiteral(v) => generateIfHelper(cond, body, el)
+            case T_GreaterThan(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_GreaterThanEq(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_LessThan(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_LessThanEq(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_Eq(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_NotEq(x, y, ty) => builder ++= generateIfHelper(cond, body, el)
+            case T_And(x, y) => builder ++= generateIfHelper(cond, body, el)
+            case T_Or(x, y) => builder ++= generateIfHelper(cond, body, el)
+            case T_Not(x) => builder ++= generateIfHelper(cond, body, el)
+            case T_BoolLiteral(v) => builder ++= generateIfHelper(cond, body, el)
             case T_Ident(v) => ???
             case _ => throw Exception(s"Should not reach here. Got $cond")
 
