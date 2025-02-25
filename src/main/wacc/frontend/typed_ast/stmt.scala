@@ -3,8 +3,8 @@ package wacc.t_ast
 import wacc.SemType
 
 sealed trait T_Stmt 
-case class T_Decl(v: T_Name, r: T_RValue) extends T_Stmt
-case class T_Asgn(l: T_LValue, r: T_RValue) extends T_Stmt
+case class T_Decl(v: T_Name, r: T_RValue, ty: SemType) extends T_Stmt
+case class T_Asgn(l: T_LValue, r: T_RValue, ty: SemType) extends T_Stmt
 case class T_Read(l: T_LValue, ty: SemType) extends T_Stmt 
 case class T_Free(x: T_Expr, ty: SemType) extends T_Stmt
 case class T_Return(x: T_Expr, ty: SemType) extends T_Stmt

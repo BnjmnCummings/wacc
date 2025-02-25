@@ -69,8 +69,8 @@ def checkArrayDeclType(l: SemType, r: Q_ArrayLiteral)(using ctx: TypeCheckerCtx)
             val semOpt: Option[SemType] = xsTys.fold(Some(?))(_.getOrElse(?) ~ _.getOrElse(?)) // ? could get changed for arrT potentially!
 
             (semOpt: @unchecked) match {
-                case Some(?) => (None, T_ArrayLiteral(xsTyped, ?)) // most generic type is ? hence we don't have any common type within the right array?
-                case Some(t) => (semOpt, T_ArrayLiteral(xsTyped, t))
+                case Some(?) => (None, T_ArrayLiteral(xsTyped, ?, xs.size)) // most generic type is ? hence we don't have any common type within the right array?
+                case Some(t) => (semOpt, T_ArrayLiteral(xsTyped, t, xs.size))
             }
         case (t@KnownType.Array(arrT), Q_ArrayLiteral(xs, pos)) =>
             ctx.setPos(pos)
@@ -86,10 +86,10 @@ def checkArrayDeclType(l: SemType, r: Q_ArrayLiteral)(using ctx: TypeCheckerCtx)
             arrT match
                 case KnownType.String =>
                     if semOpt == KnownType.String | semOpt == KnownType.Array(KnownType.Char) then
-                        (Some(t), T_ArrayLiteral(xsTyped, arrT))
+                        (Some(t), T_ArrayLiteral(xsTyped, arrT, xs.size))
                     else
-                        (ctx.error(TypeMismatch(KnownType.Array(semOpt), t)), T_ArrayLiteral(xsTyped, arrT))
-                case _ => (semOpt.satisfies(Constraint.Is(arrT)), T_ArrayLiteral(xsTyped, arrT))
+                        (ctx.error(TypeMismatch(KnownType.Array(semOpt), t)), T_ArrayLiteral(xsTyped, arrT, xs.size))
+                case _ => (semOpt.satisfies(Constraint.Is(arrT)), T_ArrayLiteral(xsTyped, arrT, xs.size))
     }
 }
 
@@ -97,7 +97,12 @@ def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: 
     stmt match {
     case Q_Decl(id: Q_Name, r: Q_RValue, pos) =>
         ctx.setPos(pos)
-        T_Decl(T_Name(id.name, id.num), checkDeclTypes(ctx.typeOf(id), r)._2)
+
+        val (declTy, declTyped) = checkDeclTypes(ctx.typeOf(id), r)
+
+        
+
+        T_Decl(T_Name(id.name, id.num), declTyped, declTy.getOrElse(?))
     // Check the type of the LValue matches that of the RValue
     case Q_Asgn(l: Q_LValue, r: Q_RValue, pos) => 
         ctx.setPos(pos)
@@ -106,12 +111,14 @@ def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: 
         val _lTy = lTy.getOrElse(?)
         val (rTy, rTyped): (Option[SemType], T_RValue) = check(r, Constraint.Unconstrained)
 
+        val ty = mostSpecific(lTy, rTy)
+
         (_lTy, rTy.getOrElse(?)) match {
             case (?, ?) => ctx.error(NonNumericType(?))
             case (_, _) => check(r, Constraint.Is(_lTy))
         }
 
-        T_Asgn(lTyped, rTyped)
+        T_Asgn(lTyped, rTyped, ty)
     // Only need to  verify the LValue is actually LValue - no constraint needed? Or create constraint for IsLValue?
     case Q_Read(l: Q_LValue, pos) => 
         ctx.setPos(pos)
@@ -369,7 +376,8 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemTyp
         val xs_typed = xs_processed.map(_._2)
         val ty = xs_processed.map(_._1)
             .fold(Some(?))((t1, t2) => t1.getOrElse(?).satisfies(Constraint.Is(t2.getOrElse(?)))).getOrElse(X)
-        (KnownType.Array(ty).satisfies(c), T_ArrayLiteral(xs_typed, KnownType.Int)) // remve knowntype.int for other - just temp to fix errror
+
+        (KnownType.Array(ty).satisfies(c), T_ArrayLiteral(xs_typed, ty, xs.size))
     case Q_PairElem(index: PairIndex, v: Q_LValue, pos) =>
         ctx.setPos(pos)  
         val (pairTy, pair_typed): (Option[SemType], T_LValue) = check(v, Constraint.Is(KnownType.Pair(?, ?)))
