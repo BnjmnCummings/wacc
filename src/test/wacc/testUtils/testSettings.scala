@@ -1,6 +1,6 @@
 package wacc.testUtils
 
-val testSettings = scala.collection.mutable.HashSet(
+val testSettings = scala.collection.immutable.HashSet(
     "prog",
     "expr_test",
     "atom",

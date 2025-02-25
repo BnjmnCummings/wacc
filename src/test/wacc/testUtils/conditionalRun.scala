@@ -4,7 +4,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 trait ConditionalRun extends AnyFlatSpec{
     def runIfTrue(
-        testSettings: scala.collection.immutable.Set[String],
+        testSettings: scala.collection.immutable.HashSet[String],
         test: String,
         testBody: () => Unit
     ): Unit = {
