@@ -238,10 +238,12 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
     private def generateCharLiteral(v: Char): List[A_Instr] = List(A_Mov(A_Reg(charSize, A_RegName.RetReg), A_Imm(v.toInt)))
 
     private def generateStringLiteral(v: String): List[A_Instr] = {
-        val lbl = strLabelGen()
+        val lbl = genNextStrLabel
         storedStrings.add(A_StoredStr(lbl, v))
 
-        List(A_Mov())
+        val offset = A_MemOffset(ptrSize, A_Reg(A_OperandSize.A_64, A_RegName.InstrPtr), A_OffsetLbl(lbl))
+
+        List(A_Lea(A_Reg(ptrSize, A_RegName.RetReg), offset))
     }
 
     private def generateIdent(v: T_Name): List[A_Instr] = ???
@@ -260,5 +262,3 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 }
 
 private def funcLabelGen(f: T_Name): A_InstrLabel = A_InstrLabel(s".F.${f.name}")
-
-private def strLabelGen(s: String): A_DataLabel = A_DataLabel(s".S.${s}")
