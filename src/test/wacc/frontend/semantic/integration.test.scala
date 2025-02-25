@@ -4,7 +4,7 @@ import wacc.parser
 import wacc.renamer
 import wacc.ScopeException
 
-import wacc.utilities.searchDir
+import wacc.testUtils.searchDir
 
 import org.scalatest.flatspec.AnyFlatSpec
 
