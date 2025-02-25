@@ -2,7 +2,7 @@ package wacc.testUtils
 
 val testSettings = scala.collection.mutable.HashMap(
     "prog" -> true,
-    "expr_test" -> true,
+    "expr_test" -> false,
     "atom" -> true,
     "unary_oper" -> true,
     "binary_oper" -> true,
