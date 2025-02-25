@@ -22,13 +22,9 @@ compile:
 test:
   stage: test
   before_script:
-    - echo "Installing Python..."
-    - apt-get update
-    - apt-get install -y python3 python3-pip
-    - apt-get install -y python3-yaml
-    - echo "Python Installed."
     - echo "Running Tests..."
   script:
-    - python3 runSelectedTests.py
+    - scala test .
   after_script:
     - echo "Testing done."
+    - echo "good boy"
