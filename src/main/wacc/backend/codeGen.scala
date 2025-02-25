@@ -238,3 +238,7 @@ class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
 
     private def generateNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType): List[A_Instr] = ???
 }
+
+private def funcLabelGen(f: T_Name): A_InstrLabel = A_InstrLabel(s".F.${f.name}")
+
+private def varLableGen(v: T_Name): A_DataLabel = A_DataLabel(s".V.${v.name}.${v.num}")
