@@ -23,7 +23,9 @@ compile:
 test:
   stage: test
   before_script:
-    - echo "Running Tests..."
+    - echo "Installing dependencies..."
+    - apt-get update && apt-get install -y gcc
+    - echo "Running tests..."
   script:
     - scala test .
   after_script:
