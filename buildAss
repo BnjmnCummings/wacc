@@ -1,0 +1,3 @@
+cd src/test/wacc/backend/integration/
+gcc -c $@.s -o $@.o
+gcc $@.o -o $@

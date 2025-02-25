@@ -4,6 +4,9 @@ import parsley.{Success, Failure}
 
 import wacc.semantic.*
 import wacc.q_ast.Q_Prog
+import wacc.t_ast.T_Prog
+import wacc.assemblyIR.A_Prog
+import wacc.codeGen.CodeGen
 
 import java.io.File
 import java.io.FileNotFoundException
@@ -15,13 +18,13 @@ val EXIT_UNEXPECTED_ERR = -1
 
 @main
 def main(fname: String): Unit = {
-    val (q_tree, typeInfo) = frontend(fname)
+    val (t_tree, typeInfo) = frontend(fname)
     // for now just exit successfully since frontend has completed
     sys.exit(EXIT_SUCCESS)
-    backend(q_tree, typeInfo)
+    backend(t_tree, typeInfo)
 }
 
-def frontend(fname: String): (Q_Prog, TypeInfo) = {
+def frontend(fname: String): (T_Prog, TypeInfo) = {
     val f = new File(fname)
     val parsedFile = try {
         parser.parseF(f)
@@ -42,7 +45,7 @@ def frontend(fname: String): (Q_Prog, TypeInfo) = {
                         }
                         sys.exit(EXIT_SEMANTIC_ERR)
                     // successfully parsed - return the qualified ast and type info to main
-                    case Right(_) => return (q_t, tyInfo)
+                    case Right(t_t) => return (t_t, tyInfo)
                 }
                 sys.exit(0)
             } catch {
@@ -60,4 +63,8 @@ def frontend(fname: String): (Q_Prog, TypeInfo) = {
         }
 }
 
-def backend(q_tree: Q_Prog, typeInfo: TypeInfo): Unit = ???
+def backend(t_tree: T_Prog, typeInfo: TypeInfo): Unit = {
+    val codeGen = CodeGen(t_tree, typeInfo)
+    val assembly: A_Prog = codeGen.generate()
+    // TODO: String output to file here @Zakk @Ben
+}

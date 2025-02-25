@@ -15,6 +15,11 @@ case class A_OffsetReg(reg: A_Reg) extends A_Offset
 /* cheeky macro for 0 offset */
 inline def noOffset: A_Offset = A_OffsetImm(0)
 
+inline def intSize: A_OperandSize = A_OperandSize.A_32
+inline def charSize: A_OperandSize = A_OperandSize.A_8
+inline def boolSize: A_OperandSize = A_OperandSize.A_8
+inline def ptrSize: A_OperandSize = A_OperandSize.A_64
+
 /* 
 caller save - if you need to preserve the values of these before a function call, push and pop them on the stack
 callee save - if you need to use this within a function call, that function must push and pop them on the stack

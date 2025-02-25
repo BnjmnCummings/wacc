@@ -1,6 +1,7 @@
 package wacc.t_ast
 
 import wacc.ast.PairIndex
+import wacc.SemType
 
 sealed trait T_Expr extends T_RValue
 sealed trait T_LValue
@@ -43,6 +44,6 @@ object T_PairNullLiteral extends T_Expr
 
 // RValues
 case class T_FuncCall(v: T_Name, args: List[T_Expr]) extends T_RValue
-case class T_ArrayLiteral(xs: List[T_Expr]) extends T_RValue // TODO: Add type
+case class T_ArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt) extends T_RValue 
 case class T_PairElem(index: PairIndex, v: T_LValue) extends T_Expr, T_LValue
-case class T_NewPair(x1: T_Expr, x2: T_Expr) extends T_RValue
+case class T_NewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType) extends T_RValue 

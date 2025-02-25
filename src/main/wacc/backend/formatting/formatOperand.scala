@@ -1,6 +1,6 @@
 package wacc.formatting
 
-import wacc.assemblyIR._
+import wacc.assemblyIR.*
 
 def formatOperand(op: A_Operand): String = op match
     case A_Imm(n) => n.toString

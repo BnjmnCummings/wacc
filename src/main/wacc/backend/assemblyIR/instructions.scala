@@ -9,11 +9,18 @@ case class A_StoredStr(lbl: A_DataLabel, str: String)
 sealed trait A_Instr
 
 sealed trait A_ArithmeticOp extends A_Instr
+sealed trait A_BitwiseOp extends A_Instr
 
 case class A_Add(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp 
 case class A_Sub(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp
 case class A_Mul(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp
 case class A_Div(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp
+case class A_IMul(opD: A_Reg, op1: A_Reg, op2: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp
+case class A_IDiv(op: A_Reg, opSize: A_OperandSize) extends A_ArithmeticOp
+
+case class A_And(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_BitwiseOp 
+case class A_Or(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_BitwiseOp 
+case class A_Xor(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_BitwiseOp 
 
 case class A_Cmp(op1: A_Reg, op2: A_Operand, opSize: A_OperandSize) extends A_Instr
 case class A_Jmp(label: A_InstrLabel, condition: A_Cond) extends A_Instr
@@ -22,10 +29,14 @@ case class A_LabelStart(label: A_InstrLabel) extends A_Instr
 case class A_Push(op: A_Reg) extends A_Instr
 case class A_Pop(op: A_Reg) extends A_Instr
 case class A_Mov(opD: A_Reg, opS: A_Operand) extends A_Instr
+case class A_Movzx(opD: A_Reg, opS: A_Reg) extends A_Instr
 case class A_Lea(opD: A_Reg, opS: A_MemOffset) extends A_Instr
 
 // clib is accessed using call
 case class A_Call(label: A_Label) extends A_Instr
+
+// Sign extend EAX into EAX:EDX
+case object A_CDQ extends A_Instr // TODO @Ben @Zakk Implement string version of this
 
 sealed trait A_Label:
     val name: String
