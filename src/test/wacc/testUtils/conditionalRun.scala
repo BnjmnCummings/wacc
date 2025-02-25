@@ -6,12 +6,12 @@ trait ConditionalRun extends AnyFlatSpec{
     def runIfTrue(
         testSettings: scala.collection.mutable.HashMap[String, Boolean],
         test: String,
-        testFunction: () => Any
+        testBody: () => Unit
     ): Unit = {
-        it should test in {
-            if (testSettings.getOrElse(test, false)) {
-                testFunction
-            } else {
+        if (testSettings.getOrElse(test, false)) {
+            testBody()
+        } else {
+            it should s"pass $test" in {
                 pending
             }
         }
