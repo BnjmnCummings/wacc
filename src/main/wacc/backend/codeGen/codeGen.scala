@@ -18,9 +18,17 @@ val CHR_MASK = -128
 class CodeGen(t_tree: T_Prog, typeInfo: TypeInfo) {
     private val storedStrings: mutable.Set[A_StoredStr] = mutable.Set()
 
+    private val defaultFuncs: mutable.Set[A_Func] = mutable.Set()
+
+    private def addDefaultFunc(f: A_Func) = defaultFuncs.add(f)
+
     // TODO @Jack : Create a function that maps a KnownType to a size - this is useful for things like read (char/int)
 
-    def generate(): A_Prog = ???
+    def generate(): A_Prog = {
+        val _funcs = t_tree.funcs.map(generate)
+        val main = A_Func(A_InstrLabel("main"), t_tree.body.flatMap(generate))
+        ???
+    }
 
     private def generate(t: T_Stmt): List[A_Instr] = t match
         case T_Decl(v, r, ty) => generateDecl(v, r, ty)
