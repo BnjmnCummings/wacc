@@ -187,10 +187,8 @@ class backend_integration_test extends ConditionalRun {
             val expected = getExpectedOutput(filePath)
             val actual = runAssembly(progName)
 
-            
-
             try {
-                if(actual == expected)
+                if(actual._1 == expected._1 && actual._2.length == expected._2.length && actual._2.zip(expected._2).forall(p => p._1 == p._2))
                     successes += filePath
                 else 
                     outputFailures += filePath
