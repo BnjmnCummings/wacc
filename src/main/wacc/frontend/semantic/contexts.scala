@@ -1,7 +1,9 @@
 package wacc
 
 import collection.mutable.ListBuffer
+import collection.mutable
 
+import wacc.assemblyIR.*
 import q_ast.Q_Name
 
 trait ErrContext {
@@ -42,3 +44,29 @@ class TypeCheckerCtx(tyInfo: TypeInfo, errs: ListBuffer[Err], fnameIn: Option[St
         None
     }
 }
+
+class CodeGenCtx {
+    private val storedStrings: mutable.Set[A_StoredStr] = mutable.Set()
+
+    private val defaultFuncs: mutable.Set[A_Func] = mutable.Set()
+
+    def addDefaultFunc(f: A_Func) = defaultFuncs.add(f)
+
+    private var strLabelCount = 0
+
+    def genNextStrLabel: A_DataLabel = {
+        val num = strLabelCount
+        strLabelCount += 1
+        A_DataLabel(s".S.str${num}")
+    }
+    // TODO @Jack : Create a function that maps a KnownType to a size - this is useful for things like read (char/int)
+
+    private var instrLabelCount: Int = 0
+
+    def genNextInstrLabel(): A_InstrLabel = {
+        val lbl = A_InstrLabel(s".L$instrLabelCount")
+        instrLabelCount += 1
+        lbl
+    }
+}
+    
