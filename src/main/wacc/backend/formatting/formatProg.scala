@@ -26,6 +26,7 @@ def formatData(storedStr: A_StoredStr): String =
 
 def formatFunction(func: A_Func): String = 
     val sb = StringBuilder()
-    sb ++= s"${func.lbl.name}:"
+    sb ++= s"${func.lbl.name}:\n"
+    sb ++= func.instrs.flatMap("\t" + formatInstr(_) + "\n")
     sb.toString()
 
