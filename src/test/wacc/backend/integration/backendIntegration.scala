@@ -187,10 +187,8 @@ class backend_integration_test extends ConditionalRun {
             val expected = getExpectedOutput(filePath)
             val actual = runAssembly(progName)
 
-            
-
             try {
-                if(actual == expected)
+                if(actual._1 == expected._1 && actual._2 == expected._2)
                     successes += filePath
                 else 
                     outputFailures += filePath
@@ -261,7 +259,8 @@ class backend_integration_test extends ConditionalRun {
 
             /* clean up after ourselves and return */
             s"./wipeAss $fileName" .!
-            return (exitStatus, output.toList)
+            
+            return (exitStatus, output.toList.filter(_.nonEmpty))
 
         } else {
             throw InstantiationException(s"Build command failed with exit status: $buildExitStatus")
@@ -279,7 +278,7 @@ class backend_integration_test extends ConditionalRun {
                 .dropWhile( _ != "# Output:").tail
                 .takeWhile(s => s != "# Program:" && s != "# Exit:")
                 .map(_.replace("#", "").trim)
-                .filterNot(_.isEmpty)
+                .filter(_.nonEmpty)
 
             
             val exitCode: Int = lines.dropWhile( _ != "# Exit:") match
@@ -288,7 +287,7 @@ class backend_integration_test extends ConditionalRun {
                 case _::tail => 
                     tail.takeWhile(_ != "# Program:")
                     .map(_.replace("#", "").trim)
-                    .filterNot(_.isEmpty)
+                    .filter(_.nonEmpty)
                     .map(_.toInt)(0)
        
             return (exitCode, output) 

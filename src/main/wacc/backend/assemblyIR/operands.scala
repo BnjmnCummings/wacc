@@ -16,10 +16,11 @@ case class A_OffsetLbl(lbl: A_DataLabel) extends A_Offset
 /* cheeky macro for 0 offset */
 inline def noOffset: A_Offset = A_OffsetImm(0)
 
-inline def intSize: A_OperandSize = A_OperandSize.A_32
-inline def charSize: A_OperandSize = A_OperandSize.A_8
-inline def boolSize: A_OperandSize = A_OperandSize.A_8
-inline def ptrSize: A_OperandSize = A_OperandSize.A_64
+inline def INT_SIZE: A_OperandSize = A_OperandSize.A_32
+inline def CHAR_SIZE: A_OperandSize = A_OperandSize.A_8
+inline def BOOL_SIZE: A_OperandSize = A_OperandSize.A_8
+inline def PTR_SIZE: A_OperandSize = A_OperandSize.A_64
+inline def EXIT_CODE_SIZE = A_OperandSize.A_8
 
 /* 
 caller save - if you need to preserve the values of these before a function call, push and pop them on the stack
