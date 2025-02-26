@@ -46,6 +46,8 @@ sealed trait A_Label:
 case class A_DataLabel(val name: String) extends A_Label 
 case class A_InstrLabel(val name: String) extends A_Label 
 
+case class A_ExternalLabel(val name: String) extends A_Label
+
 case object A_Ret extends A_Instr
 
 enum A_Cond {

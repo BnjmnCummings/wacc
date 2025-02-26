@@ -25,6 +25,7 @@ def formatOffset(op: A_Offset): String = op match
     }
     case A_OffsetReg(reg) => s"+ ${formatReg(reg)}"
     // case A_OffsetScaledReg(reg, scale) => s"+ ${formatReg(reg)} * $scale"
+    case A_OffsetLbl(lbl) => s"+ ${lbl.name}"
 
 def formatReg(op: A_Reg): String = op.regSize match
     case A_OperandSize.A_8 => op.regName match
@@ -98,4 +99,5 @@ def formatReg(op: A_Reg): String = op.regSize match
         case A_RegName.R13 => "r15"
         case A_RegName.StackPtr => "rsp"
         case A_RegName.BasePtr => "rbp"
+        case A_RegName.InstrPtr => "rip"
 

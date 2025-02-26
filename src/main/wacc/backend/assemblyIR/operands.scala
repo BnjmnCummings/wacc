@@ -10,6 +10,7 @@ case class A_Reg(regSize: A_OperandSize, regName: A_RegName) extends A_Operand
 sealed trait A_Offset
 case class A_OffsetImm(n: BigInt) extends A_Offset
 case class A_OffsetReg(reg: A_Reg) extends A_Offset
+case class A_OffsetLbl(lbl: A_DataLabel) extends A_Offset
 // case class A_OffsetScaledReg(reg: A_Reg, scale: Int) extends A_Offset
 
 /* cheeky macro for 0 offset */
@@ -42,6 +43,7 @@ enum A_RegName {
     case R13      // r15 - callee
     case StackPtr // rsp - callee
     case BasePtr  // rbp - callee
+    case InstrPtr // rip
 }
 
 enum A_OperandSize {

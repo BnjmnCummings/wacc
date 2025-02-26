@@ -100,7 +100,7 @@ enum ErrorType {
     case SemanticError
 }
 
-def generateErrorMessageCodeBlock(
+def genErrorMessageCodeBlock(
     line: String,
     linesBefore: Seq[String],
     linesAfter: Seq[String],

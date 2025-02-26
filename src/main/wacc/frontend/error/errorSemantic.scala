@@ -207,7 +207,7 @@ def getLineFromContext(ctx: ErrContext): String = {
                 lineAfter = contents.next()
             }
 
-            generateErrorMessageCodeBlock(
+            genErrorMessageCodeBlock(
                 curLine,
                 List(lineBefore),
                 List(lineAfter),

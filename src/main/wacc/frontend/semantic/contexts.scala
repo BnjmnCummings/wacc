@@ -1,7 +1,9 @@
 package wacc
 
 import collection.mutable.ListBuffer
+import collection.mutable
 
+import wacc.assemblyIR.*
 import q_ast.Q_Name
 
 trait ErrContext {
@@ -42,3 +44,4 @@ class TypeCheckerCtx(tyInfo: TypeInfo, errs: ListBuffer[Err], fnameIn: Option[St
         None
     }
 }
+    
