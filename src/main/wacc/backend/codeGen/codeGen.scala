@@ -11,7 +11,6 @@ import wacc.SemType
 import wacc.?
 import wacc.X
 import wacc.KnownType
-import wacc.CodeGenCtx
 
 val TRUE = 1
 val FALSE = 0
