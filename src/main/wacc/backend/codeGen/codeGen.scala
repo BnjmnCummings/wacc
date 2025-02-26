@@ -16,6 +16,8 @@ val TRUE = 1
 val FALSE = 0
 val ZERO_IMM = 0
 val CHR_MASK = -128
+val PAIR_SIZE_BYTES = 16
+val PAIR_OFFSET_SIZE = 8
 
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx()
@@ -301,8 +303,18 @@ private def genFuncCall(v: T_Name, args: List[T_Expr])(using ctx: CodeGenCtx): L
 
 private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
-private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType)(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
 
+    A_Mov(A_Reg(A_OperandSize.A_32, A_RegName.R1), A_Imm(PAIR_SIZE_BYTES))
+    A_Call(A_ExternalLabel("malloc"))
+    A_Mov(A_Reg(A_OperandSize.A_64, A_RegName.R11), A_Reg(A_OperandSize.A_64, A_RegName.RetReg))
+    gen(x1)
+    A_MovDeref(A_RegDeref(sizeOf(ty1), A_MemOffset(A_OperandSize.A_64, A_Reg(A_OperandSize.A_64, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Reg(sizeOf(ty1), A_RegName.RetReg))
+    gen(x2)
+    A_MovDeref(A_RegDeref(sizeOf(ty2), A_MemOffset(A_OperandSize.A_64, A_Reg(A_OperandSize.A_64, A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Reg(sizeOf(ty2), A_RegName.RetReg))
+
+    builder.toList
 
 
 private def funcLabelGen(f: T_Name): A_InstrLabel = A_InstrLabel(s".F.${f.name}")
@@ -315,5 +327,5 @@ def sizeOf(ty: SemType): A_OperandSize = ty match
     case wacc.KnownType.Char => A_OperandSize.A_8
     case wacc.KnownType.String => ???
     case wacc.KnownType.Array(ty) => ???
-    case KnownType.Pair(ty1, ty2) => ???
+    case KnownType.Pair(_, _) => ??? // should be 16 bytes - A_128??
     case KnownType.Ident => ???
