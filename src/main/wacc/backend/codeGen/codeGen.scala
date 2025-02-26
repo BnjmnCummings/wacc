@@ -95,7 +95,20 @@ private def genRead(l: T_LValue, ty: SemType)(using ctx: CodeGenCtx): List[A_Ins
 
     builder.toList
 
-private def genFree(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genFree(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+
+    builder += A_Mov(A_Reg(A_OperandSize.A_64, A_RegName.R1), A_Reg(A_OperandSize.A_64, A_RegName.R11))
+    
+    ty match
+        case KnownType.Array(_) =>
+            builder += A_Sub(A_Reg(A_OperandSize.A_64, A_RegName.R1), A_Imm(INT_SIZE_BYTES), intSize)
+            builder += A_Call(A_InstrLabel("_free"))
+        case KnownType.Pair(_, _) =>
+            builder += A_Call(A_InstrLabel("_freepair"))
+        case _ => throw Exception("Invalid type with free. Should be caught in type checker!")
+    
+    builder.toList
 
 private def genReturn(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
