@@ -12,6 +12,7 @@ import wacc.SemType
 import wacc.?
 import wacc.X
 import wacc.KnownType
+import wacc.EXIT_SUCCESS
 
 val TRUE = 1
 val FALSE = 0
@@ -41,6 +42,7 @@ def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     builder += A_Sub(A_Reg(ptrSize, A_RegName.StackPtr), A_Imm(frameSize), ptrSize)
     builder += A_Mov(A_Reg(ptrSize, A_RegName.BasePtr), A_Reg(ptrSize, A_RegName.StackPtr))
     builder ++= t_tree.body.flatMap(gen)
+    builder += A_Mov(A_Reg(ptrSize, A_RegName.RetReg), A_Imm(EXIT_SUCCESS))
     builder += A_Add(A_Reg(ptrSize, A_RegName.StackPtr), A_Imm(frameSize), ptrSize)
     builder += A_Pop(A_Reg(ptrSize, A_RegName.BasePtr))
     builder += A_Ret
