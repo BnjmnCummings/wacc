@@ -98,6 +98,8 @@ private def genRead(l: T_LValue, ty: SemType)(using ctx: CodeGenCtx): List[A_Ins
 private def genFree(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
+    builder ++= gen(x)
+
     builder += A_Mov(A_Reg(A_OperandSize.A_64, A_RegName.R1), A_Reg(A_OperandSize.A_64, A_RegName.R11))
     
     ty match
@@ -110,7 +112,17 @@ private def genFree(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr
     
     builder.toList
 
-private def genReturn(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genReturn(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+
+    builder ++= gen(x)
+
+    builder += A_Mov(A_Reg(ptrSize, A_RegName.StackPtr), A_Reg(ptrSize, A_RegName.BasePtr))
+    builder += A_Pop(A_Reg(ptrSize, A_RegName.R10))
+    builder += A_Pop(A_Reg(ptrSize, A_RegName.BasePtr))
+    builder += A_Ret
+
+    builder.toList
 
 private def genExit(x: T_Expr)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
