@@ -6,7 +6,7 @@ sealed trait Q_Expr extends Q_RValue
 sealed trait Q_LValue
 sealed trait Q_RValue
 
-case class Q_Name(name: String, num: Int)
+case class Name(name: String, num: Int)
 
 // Binary operators
 sealed trait Q_BinaryOper extends Q_Expr
@@ -37,12 +37,12 @@ case class Q_IntLiteral(v: BigInt, pos: (Int, Int) = (0, 0)) extends Q_Expr
 case class Q_BoolLiteral(v: Boolean, pos: (Int, Int) = (0, 0)) extends Q_Expr
 case class Q_CharLiteral(v: Char, pos: (Int, Int) = (0, 0)) extends Q_Expr
 case class Q_StringLiteral(v: String, pos: (Int, Int) = (0, 0)) extends Q_Expr
-case class Q_Ident(v: Q_Name, pos: (Int, Int) = (0, 0)) extends Q_Expr, Q_LValue
-case class Q_ArrayElem(v: Q_Name, indicies: List[Q_Expr], pos: (Int, Int) = (0, 0)) extends Q_Expr, Q_LValue
+case class Q_Ident(v: Name, pos: (Int, Int) = (0, 0)) extends Q_Expr, Q_LValue
+case class Q_ArrayElem(v: Name, indicies: List[Q_Expr], pos: (Int, Int) = (0, 0)) extends Q_Expr, Q_LValue
 object Q_PairNullLiteral extends Q_Expr
 
 // RValues
-case class Q_FuncCall(v: Q_Name, args: List[Q_Expr], pos: (Int, Int) = (0, 0)) extends Q_RValue
+case class Q_FuncCall(v: Name, args: List[Q_Expr], pos: (Int, Int) = (0, 0)) extends Q_RValue
 case class Q_ArrayLiteral(xs: List[Q_Expr], pos: (Int, Int) = (0, 0)) extends Q_RValue
 case class Q_PairElem(index: PairIndex, v: Q_LValue, pos: (Int, Int) = (0, 0)) extends Q_Expr, Q_LValue
 case class Q_NewPair(x1: Q_Expr, x2: Q_Expr, pos: (Int, Int) = (0, 0)) extends Q_RValue

@@ -1,6 +1,7 @@
 package wacc.codeGen
 
 import wacc.t_ast.*
+import wacc.q_ast.Name
 import wacc.assemblyIR.*
 import wacc.TypeInfo
 import wacc.ast.PairIndex
@@ -11,6 +12,7 @@ import wacc.SemType
 import wacc.?
 import wacc.X
 import wacc.KnownType
+import wacc.EXIT_SUCCESS
 
 val TRUE = 1
 val FALSE = 0
@@ -20,9 +22,34 @@ val CHR_MASK = -128
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx()
 
-    val _funcs = t_tree.funcs.map(gen)
-    val main = A_Func(A_InstrLabel("main"), t_tree.body.flatMap(gen))
-    ???
+    val _funcs = t_tree.funcs.map(gen) ++ ctx.defaultFuncsList
+
+    // --- generating main function ---
+    // calculate frame size and add variables to stack table
+    val stackTable: mutable.Map[Name, Int] = mutable.Map()
+
+    var frameSize: Int = 0
+    t_tree.scoped.foreach(v =>
+        stackTable(v) = frameSize
+        frameSize += intSizeOf(typeInfo.varTys(v))
+    )
+    
+    // building main function body
+    val builder: ListBuffer[A_Instr] = ListBuffer()
+
+    builder += A_Push(A_Reg(ptrSize, A_RegName.BasePtr))
+
+    builder += A_Sub(A_Reg(ptrSize, A_RegName.StackPtr), A_Imm(frameSize), ptrSize)
+    builder += A_Mov(A_Reg(ptrSize, A_RegName.BasePtr), A_Reg(ptrSize, A_RegName.StackPtr))
+    builder ++= t_tree.body.flatMap(gen)
+    builder += A_Mov(A_Reg(ptrSize, A_RegName.RetReg), A_Imm(EXIT_SUCCESS))
+    builder += A_Add(A_Reg(ptrSize, A_RegName.StackPtr), A_Imm(frameSize), ptrSize)
+    builder += A_Pop(A_Reg(ptrSize, A_RegName.BasePtr))
+    builder += A_Ret
+
+    val main = A_Func(A_InstrLabel("main"), builder.toList)
+
+    A_Prog(ctx.storedStringsList, main :: _funcs)
 }
 
 private def gen(t: T_Stmt)(using ctx: CodeGenCtx): List[A_Instr] = t match
@@ -79,7 +106,7 @@ private def gen(t: T_RValue)(using ctx: CodeGenCtx) = t match
 
 private def gen(t: T_Func)(using ctx: CodeGenCtx): A_Func = ???
 
-private def genDecl(v: T_Name, r: T_RValue, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genDecl(v: Name, r: T_RValue, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
 private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
@@ -115,7 +142,7 @@ private def genIfHelper(cond: T_Expr, body: List[T_Stmt], el: List[T_Stmt])(usin
 
     builder.toList
 
-private def genIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[T_Name], el: List[T_Stmt], scopedEl: Set[T_Name])(using ctx: CodeGenCtx): List[A_Instr] = 
+private def genIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name], el: List[T_Stmt], scopedEl: Set[Name])(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
 
     cond match
@@ -134,7 +161,7 @@ private def genIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[T_Name], el:
 
     builder.toList
 
-private def genWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[T_Name])(using ctx: CodeGenCtx): List[A_Instr] =
+private def genWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[Name])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
     val condLabel = ctx.genNextInstrLabel() // .L0
@@ -152,7 +179,7 @@ private def genWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[T_Name])(usin
 
     builder.toList
 
-private def genCodeBlock(body: List[T_Stmt], scoped: Set[T_Name])(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genCodeBlock(body: List[T_Stmt], scoped: Set[Name])(using ctx: CodeGenCtx): List[A_Instr] = ???
 
 private def genSkip(): List[A_Instr] = List()
 
@@ -289,15 +316,15 @@ private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] = 
     List(A_Lea(A_Reg(ptrSize, A_RegName.RetReg), offset))
 }
 
-private def genIdent(v: T_Name)(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genIdent(v: Name)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
-private def genArrayElem(v: T_Name, indices: List[T_Expr])(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genArrayElem(v: Name, indices: List[T_Expr])(using ctx: CodeGenCtx): List[A_Instr] = ???
 
 private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] = ???
 
 private def genPairElem(index: PairIndex, v: T_LValue)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
-private def genFuncCall(v: T_Name, args: List[T_Expr])(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genFuncCall(v: Name, args: List[T_Expr])(using ctx: CodeGenCtx): List[A_Instr] = ???
 
 private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
@@ -305,7 +332,7 @@ private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType)(using
 
 
 
-private def funcLabelGen(f: T_Name): A_InstrLabel = A_InstrLabel(s".F.${f.name}")
+private def funcLabelGen(f: Name): A_InstrLabel = A_InstrLabel(s".F.${f.name}")
 
 def sizeOf(ty: SemType): A_OperandSize = ty match
     case ? => throw Exception("Should not have semType ? in codeGen")
@@ -317,3 +344,10 @@ def sizeOf(ty: SemType): A_OperandSize = ty match
     case wacc.KnownType.Array(ty) => ???
     case KnownType.Pair(ty1, ty2) => ???
     case KnownType.Ident => ???
+
+def intSizeOf(ty: SemType): Int = sizeOf(ty) match
+    case A_OperandSize.A_8 => 1
+    case A_OperandSize.A_32 => 4
+    case A_OperandSize.A_64 => 8
+
+
