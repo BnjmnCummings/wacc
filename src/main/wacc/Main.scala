@@ -3,7 +3,6 @@ package wacc
 import parsley.{Success, Failure}
 
 import wacc.semantic.*
-import wacc.q_ast.Q_Prog
 import wacc.t_ast.T_Prog
 import wacc.assemblyIR.A_Prog
 import wacc.codeGen.*
