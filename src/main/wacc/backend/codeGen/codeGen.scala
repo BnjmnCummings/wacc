@@ -18,6 +18,7 @@ val ZERO_IMM = 0
 val CHR_MASK = -128
 val PAIR_SIZE_BYTES = 16
 val PAIR_OFFSET_SIZE = 8
+val INT_SIZE_BYTES = 4
 
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx()
@@ -301,7 +302,22 @@ private def genPairElem(index: PairIndex, v: T_LValue)(using ctx: CodeGenCtx): L
 
 private def genFuncCall(v: T_Name, args: List[T_Expr])(using ctx: CodeGenCtx): List[A_Instr] = ???
 
-private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt)(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt)(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+    val sizeBytes = INT_SIZE_BYTES + (sizeOfBytes(ty) * length)
+
+    builder += A_Mov(A_Reg(A_OperandSize.A_32, A_RegName.R1), A_Imm(sizeBytes))
+    builder += A_Call(A_ExternalLabel("malloc"))
+    builder += A_Mov(A_Reg(A_OperandSize.A_64, A_RegName.R11), A_Reg(A_OperandSize.A_64, A_RegName.RetReg))
+    builder += A_Add(A_Reg(A_OperandSize.A_64, A_RegName.R11), A_Imm(INT_SIZE_BYTES), intSize)
+    builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R11), A_OffsetImm(-INT_SIZE_BYTES))), A_Imm(length))
+
+    for (i <- 0 to length.asInstanceOf[Int]) { // TODO: as instance of used! haha (ranges won't take BigInt - refactor or leave?)
+        builder ++= gen(xs(i))
+        builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R11), A_OffsetImm(-i * sizeOfBytes(ty)))), A_Reg(sizeOf(ty), A_RegName.RetReg))
+    }
+
+    builder.toList
 
 private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
@@ -328,4 +344,15 @@ def sizeOf(ty: SemType): A_OperandSize = ty match
     case wacc.KnownType.String => ???
     case wacc.KnownType.Array(ty) => ???
     case KnownType.Pair(_, _) => ??? // should be 16 bytes - A_128??
+    case KnownType.Ident => ???
+
+def sizeOfBytes(ty: SemType): BigInt = ty match
+    case ? => ???
+    case X => ???
+    case wacc.KnownType.Int => ???
+    case wacc.KnownType.Boolean => ???
+    case wacc.KnownType.Char => ???
+    case wacc.KnownType.String => ???
+    case wacc.KnownType.Array(ty) => ???
+    case KnownType.Pair(ty1, ty2) => ???
     case KnownType.Ident => ???
