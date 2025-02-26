@@ -1,21 +1,9 @@
 package wacc.integration
 
-import wacc.semantic.typeCheck
-import wacc.renamer
-import wacc.parser
-import wacc.ScopeException
 import wacc.testUtils.*
 import wacc.frontend
-import wacc.backend
 import wacc.assemblyIR.A_Prog
 import wacc.codeGen.*
-
-
-
-
-
-
-
 
 import java.io.FileNotFoundException
 import java.io.File
