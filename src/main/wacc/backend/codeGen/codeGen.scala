@@ -40,14 +40,14 @@ def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     // building main function body
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
-    builder += A_Push(A_Reg(ptrSize, A_RegName.BasePtr))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.BasePtr))
 
-    builder += A_Sub(A_Reg(ptrSize, A_RegName.StackPtr), A_Imm(frameSize), ptrSize)
-    builder += A_Mov(A_Reg(ptrSize, A_RegName.BasePtr), A_Reg(ptrSize, A_RegName.StackPtr))
+    builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    builder += A_Mov(A_Reg(PTR_SIZE, A_RegName.BasePtr), A_Reg(PTR_SIZE, A_RegName.StackPtr))
     builder ++= t_tree.body.flatMap(gen)
-    builder += A_Mov(A_Reg(ptrSize, A_RegName.RetReg), A_Imm(EXIT_SUCCESS))
-    builder += A_Add(A_Reg(ptrSize, A_RegName.StackPtr), A_Imm(frameSize), ptrSize)
-    builder += A_Pop(A_Reg(ptrSize, A_RegName.BasePtr))
+    builder += A_Mov(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(EXIT_SUCCESS))
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
     builder += A_Ret
 
     val main = A_Func(A_InstrLabel("main"), builder.toList)
@@ -131,7 +131,7 @@ private def genFree(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr
     
     ty match
         case KnownType.Array(_) =>
-            builder += A_Sub(A_Reg(A_OperandSize.A_64, A_RegName.R1), A_Imm(INT_SIZE_BYTES), intSize)
+            builder += A_Sub(A_Reg(A_OperandSize.A_64, A_RegName.R1), A_Imm(INT_SIZE_BYTES), INT_SIZE)
             builder += A_Call(A_InstrLabel("_free"))
         case KnownType.Pair(_, _) =>
             builder += A_Call(A_InstrLabel("_freepair"))
@@ -144,9 +144,9 @@ private def genReturn(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Ins
 
     builder ++= gen(x)
 
-    builder += A_Mov(A_Reg(ptrSize, A_RegName.StackPtr), A_Reg(ptrSize, A_RegName.BasePtr))
-    builder += A_Pop(A_Reg(ptrSize, A_RegName.R10))
-    builder += A_Pop(A_Reg(ptrSize, A_RegName.BasePtr))
+    builder += A_Mov(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R10))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
     builder += A_Ret
 
     builder.toList
@@ -164,7 +164,7 @@ private def genIfHelper(cond: T_Expr, body: List[T_Stmt], el: List[T_Stmt])(usin
     val restLabel = ctx.genNextInstrLabel() // .L1
 
     builder ++= gen(cond)
-    builder += A_Cmp(A_Reg(boolSize, A_RegName.RetReg), A_Imm(TRUE), boolSize)
+    builder += A_Cmp(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE)
     builder += A_Jmp(bodyLabel, A_Cond.Eq)
 
     el.foreach(builder ++= gen(_))
@@ -209,7 +209,7 @@ private def genWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[Name])(using 
 
     builder += A_LabelStart(condLabel)
     builder ++= gen(cond)
-    builder += A_Cmp(A_Reg(boolSize, A_RegName.RetReg), A_Imm(TRUE), boolSize)
+    builder += A_Cmp(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE)
     builder += A_Jmp(bodyLabel, A_Cond.Eq)
 
     builder.toList
@@ -225,22 +225,22 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName)(using ctx: 
     // Note: IDiv stores remainder in edx(32bit) - R3
 
     builder ++= gen(x)
-    builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+    builder += A_Push(A_Reg(INT_SIZE, A_RegName.RetReg))
     builder ++= gen(y)
-    builder += A_Mov(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1))
+    builder += A_Mov(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1))
 
     // Compare denominator with 0
-    builder += A_Cmp(A_Reg(intSize, A_RegName.R1), A_Imm(0), intSize)
+    builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(0), INT_SIZE)
     builder += A_Jmp(???, A_Cond.Eq)
     // Above is a comparison of y (denominator) with 0
     // TODO @Aidan: Add a divide by 0 flag + label
 
-    builder += A_Pop(A_Reg(intSize, A_RegName.RetReg))
-    builder += A_IDiv(A_Reg(intSize, A_RegName.R1), intSize)
+    builder += A_Pop(A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder += A_IDiv(A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     // TODO @Aidan: Overflow can occur here - add flag system etc.
     // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
 
-    builder += A_Mov(A_Reg(intSize, A_RegName.RetReg), (A_Reg(intSize, divResultReg)))
+    builder += A_Mov(A_Reg(INT_SIZE, A_RegName.RetReg), (A_Reg(INT_SIZE, divResultReg)))
 
     builder.toList
 
@@ -248,10 +248,10 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x)
-    builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+    builder += A_Push(A_Reg(INT_SIZE, A_RegName.RetReg))
     builder ++= gen(y)
-    builder += A_Pop(A_Reg(intSize, A_RegName.R1))
-    builder += instrApply(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1), intSize)
+    builder += A_Pop(A_Reg(INT_SIZE, A_RegName.R1))
+    builder += instrApply(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     // TODO @Aidan: Overflow can occur here - add flag system etc.
 
     builder.toList
@@ -260,10 +260,10 @@ private def genMul(x: T_Expr, y: T_Expr)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x)
-    builder += A_Push(A_Reg(intSize, A_RegName.RetReg))
+    builder += A_Push(A_Reg(INT_SIZE, A_RegName.RetReg))
     builder ++= gen(y)
-    builder += A_Pop(A_Reg(intSize, A_RegName.R1))
-    builder += A_IMul(A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.RetReg), A_Reg(intSize, A_RegName.R1), intSize)
+    builder += A_Pop(A_Reg(INT_SIZE, A_RegName.R1))
+    builder += A_IMul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     // TODO @Aidan: Overflow can occur here - add flag system etc.
 
     builder.toList
@@ -279,7 +279,7 @@ private def genComparison(x: T_Expr, y: T_Expr, ty: SemType, cond: A_Cond)(using
     builder ++= gen(y)
     builder += A_Pop(A_Reg(sizeTy, A_RegName.R1))
     builder += A_Cmp(A_Reg(sizeTy, A_RegName.R1), A_Reg(sizeTy, A_RegName.RetReg), sizeTy)
-    builder += A_Set(A_Reg(boolSize, A_RegName.RetReg), cond)
+    builder += A_Set(A_Reg(BOOL_SIZE, A_RegName.RetReg), cond)
 
     builder.toList
 
@@ -287,10 +287,10 @@ private def genBitwiseOp(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x)
-    builder += A_Push(A_Reg(boolSize, A_RegName.RetReg))
+    builder += A_Push(A_Reg(BOOL_SIZE, A_RegName.RetReg))
     builder ++= gen(y)
-    builder += A_Pop(A_Reg(boolSize, A_RegName.R1))
-    builder += instrApply(A_Reg(boolSize, A_RegName.RetReg), A_Reg(boolSize, A_RegName.R1), boolSize)
+    builder += A_Pop(A_Reg(BOOL_SIZE, A_RegName.R1))
+    builder += instrApply(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Reg(BOOL_SIZE, A_RegName.R1), BOOL_SIZE)
 
     builder.toList
 
@@ -298,7 +298,7 @@ private def genNot(x: T_Expr)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x)
-    builder += A_Xor(A_Reg(boolSize, A_RegName.RetReg), A_Imm(TRUE), boolSize)
+    builder += A_Xor(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE)
 
     builder.toList
 
@@ -308,8 +308,8 @@ private def genNeg(x: T_Expr)(using ctx: CodeGenCtx): List[A_Instr] =
     builder ++= gen(x)
 
     // CONSIDER: DO WE NEED TO SAVE R1 BEFORE THIS?
-    builder += A_Mov(A_Reg(intSize, A_RegName.R1), A_Imm(ZERO_IMM))
-    builder += A_Sub(A_Reg(intSize, A_RegName.R1), A_Reg(intSize, A_RegName.RetReg), intSize)
+    builder += A_Mov(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(ZERO_IMM))
+    builder += A_Sub(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg), INT_SIZE)
     // check overflow -2^32 case! TODO @Aidan
 
     builder.toList
@@ -320,7 +320,7 @@ private def genOrd(x: T_Expr)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x)
-    builder += A_Movzx(A_Reg(intSize, A_RegName.R1), A_Reg(charSize, A_RegName.RetReg))
+    builder += A_Movzx(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(CHAR_SIZE, A_RegName.RetReg))
 
     builder.toList
 
@@ -329,26 +329,26 @@ private def genChr(x: T_Expr)(using ctx: CodeGenCtx): List[A_Instr] =
 
     builder ++= gen(x)
 
-    builder += A_Mov(A_Reg(intSize, A_RegName.R1), A_Reg(intSize, A_RegName.RetReg))
-    builder += A_And(A_Reg(intSize, A_RegName.R1), A_Imm(CHR_MASK), intSize)
-    builder += A_Cmp(A_Reg(intSize, A_RegName.R1), A_Imm(ZERO_IMM), intSize)
+    builder += A_Mov(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder += A_And(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(CHR_MASK), INT_SIZE)
+    builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(ZERO_IMM), INT_SIZE)
     builder += A_Jmp(???, A_Cond.NEq)
     // TODO: @Aidan Create bad character label - this is when you chr(x) |x| > 127 (0b1111111)
 
     builder.toList
 
-private def genIntLiteral(v: BigInt)(using ctx: CodeGenCtx): List[A_Instr] = List(A_Mov(A_Reg(intSize, A_RegName.RetReg), A_Imm(v)))
+private def genIntLiteral(v: BigInt)(using ctx: CodeGenCtx): List[A_Instr] = List(A_Mov(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(v)))
 
-private def genBoolLiteral(v: Boolean)(using ctx: CodeGenCtx): List[A_Instr] = List(A_Mov(A_Reg(boolSize, A_RegName.RetReg), A_Imm(if v then TRUE else FALSE)))
+private def genBoolLiteral(v: Boolean)(using ctx: CodeGenCtx): List[A_Instr] = List(A_Mov(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Imm(if v then TRUE else FALSE)))
 
-private def genCharLiteral(v: Char)(using ctx: CodeGenCtx): List[A_Instr] = List(A_Mov(A_Reg(charSize, A_RegName.RetReg), A_Imm(v.toInt)))
+private def genCharLiteral(v: Char)(using ctx: CodeGenCtx): List[A_Instr] = List(A_Mov(A_Reg(CHAR_SIZE, A_RegName.RetReg), A_Imm(v.toInt)))
 
 private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] = {
     val lbl = ctx.genStoredStr(v)
 
-    val offset = A_MemOffset(ptrSize, A_Reg(A_OperandSize.A_64, A_RegName.InstrPtr), A_OffsetLbl(lbl))
+    val offset = A_MemOffset(PTR_SIZE, A_Reg(A_OperandSize.A_64, A_RegName.InstrPtr), A_OffsetLbl(lbl))
 
-    List(A_Lea(A_Reg(ptrSize, A_RegName.RetReg), offset))
+    List(A_Lea(A_Reg(PTR_SIZE, A_RegName.RetReg), offset))
 }
 
 private def genIdent(v: Name)(using ctx: CodeGenCtx): List[A_Instr] = ???
@@ -368,7 +368,7 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt)(using
     builder += A_Mov(A_Reg(A_OperandSize.A_32, A_RegName.R1), A_Imm(sizeBytes))
     builder += A_Call(A_ExternalLabel("malloc"))
     builder += A_Mov(A_Reg(A_OperandSize.A_64, A_RegName.R11), A_Reg(A_OperandSize.A_64, A_RegName.RetReg))
-    builder += A_Add(A_Reg(A_OperandSize.A_64, A_RegName.R11), A_Imm(INT_SIZE_BYTES), intSize)
+    builder += A_Add(A_Reg(A_OperandSize.A_64, A_RegName.R11), A_Imm(INT_SIZE_BYTES), INT_SIZE)
     builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R11), A_OffsetImm(-INT_SIZE_BYTES))), A_Imm(length))
 
     for (i <- 0 to length.asInstanceOf[Int]) { // TODO: as instance of used! haha (ranges won't take BigInt - refactor or leave?)
