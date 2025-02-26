@@ -3,7 +3,6 @@ package wacc
 import collection.mutable.ListBuffer
 import collection.mutable
 
-import wacc.assemblyIR.*
 import q_ast.Name
 
 trait ErrContext {
