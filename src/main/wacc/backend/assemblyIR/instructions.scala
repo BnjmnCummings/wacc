@@ -2,7 +2,11 @@ package wacc.assemblyIR
 
 case class A_Prog(data: List[A_StoredStr], funcs: List[A_Func])
 
-case class A_Func(lbl: A_InstrLabel, instrs: List[A_Instr])
+sealed trait A_Proc
+
+case class A_Func(lbl: A_InstrLabel, instrs: List[A_Instr]) extends A_Proc
+
+case class A_DataFunc(lbl: A_InstrLabel, instrs: List[A_Instr], data: A_StoredStr) extends A_Proc
 
 case class A_StoredStr(lbl: A_DataLabel, str: String)
 

@@ -10,17 +10,17 @@ class types_test extends AnyFlatSpec {
         val funcs: List[Q_Func] = List[Q_Func]()
 
         val body: List[Q_Stmt] = List[Q_Stmt](
-            Q_Decl(Q_Name("x", 0), Q_IntLiteral(7)),
-            Q_Decl(Q_Name("c", 0), Q_CharLiteral('c')),
-            Q_Decl(Q_Name("b", 0), Q_BoolLiteral(true)),
-            Q_Decl(Q_Name("s", 0), Q_StringLiteral("Test"))
+            Q_Decl(Name("x", 0), Q_IntLiteral(7)),
+            Q_Decl(Name("c", 0), Q_CharLiteral('c')),
+            Q_Decl(Name("b", 0), Q_BoolLiteral(true)),
+            Q_Decl(Name("s", 0), Q_StringLiteral("Test"))
         )
 
-        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("x", 0), Q_Name("c", 0), Q_Name("b", 0), Q_Name("s", 0))
+        val scoped: Set[Name] = Set[Name](Name("x", 0), Name("c", 0), Name("b", 0), Name("s", 0))
 
         val prog: Q_Prog = Q_Prog(funcs, body, scoped)
         
-        val tyInfo = TypeInfo(varTys = Map(Q_Name("x", 0) -> KnownType.Int, Q_Name("c", 0) -> KnownType.Char, Q_Name("b", 0) -> KnownType.Boolean, Q_Name("s", 0) -> KnownType.String), funcTys = Map())
+        val tyInfo = TypeInfo(varTys = Map(Name("x", 0) -> KnownType.Int, Name("c", 0) -> KnownType.Char, Name("b", 0) -> KnownType.Boolean, Name("s", 0) -> KnownType.String), funcTys = Map())
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe a [Right[?, ?]]
     }
@@ -29,16 +29,16 @@ class types_test extends AnyFlatSpec {
         val funcs: List[Q_Func] = List[Q_Func]()
 
         val body: List[Q_Stmt] = List[Q_Stmt](
-            Q_Decl(Q_Name("xInt", 0), Q_StringLiteral("incorrect type")),
-            Q_Decl(Q_Name("yInt", 0), Q_CharLiteral('z')),
-            Q_Decl(Q_Name("zInt", 0), Q_BoolLiteral(true))
+            Q_Decl(Name("xInt", 0), Q_StringLiteral("incorrect type")),
+            Q_Decl(Name("yInt", 0), Q_CharLiteral('z')),
+            Q_Decl(Name("zInt", 0), Q_BoolLiteral(true))
         )
 
-        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("xInt", 0), Q_Name("yInt", 0), Q_Name("zInt", 0))
+        val scoped: Set[Name] = Set[Name](Name("xInt", 0), Name("yInt", 0), Name("zInt", 0))
 
         val prog: Q_Prog = Q_Prog(funcs, body, scoped)
 
-        val tyInfo = TypeInfo(varTys = Map(Q_Name("xInt", 0) -> KnownType.Int, Q_Name("yInt", 0) -> KnownType.Int, Q_Name("zInt", 0) -> KnownType.Int), funcTys = Map())
+        val tyInfo = TypeInfo(varTys = Map(Name("xInt", 0) -> KnownType.Int, Name("yInt", 0) -> KnownType.Int, Name("zInt", 0) -> KnownType.Int), funcTys = Map())
 
         // val expected = Some(List[Err](
         //     TypeMismatch(KnownType.String, KnownType.Int),
@@ -53,16 +53,16 @@ class types_test extends AnyFlatSpec {
         val funcs: List[Q_Func] = List[Q_Func]()
 
         val body: List[Q_Stmt] = List[Q_Stmt](
-            Q_Decl(Q_Name("xChar", 0), Q_StringLiteral("incorrect type")),
-            Q_Decl(Q_Name("yChar", 0), Q_BoolLiteral(true)),
-            Q_Decl(Q_Name("zChar", 0), Q_IntLiteral(4))
+            Q_Decl(Name("xChar", 0), Q_StringLiteral("incorrect type")),
+            Q_Decl(Name("yChar", 0), Q_BoolLiteral(true)),
+            Q_Decl(Name("zChar", 0), Q_IntLiteral(4))
         )
 
-        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("xChar", 0), Q_Name("yChar", 0), Q_Name("zChar", 0))
+        val scoped: Set[Name] = Set[Name](Name("xChar", 0), Name("yChar", 0), Name("zChar", 0))
 
         val prog: Q_Prog = Q_Prog(funcs, body, scoped)
         
-        val tyInfo = TypeInfo(varTys = Map(Q_Name("xChar", 0) -> KnownType.Char, Q_Name("yChar", 0) -> KnownType.Char, Q_Name("zChar", 0) -> KnownType.Char), funcTys = Map())
+        val tyInfo = TypeInfo(varTys = Map(Name("xChar", 0) -> KnownType.Char, Name("yChar", 0) -> KnownType.Char, Name("zChar", 0) -> KnownType.Char), funcTys = Map())
 
         // val expected = Some(List[Error](
         //     TypeMismatch(KnownType.String, KnownType.Char),
@@ -77,16 +77,16 @@ class types_test extends AnyFlatSpec {
         val funcs: List[Q_Func] = List[Q_Func]()
 
         val body: List[Q_Stmt] = List[Q_Stmt](
-            Q_Decl(Q_Name("xStr", 0), Q_CharLiteral('z')),
-            Q_Decl(Q_Name("yStr", 0), Q_BoolLiteral(true)),
-            Q_Decl(Q_Name("zStr", 0), Q_IntLiteral(4))
+            Q_Decl(Name("xStr", 0), Q_CharLiteral('z')),
+            Q_Decl(Name("yStr", 0), Q_BoolLiteral(true)),
+            Q_Decl(Name("zStr", 0), Q_IntLiteral(4))
         )
 
-        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("xStr", 0), Q_Name("yStr", 0), Q_Name("zStr", 0))
+        val scoped: Set[Name] = Set[Name](Name("xStr", 0), Name("yStr", 0), Name("zStr", 0))
 
         val prog: Q_Prog = Q_Prog(funcs, body, scoped)
         
-        val tyInfo = TypeInfo(varTys = Map(Q_Name("xStr", 0) -> KnownType.String, Q_Name("yStr", 0) -> KnownType.String, Q_Name("zStr", 0) -> KnownType.String), funcTys = Map())
+        val tyInfo = TypeInfo(varTys = Map(Name("xStr", 0) -> KnownType.String, Name("yStr", 0) -> KnownType.String, Name("zStr", 0) -> KnownType.String), funcTys = Map())
 
         // val expected = Some(List[Error](
         //     TypeMismatch(KnownType.Char, KnownType.String),
@@ -101,16 +101,16 @@ class types_test extends AnyFlatSpec {
         val funcs: List[Q_Func] = List[Q_Func]()
 
         val body: List[Q_Stmt] = List[Q_Stmt](
-            Q_Decl(Q_Name("xBool", 0), Q_IntLiteral(4)),
-            Q_Decl(Q_Name("yBool", 0), Q_CharLiteral('z')),
-            Q_Decl(Q_Name("zBool", 0), Q_StringLiteral("incorrect type"))
+            Q_Decl(Name("xBool", 0), Q_IntLiteral(4)),
+            Q_Decl(Name("yBool", 0), Q_CharLiteral('z')),
+            Q_Decl(Name("zBool", 0), Q_StringLiteral("incorrect type"))
         )
 
-        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("xBool", 0), Q_Name("yBool", 0), Q_Name("zBool", 0))
+        val scoped: Set[Name] = Set[Name](Name("xBool", 0), Name("yBool", 0), Name("zBool", 0))
 
         val prog: Q_Prog = Q_Prog(funcs, body, scoped)
         
-        val tyInfo = TypeInfo(varTys = Map(Q_Name("xBool", 0) -> KnownType.Boolean, Q_Name("yBool", 0) -> KnownType.Boolean, Q_Name("zBool", 0) -> KnownType.Boolean), funcTys = Map())
+        val tyInfo = TypeInfo(varTys = Map(Name("xBool", 0) -> KnownType.Boolean, Name("yBool", 0) -> KnownType.Boolean, Name("zBool", 0) -> KnownType.Boolean), funcTys = Map())
 
         // val expected = Some(List[Error](
         //     TypeMismatch(KnownType.Int, KnownType.Boolean),
@@ -125,14 +125,14 @@ class types_test extends AnyFlatSpec {
         val funcs: List[Q_Func] = List[Q_Func]()
 
         val body: List[Q_Stmt] = List[Q_Stmt](
-            Q_Decl(Q_Name("intArr", 0), Q_ArrayLiteral(List[Q_Expr](Q_IntLiteral(1), Q_IntLiteral(2), Q_IntLiteral(3))))
+            Q_Decl(Name("intArr", 0), Q_ArrayLiteral(List[Q_Expr](Q_IntLiteral(1), Q_IntLiteral(2), Q_IntLiteral(3))))
         )
 
-        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("intArr", 0))
+        val scoped: Set[Name] = Set[Name](Name("intArr", 0))
 
         val prog: Q_Prog = Q_Prog(funcs, body, scoped)
         
-        val tyInfo = TypeInfo(varTys = Map(Q_Name("intArr", 0) -> KnownType.Array(KnownType.Int)), funcTys = Map())
+        val tyInfo = TypeInfo(varTys = Map(Name("intArr", 0) -> KnownType.Array(KnownType.Int)), funcTys = Map())
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe a [Right[?, ?]]
     }
@@ -141,17 +141,17 @@ class types_test extends AnyFlatSpec {
         val funcs: List[Q_Func] = List[Q_Func]()
 
         val body: List[Q_Stmt] = List[Q_Stmt](
-            Q_Decl(Q_Name("arr1", 0), Q_IntLiteral(6)),
-            Q_Decl(Q_Name("arr2", 0), Q_CharLiteral('b')),
-            Q_Decl(Q_Name("arr3", 0), Q_BoolLiteral(false)),
-            Q_Decl(Q_Name("arr4", 0), Q_ArrayLiteral(List[Q_Expr](Q_CharLiteral('a'))))
+            Q_Decl(Name("arr1", 0), Q_IntLiteral(6)),
+            Q_Decl(Name("arr2", 0), Q_CharLiteral('b')),
+            Q_Decl(Name("arr3", 0), Q_BoolLiteral(false)),
+            Q_Decl(Name("arr4", 0), Q_ArrayLiteral(List[Q_Expr](Q_CharLiteral('a'))))
             )
 
-        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("arr1", 0), Q_Name("arr2", 0), Q_Name("arr3", 0), Q_Name("arr4", 0))
+        val scoped: Set[Name] = Set[Name](Name("arr1", 0), Name("arr2", 0), Name("arr3", 0), Name("arr4", 0))
 
         val prog: Q_Prog = Q_Prog(funcs, body, scoped)
         
-        val tyInfo = TypeInfo(varTys = Map(Q_Name("arr1", 0) -> KnownType.Array(KnownType.Int), Q_Name("arr2", 0) -> KnownType.Array(KnownType.Int), Q_Name("arr3", 0) -> KnownType.Array(KnownType.Int), Q_Name("arr4", 0) -> KnownType.Array(KnownType.Int)), funcTys = Map())
+        val tyInfo = TypeInfo(varTys = Map(Name("arr1", 0) -> KnownType.Array(KnownType.Int), Name("arr2", 0) -> KnownType.Array(KnownType.Int), Name("arr3", 0) -> KnownType.Array(KnownType.Int), Name("arr4", 0) -> KnownType.Array(KnownType.Int)), funcTys = Map())
 
         // val expected = Some(List(
         //     TypeMismatch(KnownType.Int, KnownType.Array(KnownType.Int)),
@@ -167,14 +167,14 @@ class types_test extends AnyFlatSpec {
         val funcs: List[Q_Func] = List[Q_Func]()
 
         val body: List[Q_Stmt] = List[Q_Stmt](
-            Q_Decl(Q_Name("arr5", 0), Q_ArrayLiteral(List[Q_Expr](Q_IntLiteral(3), Q_CharLiteral('a'))))
+            Q_Decl(Name("arr5", 0), Q_ArrayLiteral(List[Q_Expr](Q_IntLiteral(3), Q_CharLiteral('a'))))
         )
 
-        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("arr5", 0))
+        val scoped: Set[Name] = Set[Name](Name("arr5", 0))
 
         val prog: Q_Prog = Q_Prog(funcs, body, scoped)
         
-        val tyInfo = TypeInfo(varTys = Map(Q_Name("arr5", 0) -> KnownType.Array(KnownType.Int)), funcTys = Map())
+        val tyInfo = TypeInfo(varTys = Map(Name("arr5", 0) -> KnownType.Array(KnownType.Int)), funcTys = Map())
 
         val expected = Left(List(
             TypeMismatch(KnownType.Char, KnownType.Int)
@@ -189,15 +189,15 @@ class types_test2 extends AnyFlatSpec {
         val funcs: List[Q_Func] = List[Q_Func]()
 
         val body: List[Q_Stmt] = List[Q_Stmt](
-            Q_Decl(Q_Name("arr1", 0), Q_ArrayLiteral(List[Q_Expr](Q_IntLiteral(1)))),
-            Q_Free(Q_Ident(Q_Name("arr1", 0)))
+            Q_Decl(Name("arr1", 0), Q_ArrayLiteral(List[Q_Expr](Q_IntLiteral(1)))),
+            Q_Free(Q_Ident(Name("arr1", 0)))
             )
 
-        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("arr1", 0))
+        val scoped: Set[Name] = Set[Name](Name("arr1", 0))
 
         val prog: Q_Prog = Q_Prog(funcs, body, scoped)
         
-        val tyInfo = TypeInfo(varTys = Map(Q_Name("arr1", 0) -> KnownType.Array(KnownType.Int)), funcTys = Map())
+        val tyInfo = TypeInfo(varTys = Map(Name("arr1", 0) -> KnownType.Array(KnownType.Int)), funcTys = Map())
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe a [Right[?, ?]]
     }
@@ -206,15 +206,15 @@ class types_test2 extends AnyFlatSpec {
         val funcs: List[Q_Func] = List[Q_Func]()
 
         val body: List[Q_Stmt] = List[Q_Stmt](
-            Q_Decl(Q_Name("p", 0), Q_NewPair(Q_IntLiteral(1), Q_IntLiteral(2))),
-            Q_Free(Q_Ident(Q_Name("p", 0)))
+            Q_Decl(Name("p", 0), Q_NewPair(Q_IntLiteral(1), Q_IntLiteral(2))),
+            Q_Free(Q_Ident(Name("p", 0)))
             )
 
-        val scoped: Set[Q_Name] = Set[Q_Name](Q_Name("p", 0))
+        val scoped: Set[Name] = Set[Name](Name("p", 0))
 
         val prog: Q_Prog = Q_Prog(funcs, body, scoped)
         
-        val tyInfo = TypeInfo(varTys = Map(Q_Name("p", 0) -> KnownType.Pair(KnownType.Int, KnownType.Int)), funcTys = Map())
+        val tyInfo = TypeInfo(varTys = Map(Name("p", 0) -> KnownType.Pair(KnownType.Int, KnownType.Int)), funcTys = Map())
 
         wacc.semantic.typeCheck(prog, tyInfo) shouldBe a [Right[?, ?]]
     }

@@ -6,6 +6,7 @@ import wacc.semantic.*
 import wacc.t_ast.T_Prog
 import wacc.assemblyIR.A_Prog
 import wacc.codeGen.*
+import wacc.formatting.*
 
 import java.io.File
 import java.io.FileNotFoundException
@@ -18,9 +19,7 @@ val EXIT_UNEXPECTED_ERR = -1
 @main
 def main(fname: String): Unit = {
     val (t_tree, typeInfo) = frontend(fname)
-    // for now just exit successfully since frontend has completed
-    sys.exit(EXIT_SUCCESS)
-    backend(t_tree, typeInfo)
+    backend(t_tree, typeInfo, fname)
 }
 
 def frontend(fname: String): (T_Prog, TypeInfo) = {
@@ -62,7 +61,13 @@ def frontend(fname: String): (T_Prog, TypeInfo) = {
         }
 }
 
-def backend(t_tree: T_Prog, typeInfo: TypeInfo): Unit = {
+def backend(t_tree: T_Prog, typeInfo: TypeInfo, fname: String): Unit = {
     val assembly: A_Prog = gen(t_tree, typeInfo)
-    // TODO: String output to file here @Zakk @Ben
+    val progName = fname
+                .split("/")
+                .last
+                .replace(".wacc", "")
+    val printWriter = new java.io.PrintWriter(s"$progName.s")
+    formatProg(assembly)(using printWriter)
+    printWriter.close()
 }

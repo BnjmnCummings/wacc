@@ -3,8 +3,7 @@ package wacc
 import collection.mutable.ListBuffer
 import collection.mutable
 
-import wacc.assemblyIR.*
-import q_ast.Q_Name
+import q_ast.Name
 
 trait ErrContext {
     def fname: Option[String]
@@ -36,8 +35,8 @@ class TypeCheckerCtx(tyInfo: TypeInfo, errs: ListBuffer[Err], fnameIn: Option[St
     }
 
     // This will get the type of variables
-    def typeOf(id: Q_Name): KnownType = tyInfo.varTys(id)
-    def typeOfFunc(id: Q_Name): (KnownType, List[Q_Name]) = tyInfo.funcTys(id)
+    def typeOf(id: Name): KnownType = tyInfo.varTys(id)
+    def typeOfFunc(id: Name): (KnownType, List[Name]) = tyInfo.funcTys(id)
 
     def error(err: Err) = {
         errs += err

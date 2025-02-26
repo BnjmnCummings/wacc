@@ -11,6 +11,8 @@ class CodeGenCtx {
 
     def addDefaultFunc(f: A_Func) = defaultFuncs.add(f)
 
+    def defaultFuncsList: List[A_Func] = defaultFuncs.toList
+
     private var strLabelCount = 0
 
     def genNextStrLabel: A_DataLabel = {
@@ -28,6 +30,8 @@ class CodeGenCtx {
             lbl
         }
     }
+
+    def storedStringsList: List[A_StoredStr] = storedStrings.toList
     // TODO @Jack : Create a function that maps a KnownType to a size - this is useful for things like read (char/int)
 
     private var instrLabelCount: Int = 0
