@@ -86,7 +86,14 @@ private def genDecl(v: T_Name, r: T_RValue, ty: SemType)(using ctx: CodeGenCtx):
 
 private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
-private def genRead(l: T_LValue, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genRead(l: T_LValue, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+    
+    builder += A_Mov(A_Reg(A_OperandSize.A_32, A_RegName.R1), A_Reg(A_OperandSize.A_32, A_RegName.R10))
+    builder += A_Call(A_InstrLabel("_readi"))
+    // Result left in eax
+
+    builder.toList
 
 private def genFree(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
@@ -350,6 +357,17 @@ def sizeOfBytes(ty: SemType): BigInt = ty match
     case ? => ???
     case X => ???
     case wacc.KnownType.Int => ???
+    case wacc.KnownType.Boolean => ???
+    case wacc.KnownType.Char => ???
+    case wacc.KnownType.String => ???
+    case wacc.KnownType.Array(ty) => ???
+    case KnownType.Pair(ty1, ty2) => ???
+    case KnownType.Ident => ???
+
+def typeToLetter(ty: SemType): String = ty match
+    case ? => ???
+    case X => ???
+    case wacc.KnownType.Int => "i"
     case wacc.KnownType.Boolean => ???
     case wacc.KnownType.Char => ???
     case wacc.KnownType.String => ???
