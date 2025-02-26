@@ -64,6 +64,6 @@ def frontend(fname: String): (T_Prog, TypeInfo) = {
 }
 
 def backend(t_tree: T_Prog, typeInfo: TypeInfo): Unit = {
-    val assembly: A_Prog = generate(t_tree, typeInfo)
+    val assembly: A_Prog = gen(t_tree, typeInfo)
     // TODO: String output to file here @Zakk @Ben
 }
