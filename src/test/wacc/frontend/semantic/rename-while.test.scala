@@ -62,19 +62,19 @@ class rename_while_test extends AnyFlatSpec{
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            Q_Name("x", 0),
+                            Name("x", 0),
                             Q_IntLiteral(5)
                         )
                     ),
                     Set(
-                        Q_Name("x", 0)
+                        Name("x", 0)
                     )
                 )
             ),
             Set()
         ), TypeInfo(
             Map(
-                Q_Name("x", 0) -> KnownType.Int
+                Name("x", 0) -> KnownType.Int
             ),
             Map()
         ))
@@ -116,42 +116,42 @@ class rename_while_test extends AnyFlatSpec{
             List(),
             List(
                 Q_Decl(
-                    Q_Name("x", 0),
+                    Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_While(
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            Q_Name("x", 1),
+                            Name("x", 1),
                             Q_IntLiteral(10)
                         )
                     ),
                     Set(
-                        Q_Name("x", 1)
+                        Name("x", 1)
                     )
                 ),
                 Q_While(
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            Q_Name("x", 2),
+                            Name("x", 2),
                             Q_IntLiteral(15)
                         )
                     ),
                     Set(
-                        Q_Name("x", 2)
+                        Name("x", 2)
                     )
                 )
             ),
             Set(
-                Q_Name("x", 0)
+                Name("x", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("x", 0) -> KnownType.Int,
-                Q_Name("x", 1) -> KnownType.Int,
-                Q_Name("x", 2) -> KnownType.Int
+                Name("x", 0) -> KnownType.Int,
+                Name("x", 1) -> KnownType.Int,
+                Name("x", 2) -> KnownType.Int
             ),
             Map()
         ))
@@ -182,14 +182,14 @@ class rename_while_test extends AnyFlatSpec{
             List(),
             List(
             Q_Decl(
-                Q_Name("x", 0),
+                Name("x", 0),
                 Q_IntLiteral(5)
             ),
             Q_While(
                 Q_BoolLiteral(true),
                 List(
                     Q_Asgn(
-                        Q_Ident(Q_Name("x", 0)),
+                        Q_Ident(Name("x", 0)),
                         Q_IntLiteral(5)
                     )
                 ),
@@ -197,11 +197,11 @@ class rename_while_test extends AnyFlatSpec{
             )
             ),
             Set(
-            Q_Name("x", 0)
+            Name("x", 0)
             )
         ), TypeInfo(
             Map(
-            Q_Name("x", 0) -> KnownType.Int
+            Name("x", 0) -> KnownType.Int
             ),
             Map()
         ))
@@ -240,27 +240,27 @@ class rename_while_test extends AnyFlatSpec{
                 Q_BoolLiteral(true),
                 List(
                 Q_Decl(
-                    Q_Name("x", 0),
+                    Name("x", 0),
                     Q_IntLiteral(10)
                 ),
                 Q_While(
                     Q_BoolLiteral(true),
                     List(
                     Q_Asgn(
-                        Q_Ident(Q_Name("x", 0)),
+                        Q_Ident(Name("x", 0)),
                         Q_IntLiteral(5)
                     )
                     ),
                     Set()
                 )
                 ),
-                Set(Q_Name("x", 0))
+                Set(Name("x", 0))
             )
             ),
             Set()
         ), TypeInfo(
             Map(
-            Q_Name("x", 0) -> KnownType.Int
+            Name("x", 0) -> KnownType.Int
             ),
             Map()
         ))
@@ -296,33 +296,33 @@ class rename_while_test extends AnyFlatSpec{
                 List(),
                 List(
                     Q_Decl(
-                        Q_Name("x", 0),
+                        Name("x", 0),
                         Q_IntLiteral(5)
                     ),
                     Q_While(
                         Q_BoolLiteral(true),
                         List(
                             Q_Decl(
-                                Q_Name("x", 1),
+                                Name("x", 1),
                                 Q_IntLiteral(10)
                             ),
                             Q_Asgn(
-                                Q_Ident(Q_Name("x", 1)),
+                                Q_Ident(Name("x", 1)),
                                 Q_IntLiteral(5)
                             )
                         ),
                         Set(
-                            Q_Name("x", 1)
+                            Name("x", 1)
                         )
                     )
                 ),
                 Set(
-                    Q_Name("x", 0)
+                    Name("x", 0)
                 )
             ), TypeInfo(
                 Map(
-                    Q_Name("x", 0) -> KnownType.Int,
-                    Q_Name("x", 1) -> KnownType.Int
+                    Name("x", 0) -> KnownType.Int,
+                    Name("x", 1) -> KnownType.Int
                 ),
                 Map()
             ))
@@ -358,33 +358,33 @@ class rename_while_test extends AnyFlatSpec{
                 List(),
                 List(
                     Q_Decl(
-                        Q_Name("x", 0),
+                        Name("x", 0),
                         Q_IntLiteral(5)
                     ),
                     Q_While(
                         Q_BoolLiteral(true),
                         List(
                             Q_Decl(
-                                Q_Name("x", 1),
+                                Name("x", 1),
                                 Q_StringLiteral("string")
                             ),
                             Q_Asgn(
-                                Q_Ident(Q_Name("x", 1)),
+                                Q_Ident(Name("x", 1)),
                                 Q_StringLiteral("newString")
                             )
                         ),
                         Set(
-                            Q_Name("x", 1)
+                            Name("x", 1)
                         )
                     )
                 ),
                 Set(
-                    Q_Name("x", 0)
+                    Name("x", 0)
                 )
             ), TypeInfo(
                 Map(
-                    Q_Name("x", 0) -> KnownType.Int,
-                    Q_Name("x", 1) -> KnownType.String
+                    Name("x", 0) -> KnownType.Int,
+                    Name("x", 1) -> KnownType.String
                 ),
                 Map()
             ))
@@ -415,14 +415,14 @@ class rename_while_test extends AnyFlatSpec{
             List(),
             List(
                 Q_Decl(
-                    Q_Name("x", 0),
+                    Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_While(
-                    Q_Ident(Q_Name("x", 0)),
+                    Q_Ident(Name("x", 0)),
                     List(
                         Q_Asgn(
-                            Q_Ident(Q_Name("x", 0)),
+                            Q_Ident(Name("x", 0)),
                             Q_IntLiteral(10)
                         )
                     ),
@@ -430,11 +430,11 @@ class rename_while_test extends AnyFlatSpec{
                 )
             ),
             Set(
-                Q_Name("x", 0)
+                Name("x", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("x", 0) -> KnownType.Int
+                Name("x", 0) -> KnownType.Int
             ),
             Map()
         ))
@@ -475,37 +475,37 @@ class rename_while_test extends AnyFlatSpec{
             List(),
             List(
                 Q_Decl(
-                    Q_Name("x", 0),
+                    Name("x", 0),
                     Q_IntLiteral(10)
                 ),
                 Q_While(
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            Q_Name("x", 1),
+                            Name("x", 1),
                             Q_IntLiteral(5)
                         ),
                         Q_While(
-                            Q_Ident(Q_Name("x", 1)),
+                            Q_Ident(Name("x", 1)),
                             List(
                                 Q_Asgn(
-                                    Q_Ident(Q_Name("x", 1)),
+                                    Q_Ident(Name("x", 1)),
                                     Q_IntLiteral(5)
                                 )
                             ),
                             Set()
                         )
                     ),
-                    Set(Q_Name("x", 1))
+                    Set(Name("x", 1))
                 )
             ),
             Set(
-                Q_Name("x", 0)
+                Name("x", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("x", 0) -> KnownType.Int,
-                Q_Name("x", 1) -> KnownType.Int
+                Name("x", 0) -> KnownType.Int,
+                Name("x", 1) -> KnownType.Int
             ),
             Map()
         ))

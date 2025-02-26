@@ -31,19 +31,19 @@ class rename_codeblock_test extends AnyFlatSpec{
                 Q_CodeBlock(
                     List(
                         Q_Decl(
-                            Q_Name("y", 0),
+                            Name("y", 0),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("y", 0)
+                        Name("y", 0)
                     )
                 )
             ),
             Set()
         ), TypeInfo(
             Map(
-                Q_Name("y", 0) -> KnownType.Int
+                Name("y", 0) -> KnownType.Int
             ),
             Map()
         ))
@@ -74,28 +74,28 @@ class rename_codeblock_test extends AnyFlatSpec{
             List(),
             List(
                 Q_Decl(
-                    Q_Name("y", 0),
+                    Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
-                            Q_Name("y", 1),
+                            Name("y", 1),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("y", 1)
+                        Name("y", 1)
                     )
                 )
             ),
             Set(
-                Q_Name("y", 0)
+                Name("y", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("y", 0) -> KnownType.Int,
-                Q_Name("y", 1) -> KnownType.Int
+                Name("y", 0) -> KnownType.Int,
+                Name("y", 1) -> KnownType.Int
             ),
             Map()
         ))
@@ -126,28 +126,28 @@ class rename_codeblock_test extends AnyFlatSpec{
             List(),
             List(
                 Q_Decl(
-                    Q_Name("y", 0),
+                    Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
-                            Q_Name("x", 0),
-                            Q_Ident(Q_Name("y", 0))
+                            Name("x", 0),
+                            Q_Ident(Name("y", 0))
                         )
                     ),
                     Set(
-                        Q_Name("x", 0)
+                        Name("x", 0)
                     )
                 )
             ),
             Set(
-                Q_Name("y", 0)
+                Name("y", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("y", 0) -> KnownType.Int,
-                Q_Name("x", 0) -> KnownType.Int
+                Name("y", 0) -> KnownType.Int,
+                Name("x", 0) -> KnownType.Int
             ),
             Map()
         ))
@@ -178,28 +178,28 @@ class rename_codeblock_test extends AnyFlatSpec{
             List(),
             List(
                 Q_Decl(
-                    Q_Name("y", 0),
+                    Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
-                            Q_Name("y", 1),
-                            Q_Ident(Q_Name("y", 0))
+                            Name("y", 1),
+                            Q_Ident(Name("y", 0))
                         )
                     ),
                     Set(
-                        Q_Name("y", 1)
+                        Name("y", 1)
                     )
                 )
             ),
             Set(
-                Q_Name("y", 0)
+                Name("y", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("y", 0) -> KnownType.Int,
-                Q_Name("y", 1) -> KnownType.Int
+                Name("y", 0) -> KnownType.Int,
+                Name("y", 1) -> KnownType.Int
             ),
             Map()
         ))
@@ -230,28 +230,28 @@ class rename_codeblock_test extends AnyFlatSpec{
             List(),
             List(
                 Q_Decl(
-                    Q_Name("y", 0),
+                    Name("y", 0),
                     Q_IntLiteral(6)
                 ),
                 Q_CodeBlock(
                     List(
                         Q_Decl(
-                            Q_Name("y", 1),
+                            Name("y", 1),
                             Q_StringLiteral("hello")
                         )
                     ),
                     Set(
-                        Q_Name("y", 1)
+                        Name("y", 1)
                     )
                 )
             ),
             Set(
-                Q_Name("y", 0)
+                Name("y", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("y", 0) -> KnownType.Int,
-                Q_Name("y", 1) -> KnownType.String
+                Name("y", 0) -> KnownType.Int,
+                Name("y", 1) -> KnownType.String
             ),
             Map()
         ))
