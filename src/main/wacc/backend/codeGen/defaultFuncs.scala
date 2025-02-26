@@ -5,6 +5,7 @@ import scala.collection.mutable.ListBuffer
 
 // stack aligning for 16 bytes
 inline def STACK_ALIGN_VAL = -16
+val OVERFLOW_LBL_STR_NAME = ".L._errOverflow_str0"
 
 /* 
 _exit:
@@ -29,3 +30,31 @@ inline def defaultExit: A_Func = {
 
     A_Func(A_InstrLabel("_exit"), program.toList)
 }
+
+inline def defaultOverflow: A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+    program += A_And(A_Reg(A_OperandSize.A_64, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), A_OperandSize.A_64)
+    program += A_Lea(A_Reg(A_OperandSize.A_64, A_RegName.R1), A_MemOffset(A_OperandSize.A_64, A_Reg(A_OperandSize.A_64, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(OVERFLOW_LBL_STR_NAME))))
+    // TODO: CHECK THE OVERFLOW_LBL_STR_NAME constant
+    program += A_Call(A_InstrLabel("_prints"))
+    program += A_Mov(A_Reg(A_OperandSize.A_8, A_RegName.R1), A_Imm(-1)) // TODO: FACTOR OUT THIS MAGIC NUMBER - WHAT IS ITS NAME??
+    program += A_Call(A_ExternalLabel("exit"))
+
+    A_Func(A_InstrLabel("_errOverflow"), program.toList)
+}
+
+/*
+.section .rodata
+# length of .L._errOverflow_str0
+	.int 52
+.L._errOverflow_str0:
+	.asciz "fatal error: integer overflow or underflow occurred\n"
+.text
+_errOverflow:
+	# external calls must be stack-aligned to 16 bytes, accomplished by masking with fffffffffffffff0
+	and rsp, -16
+	lea rdi, [rip + .L._errOverflow_str0]
+	call _prints
+	mov dil, -1
+	call exit@plt
+*/
