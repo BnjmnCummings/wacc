@@ -35,7 +35,7 @@ def toSemType(t: Type): SemType = t match
 // It maps variable names & function names to their types
 // This should allow for variables and functions to share names
 case class TypeInfo(
-    var varTys: Map[Q_Name, KnownType],
-    var funcTys: Map[Q_Name, (KnownType, List[Q_Name])]
+    var varTys: Map[Name, KnownType],
+    var funcTys: Map[Name, (KnownType, List[Name])]
     // This is a map from (Function Identifier, Return Type) -> parameter map [Param name -> Param type]
 )

@@ -79,29 +79,29 @@ class rename_if_test extends AnyFlatSpec{
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            Q_Name("x", 0),
+                            Name("x", 0),
                             Q_IntLiteral(5)
                         )
                     ),
                     Set(
-                        Q_Name("x", 0)
+                        Name("x", 0)
                     ),
                     List(
                         Q_Decl(
-                            Q_Name("y", 0),
+                            Name("y", 0),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("y", 0)   
+                        Name("y", 0)   
                     )
                 )
             ),
             Set()
         ), TypeInfo(
             Map(
-                Q_Name("x", 0) -> KnownType.Int,
-                Q_Name("y", 0) -> KnownType.Int
+                Name("x", 0) -> KnownType.Int,
+                Name("y", 0) -> KnownType.Int
             ),
             Map()
         ))
@@ -140,39 +140,39 @@ class rename_if_test extends AnyFlatSpec{
             List(),
             List(
                 Q_Decl(
-                    Q_Name("x", 0),
+                    Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_If(
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            Q_Name("x", 1),
+                            Name("x", 1),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("x", 1)
+                        Name("x", 1)
                     ),
                     List(
                         Q_Decl(
-                            Q_Name("x", 2),
+                            Name("x", 2),
                             Q_IntLiteral(7)
                         )
                     ),
                     Set(
-                        Q_Name("x", 2)
+                        Name("x", 2)
                     )
                 )
             ),
             Set(
-                Q_Name("x", 0)
+                Name("x", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("x", 0) -> KnownType.Int,
-                Q_Name("x", 1) -> KnownType.Int,
-                Q_Name("x", 2) -> KnownType.Int
+                Name("x", 0) -> KnownType.Int,
+                Name("x", 1) -> KnownType.Int,
+                Name("x", 2) -> KnownType.Int
             ),
             Map()
         ))
@@ -237,39 +237,39 @@ class rename_if_test extends AnyFlatSpec{
             List(),
             List(
                 Q_Decl(
-                    Q_Name("x", 0),
+                    Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_If(
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            Q_Name("x", 1),
+                            Name("x", 1),
                             Q_StringLiteral("hello")
                         )
                     ),
                     Set(
-                        Q_Name("x", 1)
+                        Name("x", 1)
                     ),
                     List(
                         Q_Decl(
-                            Q_Name("x", 2),
+                            Name("x", 2),
                             Q_IntLiteral(6)
                         )
                     ),
                     Set(
-                        Q_Name("x", 2)
+                        Name("x", 2)
                     )
                 )
             ),
             Set(
-                Q_Name("x", 0)
+                Name("x", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("x", 0) -> KnownType.Int,
-                Q_Name("x", 1) -> KnownType.String,
-                Q_Name("x", 2) -> KnownType.Int
+                Name("x", 0) -> KnownType.Int,
+                Name("x", 1) -> KnownType.String,
+                Name("x", 2) -> KnownType.Int
             ),
             Map()
         ))
@@ -308,39 +308,39 @@ class rename_if_test extends AnyFlatSpec{
             List(),
             List(
                 Q_Decl(
-                    Q_Name("x", 0),
+                    Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_If(
                     Q_BoolLiteral(true),
                     List(
                         Q_Decl(
-                            Q_Name("y", 0),
-                            Q_Ident(Q_Name("x", 0))
+                            Name("y", 0),
+                            Q_Ident(Name("x", 0))
                         )
                     ),
                     Set(
-                        Q_Name("y", 0)
+                        Name("y", 0)
                     ),
                     List(
                         Q_Decl(
-                            Q_Name("z", 0),
-                            Q_Ident(Q_Name("x", 0))
+                            Name("z", 0),
+                            Q_Ident(Name("x", 0))
                         )
                     ),
                     Set(
-                        Q_Name("z", 0)
+                        Name("z", 0)
                     )
                 )
             ),
             Set(
-                Q_Name("x", 0)
+                Name("x", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("x", 0) -> KnownType.Int,
-                Q_Name("y", 0) -> KnownType.Int,
-                Q_Name("z", 0) -> KnownType.Int
+                Name("x", 0) -> KnownType.Int,
+                Name("y", 0) -> KnownType.Int,
+                Name("z", 0) -> KnownType.Int
             ),
             Map()
         ))

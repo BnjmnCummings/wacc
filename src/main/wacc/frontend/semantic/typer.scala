@@ -15,11 +15,11 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo, fname: Option[String] = None): Eit
 
     val progFuncs: List[Q_Func] = prog.funcs
     val progStmts: List[Q_Stmt] = prog.body
-    val progScoped: Set[Q_Name] = prog.scoped
+    val progScoped: Set[Name] = prog.scoped
     
     val typedFuncs = progFuncs.map(check(_, Constraint.Unconstrained)._2)
     val typedStmts = progStmts.map(check(_, isFunc = false, Constraint.Unconstrained))
-    val typedScoped = progScoped.map(q_name => T_Name(q_name.name, q_name.num))
+    val typedScoped = progScoped.map(q_name => Name(q_name.name, q_name.num))
 
     ctx.errors.match {
         case err :: errs => Left(err :: errs)
@@ -37,12 +37,12 @@ def checkDeclTypes(l: SemType, r: Q_RValue)(using ctx: TypeCheckerCtx): (Option[
             val t = ctx.typeOf(n)
             (l, t) match
                 case (KnownType.String, KnownType.Array(KnownType.Char)) =>
-                    (Some(l), T_Ident(T_Name(n.name, n.num)))
+                    (Some(l), T_Ident(Name(n.name, n.num)))
                 case _ =>
                     if l == t then
-                        (Some(l), T_Ident(T_Name(n.name, n.num)))
+                        (Some(l), T_Ident(Name(n.name, n.num)))
                     else
-                        (ctx.error(TypeMismatch(t, l)), T_Ident(T_Name(n.name, n.num)))
+                        (ctx.error(TypeMismatch(t, l)), T_Ident(Name(n.name, n.num)))
                     
             // check(r, Constraint.IsExactly(l))
         // catches the base value case and the case where r is an ident
@@ -95,14 +95,14 @@ def checkArrayDeclType(l: SemType, r: Q_ArrayLiteral)(using ctx: TypeCheckerCtx)
 
 def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: TypeCheckerCtx): T_Stmt =
     stmt match {
-    case Q_Decl(id: Q_Name, r: Q_RValue, pos) =>
+    case Q_Decl(id: Name, r: Q_RValue, pos) =>
         ctx.setPos(pos)
 
         val (declTy, declTyped) = checkDeclTypes(ctx.typeOf(id), r)
 
         
 
-        T_Decl(T_Name(id.name, id.num), declTyped, declTy.getOrElse(?))
+        T_Decl(Name(id.name, id.num), declTyped, declTy.getOrElse(?))
     // Check the type of the LValue matches that of the RValue
     case Q_Asgn(l: Q_LValue, r: Q_RValue, pos) => 
         ctx.setPos(pos)
@@ -164,14 +164,14 @@ def check(stmt: Q_Stmt, isFunc: Boolean, funcConstraint: Constraint)(using ctx: 
         val condTyped = check(cond, Constraint.IsBoolean)._2
         val bodyTyped = check(body, isFunc, funcConstraint)
         val elTyped = check(el, isFunc, funcConstraint)
-        T_If(condTyped, bodyTyped, scopedBody.map(n => T_Name(n.name, n.num)), elTyped, scopedEl.map(n => T_Name(n.name, n.num)))
-    case Q_While(cond: Q_Expr, body: List[Q_Stmt], scopedBody: Set[Q_Name], pos) =>
+        T_If(condTyped, bodyTyped, scopedBody.map(n => Name(n.name, n.num)), elTyped, scopedEl.map(n => Name(n.name, n.num)))
+    case Q_While(cond: Q_Expr, body: List[Q_Stmt], scopedBody: Set[Name], pos) =>
         ctx.setPos(pos)
         check(cond, Constraint.IsBoolean)
-        T_While(check(cond, Constraint.IsBoolean)._2, check(body, isFunc, funcConstraint), scopedBody.map(n => T_Name(n.name, n.num)))
-    case Q_CodeBlock(body: List[Q_Stmt], scopedBody: Set[Q_Name], pos) =>
+        T_While(check(cond, Constraint.IsBoolean)._2, check(body, isFunc, funcConstraint), scopedBody.map(n => Name(n.name, n.num)))
+    case Q_CodeBlock(body: List[Q_Stmt], scopedBody: Set[Name], pos) =>
         ctx.setPos(pos)
-        T_CodeBlock(check(body, isFunc, funcConstraint), scopedBody.map(n => T_Name(n.name, n.num)))
+        T_CodeBlock(check(body, isFunc, funcConstraint), scopedBody.map(n => Name(n.name, n.num)))
     case Q_Skip(_) => T_Skip()
 }
 
@@ -270,10 +270,10 @@ def check(expr: Q_Expr, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemTy
     case Q_StringLiteral(v: String, pos) => 
         ctx.setPos(pos)
         (KnownType.String.satisfies(c), T_StringLiteral(v))
-    case Q_Ident(v: Q_Name, pos) => 
+    case Q_Ident(v: Name, pos) => 
         ctx.setPos(pos)
-        (ctx.typeOf(v).satisfies(c), T_Ident(T_Name(v.name, v.num)))
-    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], pos) => 
+        (ctx.typeOf(v).satisfies(c), T_Ident(Name(v.name, v.num)))
+    case Q_ArrayElem(v: Name, indices: List[Q_Expr], pos) => 
         ctx.setPos(pos)
         checkArrayElem(indices, v, c)
     case Q_PairNullLiteral => (KnownType.Pair(?, ?).satisfies(c), T_PairNullLiteral)
@@ -291,7 +291,7 @@ def getBaseType(ty: SemType, idxRem: Integer)(using ctx: TypeCheckerCtx): Option
     case (_, t) => ctx.error(InvalidIndexing())
 }
  
-def checkArrayElem(indices: List[Q_Expr], v: Q_Name, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemType], T_ArrayElem) =
+def checkArrayElem(indices: List[Q_Expr], v: Name, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemType], T_ArrayElem) =
     // Indices should evaluate to a numberic index
     val indicesTyped = indices.map(expr => check(expr, Constraint.IsNumeric)._2)
 
@@ -300,7 +300,7 @@ def checkArrayElem(indices: List[Q_Expr], v: Q_Name, c: Constraint)(using ctx: T
     // Get the base type of the array e.g. Array[Array[Bool]] -> Bool
     val checkedT = getBaseType(t, indices.length).getOrElse(?)
     
-    (checkedT.satisfies(c), T_ArrayElem(T_Name(v.name, v.num), indicesTyped))
+    (checkedT.satisfies(c), T_ArrayElem(Name(v.name, v.num), indicesTyped))
 
 def checkArithmeticExpr(x: Q_Expr, y: Q_Expr, c: Constraint, result_expr: (T_Expr, T_Expr) => T_Expr)
                        (using TypeCheckerCtx): (Option[SemType], T_Expr) =
@@ -330,13 +330,13 @@ def checkBooleanExpr(x: Q_Expr, y: Q_Expr, c: Constraint, result_expr: (T_Expr, 
     (mostSpecific(xTy, yTy).satisfies(c), result_expr(xTyped, yTyped))
 
 def check(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemType], T_LValue) = l match {
-    case Q_Ident(v: Q_Name, pos) => 
+    case Q_Ident(v: Name, pos) => 
         ctx.setPos(pos)
-        (ctx.typeOf(v).satisfies(c), T_Ident(T_Name(v.name, v.num)))
+        (ctx.typeOf(v).satisfies(c), T_Ident(Name(v.name, v.num)))
     case Q_PairElem(index: PairIndex, v: Q_LValue, pos) => 
         ctx.setPos(pos)
         checkPairElem(l, c)
-    case Q_ArrayElem(v: Q_Name, indices: List[Q_Expr], pos) => 
+    case Q_ArrayElem(v: Name, indices: List[Q_Expr], pos) => 
         ctx.setPos(pos)
         checkArrayElem(indices, v, c)
 }
@@ -359,10 +359,10 @@ def checkPairElem(l: Q_LValue, c: Constraint)(using ctx: TypeCheckerCtx): (Optio
 
 def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemType], T_RValue) =
     r match {
-    case Q_FuncCall(v: Q_Name, args: List[Q_Expr], pos) =>
+    case Q_FuncCall(v: Name, args: List[Q_Expr], pos) =>
         ctx.setPos(pos)
         val returnType: KnownType = ctx.typeOfFunc(v)._1
-        val argNames: List[Q_Name] = ctx.typeOfFunc(v)._2
+        val argNames: List[Name] = ctx.typeOfFunc(v)._2
 
         var argsTyped: List[T_Expr] = List()
 
@@ -377,7 +377,7 @@ def check(r: Q_RValue, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemTyp
                     check(arg, Constraint.Is(expectedType))._2
                 })
 
-        (returnType.satisfies(c), T_FuncCall(T_Name(v.name, v.num), argsTyped))
+        (returnType.satisfies(c), T_FuncCall(Name(v.name, v.num), argsTyped))
     case Q_ArrayLiteral(xs: List[Q_Expr], _) =>
         val xs_processed = xs.map(check(_, Constraint.Unconstrained))
         val xs_typed = xs_processed.map(_._2)
@@ -421,10 +421,10 @@ def checkReturnType(t: Type, stmt: Q_Stmt)(using ctx: TypeCheckerCtx): Option[Se
 }
 
 def check(func: Q_Func, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemType], T_Func) = {
-    val typedArgs = func.args.map(q_param => T_Param(q_param.t, T_Name(q_param.v.name, q_param.v.num)))
+    val typedArgs = func.args.map(q_param => T_Param(q_param.t, Name(q_param.v.name, q_param.v.num)))
     val typedBody = func.body.map(check(_, isFunc = true, Constraint.Is(toSemType(func.t))))
 
-    (checkReturnType(func.t, func.body.last), T_Func(func.t, T_Name(func.v.name, func.v.num), typedArgs, typedBody, func.scoped.map(q_name => T_Name(q_name.name, q_name.num))))
+    (checkReturnType(func.t, func.body.last), T_Func(func.t, Name(func.v.name, func.v.num), typedArgs, typedBody, func.scoped.map(q_name => Name(q_name.name, q_name.num))))
 }
 
 @targetName("checkStmts")

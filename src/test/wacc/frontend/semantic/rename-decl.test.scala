@@ -41,15 +41,15 @@ class rename_decl_test extends AnyFlatSpec {
             List(),
             List(
                 Q_Decl(
-                    Q_Name("x", 0),
+                    Name("x", 0),
                     Q_IntLiteral(5)
                 )
             ),
             Set(
-                Q_Name("x", 0)
+                Name("x", 0)
             )
         ), TypeInfo(
-            Map(Q_Name("x", 0) -> KnownType.Int),
+            Map(Name("x", 0) -> KnownType.Int),
             Map()
         ))
     }
@@ -171,22 +171,22 @@ class rename_decl_test extends AnyFlatSpec {
             List(),
             List(
                 Q_Decl(
-                    Q_Name("x", 0),
+                    Name("x", 0),
                     Q_IntLiteral(5)
                 ),
                 Q_Decl(
-                    Q_Name("y", 0),
-                    Q_Ident(Q_Name("x", 0))
+                    Name("y", 0),
+                    Q_Ident(Name("x", 0))
                 )
             ),
             Set(
-                Q_Name("x", 0),
-                Q_Name("y", 0)
+                Name("x", 0),
+                Name("y", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("x", 0) -> KnownType.Int,
-                Q_Name("y", 0) -> KnownType.Int
+                Name("x", 0) -> KnownType.Int,
+                Name("y", 0) -> KnownType.Int
             ),
             Map()
         ))
@@ -240,20 +240,20 @@ class rename_decl_test extends AnyFlatSpec {
             List(),
             List(
                 Q_Decl(
-                    Q_Name("x", 0),
+                    Name("x", 0),
                     Q_IntLiteral(6),
                 ),
                 Q_Asgn(
-                    Q_Ident(Q_Name("x", 0)),
-                    Q_Ident(Q_Name("x", 0)),
+                    Q_Ident(Name("x", 0)),
+                    Q_Ident(Name("x", 0)),
                 ),
             ),
             Set(
-                Q_Name("x", 0)
+                Name("x", 0)
             )
         ), TypeInfo(
             Map(
-                Q_Name("x", 0) -> KnownType.Int,
+                Name("x", 0) -> KnownType.Int,
             ),
             Map()
         ))
