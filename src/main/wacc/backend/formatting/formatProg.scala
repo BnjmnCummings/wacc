@@ -22,7 +22,7 @@ def formatData(storedStr: A_StoredStr): String =
     sb ++= s"\t.int ${storedStr.str.length()}\n"
     //TODO: verify that storedStr.lbl contains the number :)
     sb ++= s"${storedStr.lbl.name}:\n"
-    sb ++= s"\t.asciz: \"${storedStr.str}\"\n"
+    sb ++= s"\t.asciz \"${storedStr.str}\"\n"
     sb.toString()
 
 def formatFunction(func: A_Func): String = 
