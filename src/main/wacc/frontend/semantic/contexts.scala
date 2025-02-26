@@ -59,6 +59,16 @@ class CodeGenCtx {
         strLabelCount += 1
         A_DataLabel(s".S.str${num}")
     }
+
+    def genStoredStr(str: String): A_DataLabel = {
+        if (storedStrings.exists(_.str == str)) {
+            storedStrings.find(_.str == str).get.lbl
+        } else {
+            val lbl = genNextStrLabel
+            storedStrings.add(A_StoredStr(lbl, str))
+            lbl
+        }
+    }
     // TODO @Jack : Create a function that maps a KnownType to a size - this is useful for things like read (char/int)
 
     private var instrLabelCount: Int = 0
