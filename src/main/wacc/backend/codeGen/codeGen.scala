@@ -90,7 +90,7 @@ private def genRead(l: T_LValue, ty: SemType)(using ctx: CodeGenCtx): List[A_Ins
     val builder = new ListBuffer[A_Instr]
     
     builder += A_Mov(A_Reg(A_OperandSize.A_32, A_RegName.R1), A_Reg(A_OperandSize.A_32, A_RegName.R10))
-    builder += A_Call(A_InstrLabel("_readi"))
+    builder += A_Call(A_InstrLabel(s"_read${{typeToLetter(ty)}}"))
     // Result left in eax
 
     builder.toList
