@@ -16,12 +16,12 @@ case class T_Div(x: T_Expr, y: T_Expr) extends T_BinaryOper
 case class T_Mod(x: T_Expr, y: T_Expr) extends T_BinaryOper
 case class T_Add(x: T_Expr, y: T_Expr) extends T_BinaryOper
 case class T_Sub(x: T_Expr, y: T_Expr) extends T_BinaryOper
-case class T_GreaterThan(x: T_Expr, y: T_Expr) extends T_BinaryOper
-case class T_GreaterThanEq(x: T_Expr, y: T_Expr) extends T_BinaryOper
-case class T_LessThan(x: T_Expr, y: T_Expr) extends T_BinaryOper
-case class T_LessThanEq(x: T_Expr, y: T_Expr) extends T_BinaryOper
-case class T_Eq(x: T_Expr, y: T_Expr) extends T_BinaryOper
-case class T_NotEq(x: T_Expr, y: T_Expr) extends T_BinaryOper
+case class T_GreaterThan(x: T_Expr, y: T_Expr, ty: SemType) extends T_BinaryOper
+case class T_GreaterThanEq(x: T_Expr, y: T_Expr, ty: SemType) extends T_BinaryOper
+case class T_LessThan(x: T_Expr, y: T_Expr, ty: SemType) extends T_BinaryOper
+case class T_LessThanEq(x: T_Expr, y: T_Expr, ty: SemType) extends T_BinaryOper
+case class T_Eq(x: T_Expr, y: T_Expr, ty: SemType) extends T_BinaryOper
+case class T_NotEq(x: T_Expr, y: T_Expr, ty: SemType) extends T_BinaryOper
 case class T_And(x: T_Expr, y: T_Expr) extends T_BinaryOper
 case class T_Or(x: T_Expr, y: T_Expr) extends T_BinaryOper
 

@@ -5,30 +5,34 @@ import wacc.parser
 
 import wacc.lexer.fully
 
+import wacc.testUtils.*
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 import parsley.{Success, Failure, Result}
 
-class expr_test extends AnyFlatSpec {
-    "expr" should "be able to parse binary operators" in {
-        parser.expr.parse("1 + 2") shouldBe Success(Add(IntLiteral(1),IntLiteral(2)))
-    }
+class expr_test extends ConditionalRun {
+    runIfTrue(testSettings, "expr_test", () => {
+        "expr" should "be able to parse binary operators" in {
+            parser.expr.parse("1 + 2") shouldBe Success(Add(IntLiteral(1),IntLiteral(2)))
+        }
 
-    it should "be able to parse unary operators" in {
-        parser.expr.parse("!a") should equal (Success(Not(Ident("a"))))
-    }
-    
-    it should "be able to parse single identifiers" in {
-        parser.expr.parse("a") shouldBe Success(Ident("a"))
-    }
+        it should "be able to parse unary operators" in {
+            parser.expr.parse("!a") should equal (Success(Not(Ident("a"))))
+        }
 
-    it should "be able to parse pair null literals" in {
-        parser.expr.parse("null") shouldBe Success(PairNullLiteral)
-    }
+        it should "be able to parse single identifiers" in {
+            parser.expr.parse("a") shouldBe Success(Ident("a"))
+        }
 
-    it should "reject two variables without an operator" in {
-        fully(parser.expr).parse("a b") shouldBe a [Failure[?]]
-    }
+        it should "be able to parse pair null literals" in {
+            parser.expr.parse("null") shouldBe Success(PairNullLiteral)
+        }
+
+        it should "reject two variables without an operator" in {
+            fully(parser.expr).parse("a b") shouldBe a [Failure[?]]
+        }
+    })
 }
 
 class lvalue_test extends AnyFlatSpec {
