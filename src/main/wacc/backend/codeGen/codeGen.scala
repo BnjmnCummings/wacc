@@ -306,13 +306,13 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt)(using
 private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
-    A_Mov(A_Reg(A_OperandSize.A_32, A_RegName.R1), A_Imm(PAIR_SIZE_BYTES))
-    A_Call(A_ExternalLabel("malloc"))
-    A_Mov(A_Reg(A_OperandSize.A_64, A_RegName.R11), A_Reg(A_OperandSize.A_64, A_RegName.RetReg))
-    gen(x1)
-    A_MovDeref(A_RegDeref(sizeOf(ty1), A_MemOffset(A_OperandSize.A_64, A_Reg(A_OperandSize.A_64, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Reg(sizeOf(ty1), A_RegName.RetReg))
-    gen(x2)
-    A_MovDeref(A_RegDeref(sizeOf(ty2), A_MemOffset(A_OperandSize.A_64, A_Reg(A_OperandSize.A_64, A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Reg(sizeOf(ty2), A_RegName.RetReg))
+    builder += A_Mov(A_Reg(A_OperandSize.A_32, A_RegName.R1), A_Imm(PAIR_SIZE_BYTES))
+    builder += A_Call(A_ExternalLabel("malloc"))
+    builder += A_Mov(A_Reg(A_OperandSize.A_64, A_RegName.R11), A_Reg(A_OperandSize.A_64, A_RegName.RetReg))
+    builder ++= gen(x1)
+    builder += A_MovDeref(A_RegDeref(sizeOf(ty1), A_MemOffset(A_OperandSize.A_64, A_Reg(A_OperandSize.A_64, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Reg(sizeOf(ty1), A_RegName.RetReg))
+    builder ++= gen(x2)
+    builder += A_MovDeref(A_RegDeref(sizeOf(ty2), A_MemOffset(A_OperandSize.A_64, A_Reg(A_OperandSize.A_64, A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Reg(sizeOf(ty2), A_RegName.RetReg))
 
     builder.toList
 
