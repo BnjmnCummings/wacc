@@ -183,12 +183,20 @@ class backend_integration_test extends ConditionalRun {
             val printWriter = new java.io.PrintWriter(s"src/test/wacc/backend/integration/assembly/$progName.s")
             formatProg(assembly)(using printWriter)
             printWriter.close()
+            
+            val expected = getExpectedOutput(filePath)
+            val actual = runAssembly(progName)
+
+            
 
             try {
-                if(runAssembly(progName) == getExpectedOutput(filePath))
+                if(actual == expected)
                     successes += filePath
                 else 
                     outputFailures += filePath
+                    info(s"expected: $expected")
+                    info(s"actual: $actual")
+                    info("naughty boy")
             } catch {
                 case e: InstantiationException => 
                     compileFailures += filePath
