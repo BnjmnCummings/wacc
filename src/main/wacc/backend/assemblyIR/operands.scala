@@ -20,6 +20,7 @@ inline def INT_SIZE: A_OperandSize = A_OperandSize.A_32
 inline def CHAR_SIZE: A_OperandSize = A_OperandSize.A_8
 inline def BOOL_SIZE: A_OperandSize = A_OperandSize.A_8
 inline def PTR_SIZE: A_OperandSize = A_OperandSize.A_64
+inline def EXIT_CODE_SIZE = A_OperandSize.A_8
 
 /* 
 caller save - if you need to preserve the values of these before a function call, push and pop them on the stack

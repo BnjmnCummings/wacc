@@ -20,7 +20,6 @@ val ZERO_IMM = 0
 val CHR_MASK = -128
 val PAIR_SIZE_BYTES = 16
 val PAIR_OFFSET_SIZE = 8
-val INT_SIZE_BYTES = 4
 
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx()
@@ -116,7 +115,7 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType)(using ctx: CodeGenCtx
 private def genRead(l: T_LValue, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
     
-    builder += A_Mov(A_Reg(A_OperandSize.A_32, A_RegName.R1), A_Reg(A_OperandSize.A_32, A_RegName.R10))
+    builder += A_Mov(A_Reg(sizeOf(ty), A_RegName.R1), A_Reg(sizeOf(ty), A_RegName.R10))
     builder += A_Call(A_InstrLabel(s"_read${{typeToLetter(ty)}}"))
     // Result left in eax
 
@@ -127,11 +126,11 @@ private def genFree(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr
 
     builder ++= gen(x)
 
-    builder += A_Mov(A_Reg(A_OperandSize.A_64, A_RegName.R1), A_Reg(A_OperandSize.A_64, A_RegName.R11))
+    builder += A_Mov(A_Reg(PTR_SIZE, A_RegName.R1), A_Reg(PTR_SIZE, A_RegName.R11))
     
     ty match
         case KnownType.Array(_) =>
-            builder += A_Sub(A_Reg(A_OperandSize.A_64, A_RegName.R1), A_Imm(INT_SIZE_BYTES), INT_SIZE)
+            builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.R1), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
             builder += A_Call(A_InstrLabel("_free"))
         case KnownType.Pair(_, _) =>
             builder += A_Call(A_InstrLabel("_freepair"))
@@ -346,7 +345,7 @@ private def genCharLiteral(v: Char)(using ctx: CodeGenCtx): List[A_Instr] = List
 private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] = {
     val lbl = ctx.genStoredStr(v)
 
-    val offset = A_MemOffset(PTR_SIZE, A_Reg(A_OperandSize.A_64, A_RegName.InstrPtr), A_OffsetLbl(lbl))
+    val offset = A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(lbl))
 
     List(A_Lea(A_Reg(PTR_SIZE, A_RegName.RetReg), offset))
 }
@@ -363,13 +362,13 @@ private def genFuncCall(v: Name, args: List[T_Expr])(using ctx: CodeGenCtx): Lis
 
 private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
-    val sizeBytes = INT_SIZE_BYTES + (intSizeOf(ty) * length)
+    val sizeBytes = opSizeToInt(INT_SIZE) + (intSizeOf(ty) * length)
 
-    builder += A_Mov(A_Reg(A_OperandSize.A_32, A_RegName.R1), A_Imm(sizeBytes))
+    builder += A_Mov(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(sizeBytes))
     builder += A_Call(A_ExternalLabel("malloc"))
-    builder += A_Mov(A_Reg(A_OperandSize.A_64, A_RegName.R11), A_Reg(A_OperandSize.A_64, A_RegName.RetReg))
-    builder += A_Add(A_Reg(A_OperandSize.A_64, A_RegName.R11), A_Imm(INT_SIZE_BYTES), INT_SIZE)
-    builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R11), A_OffsetImm(-INT_SIZE_BYTES))), A_Imm(length))
+    builder += A_Mov(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.R11), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
+    builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R11), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length))
 
     for (i <- 0 to length.asInstanceOf[Int]) { // TODO: as instance of used! haha (ranges won't take BigInt - refactor or leave?)
         builder ++= gen(xs(i))
@@ -381,13 +380,13 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt)(using
 private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
-    builder += A_Mov(A_Reg(A_OperandSize.A_32, A_RegName.R1), A_Imm(PAIR_SIZE_BYTES))
+    builder += A_Mov(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(opSizeToInt(PTR_SIZE) * 2))
     builder += A_Call(A_ExternalLabel("malloc"))
-    builder += A_Mov(A_Reg(A_OperandSize.A_64, A_RegName.R11), A_Reg(A_OperandSize.A_64, A_RegName.RetReg))
+    builder += A_Mov(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(x1)
-    builder += A_MovDeref(A_RegDeref(sizeOf(ty1), A_MemOffset(A_OperandSize.A_64, A_Reg(A_OperandSize.A_64, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Reg(sizeOf(ty1), A_RegName.RetReg))
+    builder += A_MovDeref(A_RegDeref(sizeOf(ty1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Reg(sizeOf(ty1), A_RegName.RetReg))
     builder ++= gen(x2)
-    builder += A_MovDeref(A_RegDeref(sizeOf(ty2), A_MemOffset(A_OperandSize.A_64, A_Reg(A_OperandSize.A_64, A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Reg(sizeOf(ty2), A_RegName.RetReg))
+    builder += A_MovDeref(A_RegDeref(sizeOf(ty2), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Reg(sizeOf(ty2), A_RegName.RetReg))
 
     builder.toList
 
@@ -416,7 +415,10 @@ def typeToLetter(ty: SemType): String = ty match
     case KnownType.Pair(ty1, ty2) => ???
     case KnownType.Ident => ???
 
-def intSizeOf(ty: SemType): Int = sizeOf(ty) match
+def opSizeToInt(opSize: A_OperandSize): Int = opSize match
     case A_OperandSize.A_8 => 1
+    case A_OperandSize.A_16 => 2
     case A_OperandSize.A_32 => 4
     case A_OperandSize.A_64 => 8
+
+def intSizeOf(ty: SemType): Int = opSizeToInt(sizeOf(ty)) 
