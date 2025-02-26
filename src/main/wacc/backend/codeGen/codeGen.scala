@@ -405,17 +405,6 @@ def sizeOf(ty: SemType): A_OperandSize = ty match
     case KnownType.Pair(_, _) => ??? // should be 16 bytes - A_128??
     case KnownType.Ident => ???
 
-def sizeOfBytes(ty: SemType): BigInt = ty match
-    case ? => ???
-    case X => ???
-    case wacc.KnownType.Int => ???
-    case wacc.KnownType.Boolean => ???
-    case wacc.KnownType.Char => ???
-    case wacc.KnownType.String => ???
-    case wacc.KnownType.Array(ty) => ???
-    case KnownType.Pair(ty1, ty2) => ???
-    case KnownType.Ident => ???
-
 def typeToLetter(ty: SemType): String = ty match
     case ? => ???
     case X => ???
