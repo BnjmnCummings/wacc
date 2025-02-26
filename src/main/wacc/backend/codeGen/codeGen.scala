@@ -19,6 +19,35 @@ val ZERO_IMM = 0
 val CHR_MASK = -128
 
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
+    given ctx: CodeGenCtx = CodeGenCtx()
+
+    val _funcs = t_tree.funcs.map(gen) ++ ctx.defaultFuncsList
+
+    // --- generating main function ---
+    // calculate frame size and add variables to stack table
+    val stackTable: mutable.Map[Name, Int] = mutable.Map()
+
+    var frameSize: Int = 0
+    t_tree.scoped.foreach(v =>
+        stackTable(v) = frameSize
+        frameSize += intSizeOf(typeInfo.varTys(v))
+    )
+    
+    // building main function body
+    val builder: ListBuffer[A_Instr] = ListBuffer()
+
+    builder += A_Push(A_Reg(ptrSize, A_RegName.BasePtr))
+
+    builder += A_Sub(A_Reg(ptrSize, A_RegName.StackPtr), A_Imm(frameSize), ptrSize)
+    builder += A_Mov(A_Reg(ptrSize, A_RegName.BasePtr), A_Reg(ptrSize, A_RegName.StackPtr))
+    builder ++= t_tree.body.flatMap(gen)
+    builder += A_Add(A_Reg(ptrSize, A_RegName.StackPtr), A_Imm(frameSize), ptrSize)
+    builder += A_Pop(A_Reg(ptrSize, A_RegName.BasePtr))
+    builder += A_Ret
+
+    val main = A_Func(A_InstrLabel("main"), builder.toList)
+
+    A_Prog(ctx.storedStringsList, main :: _funcs)
 }
 
 private def gen(t: T_Stmt)(using ctx: CodeGenCtx): List[A_Instr] = t match
