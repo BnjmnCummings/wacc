@@ -41,7 +41,7 @@ abstract class MyErrorBuilder extends ErrorBuilder[Err] {
         linesBefore: Seq[String],
         linesAfter: Seq[String],
         lineNum: Int, errorPointsAt: Int, errorWidth: Int
-        ): String = generateErrorMessageCodeBlock(
+        ): String = genErrorMessageCodeBlock(
             line = line, 
             linesBefore = linesBefore, 
             linesAfter = linesAfter,

@@ -3,10 +3,9 @@ package wacc
 import parsley.{Success, Failure}
 
 import wacc.semantic.*
-import wacc.q_ast.Q_Prog
 import wacc.t_ast.T_Prog
 import wacc.assemblyIR.A_Prog
-import wacc.codeGen.CodeGen
+import wacc.codeGen.*
 
 import java.io.File
 import java.io.FileNotFoundException
@@ -64,7 +63,6 @@ def frontend(fname: String): (T_Prog, TypeInfo) = {
 }
 
 def backend(t_tree: T_Prog, typeInfo: TypeInfo): Unit = {
-    val codeGen = CodeGen(t_tree, typeInfo)
-    val assembly: A_Prog = codeGen.generate()
+    val assembly: A_Prog = gen(t_tree, typeInfo)
     // TODO: String output to file here @Zakk @Ben
 }

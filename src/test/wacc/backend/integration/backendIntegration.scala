@@ -1,25 +1,12 @@
 package wacc.integration
 
-import wacc.semantic.typeCheck
-import wacc.renamer
-import wacc.parser
-import wacc.ScopeException
 import wacc.testUtils.*
 import wacc.frontend
-import wacc.backend
 import wacc.assemblyIR.A_Prog
-import wacc.codeGen.CodeGen
-
-
-
-
-
-
-
+import wacc.codeGen.*
 
 import java.io.FileNotFoundException
 import java.io.File
-import parsley.Success
 import org.scalatest.flatspec.AnyFlatSpec
 import sys.process._
 import scala.io.Source
@@ -185,10 +172,9 @@ class backend_integration_test extends ConditionalRun {
         
         paths.foreach {filePath => 
             val (tProg, typeInfo) = frontend(filePath)
-            val codeGen = CodeGen(tProg, typeInfo)
-            val assembly: A_Prog = codeGen.generate()
+            val assembly: A_Prog = gen(tProg, typeInfo)
             // TODO: String output to file here @Zakk @Ben
-            // TODO: make sure she gets generated progname.s in test/wacc/backend/integration/assembly
+            // TODO: make sure she gets gend progname.s in test/wacc/backend/integration/assembly
             val progName = filePath
                 .split("/")
                 .last
@@ -244,7 +230,7 @@ class backend_integration_test extends ConditionalRun {
 
     /**
     * 
-    * @param progName the path to the generated 'progName.s' assembly file
+    * @param progName the path to the gend 'progName.s' assembly file
     * @return a pair: (exit code, output)
     */
     def runAssembly(progName: String): (Int, List[String]) = {
