@@ -4,6 +4,7 @@ import wacc.testUtils.*
 import wacc.frontend
 import wacc.assemblyIR.A_Prog
 import wacc.codeGen.*
+import wacc.formatting.*
 
 import java.io.FileNotFoundException
 import java.io.File
@@ -173,12 +174,15 @@ class backend_integration_test extends ConditionalRun {
         paths.foreach {filePath => 
             val (tProg, typeInfo) = frontend(filePath)
             val assembly: A_Prog = gen(tProg, typeInfo)
-            // TODO: String output to file here @Zakk @Ben
-            // TODO: make sure she gets gend progname.s in test/wacc/backend/integration/assembly
+
             val progName = filePath
                 .split("/")
                 .last
                 .replace(".wacc", "")
+            
+            val printWriter = new java.io.PrintWriter(s"src/test/wacc/backend/integration/assembly/$progName.s")
+            formatProg(assembly)(using printWriter)
+            printWriter.close()
 
             try {
                 if(runAssembly(progName) == getExpectedOutput(filePath))
