@@ -143,10 +143,7 @@ private def genReturn(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Ins
 
     builder ++= gen(x)
 
-    builder += A_Mov(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Reg(PTR_SIZE, A_RegName.BasePtr))
-    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R10))
-    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
-    builder += A_Ret
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
 
     builder.toList
 
