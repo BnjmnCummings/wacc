@@ -190,6 +190,7 @@ class backend_integration_test extends ConditionalRun {
             try {
                 if(actual._1 == expected._1 && actual._2 == expected._2)
                     successes += filePath
+                    s"./wipeAss $progName" .!
                 else 
                     outputFailures += filePath
                     info(s"expected: $expected")
@@ -256,13 +257,14 @@ class backend_integration_test extends ConditionalRun {
             if(exitStatus == 0) {
                 output ++= (cmd .!!).split('\n')
             }
-
-            /* clean up after ourselves and return */
-            s"./wipeAss $fileName" .!
             
+            /* clean up after ourselves and return */
+            s"./wipeObj $fileName" .!
+
             return (exitStatus, output.toList.filter(_.nonEmpty))
 
         } else {
+            s"./wipeObj $fileName" .!
             throw InstantiationException(s"Build command failed with exit status: $buildExitStatus")
         }
     }
