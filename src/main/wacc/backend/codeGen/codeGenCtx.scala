@@ -1,10 +1,11 @@
 package wacc.codeGen
 
 import wacc.assemblyIR.*
+import wacc.TypeInfo
 
 import scala.collection.mutable
 
-class CodeGenCtx {
+class CodeGenCtx(val typeInfo: TypeInfo) {
     private val storedStrings: mutable.Set[A_StoredStr] = mutable.Set()
 
     private val defaultFuncs: mutable.Set[A_Func] = mutable.Set()

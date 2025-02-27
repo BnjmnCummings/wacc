@@ -23,7 +23,7 @@ val PAIR_SIZE_BYTES = 16
 val PAIR_OFFSET_SIZE = 8
 
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
-    given ctx: CodeGenCtx = CodeGenCtx()
+    given ctx: CodeGenCtx = CodeGenCtx(typeInfo)
 
     val _funcs = t_tree.funcs.map(gen) ++ ctx.defaultFuncsList
 
@@ -154,22 +154,37 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int]
     builder.toList
 
 private def genReturn(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+    gen(x, stackTable)
+
+private def genExit(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
-
-    builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Reg(PTR_SIZE, A_RegName.BasePtr))
-    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R10))
-    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
-    builder += A_Ret
+    // x will be an integer - we can only perform exit on integers
+    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
+    // We need to move the exit code into edi (32-bit R1) for the exit code to be successfully passed to plt@exit
+    builder += A_Call(A_InstrLabel("exit"))
 
     builder.toList
 
-private def genExit(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genPrint(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
 
-private def genPrint(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = ???
+    builder ++= gen(x, stackTable)
+    // x can be any type so use sizeOf(ty)
+    builder += A_MovTo(A_Reg(sizeOf(ty), A_RegName.R1), A_Reg(sizeOf(ty), A_RegName.RetReg))
+    // We need to move x into edi (32-bit R1) for the value to be successfully passed to plt@printf
+    builder += A_Call(A_InstrLabel(s"print${{typeToLetter(ty)}}"))
 
-private def genPrintln(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = ???
+    builder.toList
+
+private def genPrintln(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+
+    builder ++= genPrint(x, ty, stackTable)
+    builder += A_Call(A_InstrLabel("println"))
+
+    builder.toList
 
 private def genIfHelper(cond: T_Expr, body: List[T_Stmt], el: List[T_Stmt], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
@@ -366,11 +381,20 @@ private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] = 
 }
 
 private def genIdent(v: Name, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
-    List(A_MovTo(A_Reg(sizeOf(KnownType.Ident), A_RegName.RetReg), A_MemOffset(sizeOf(KnownType.Ident), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(- stackTable(v)))))
+    List(A_MovTo(A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.RetReg), A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(- stackTable(v)))))
 
 private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = ???
 
-private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+
+    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(opSizeToInt(PTR_SIZE) * 2))
+    builder += A_Call(A_ExternalLabel("malloc"))
+    builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
+    builder += A_MovDeref(A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Imm(ZERO_IMM))
+    builder += A_MovDeref(A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Imm(ZERO_IMM))
+
+    builder.toList
 
 private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = ???
 
@@ -418,17 +442,18 @@ def sizeOf(ty: SemType): A_OperandSize = ty match
     case wacc.KnownType.String => PTR_SIZE
     case wacc.KnownType.Array(ty) => PTR_SIZE
     case KnownType.Pair(_, _) => ???
-    case KnownType.Ident => ???
+    case KnownType.Ident => println(ty)
+         ???
 
 def typeToLetter(ty: SemType): String = ty match
-    case ? => ???
-    case X => ???
+    case ? => throw Exception("Should not have semType ? in codeGen")
+    case X => throw Exception("Should not have semType ? in codeGen")
     case wacc.KnownType.Int => "i"
-    case wacc.KnownType.Boolean => ???
-    case wacc.KnownType.Char => ???
-    case wacc.KnownType.String => ???
-    case wacc.KnownType.Array(ty) => ???
-    case KnownType.Pair(ty1, ty2) => ???
+    case wacc.KnownType.Boolean => "b"
+    case wacc.KnownType.Char => "c"
+    case wacc.KnownType.String => "s"
+    case wacc.KnownType.Array(ty) => "p"
+    case KnownType.Pair(ty1, ty2) => "p"
     case KnownType.Ident => ???
 
 def opSizeToInt(opSize: A_OperandSize): Int = opSize match
