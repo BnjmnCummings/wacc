@@ -42,7 +42,7 @@ val testSettings = scala.collection.immutable.HashSet(
     "format_data_test",
     "format_function_test",
     // "integration_exit",
-    "integration_skip",
+    // "integration_skip",
     // "integration_advanced",
     // "integration_array",
     // "integration_expressions",
@@ -60,6 +60,6 @@ val testSettings = scala.collection.immutable.HashSet(
     // "integration_runtimeErr_nullDereference",
     // "integration_scope",
     // "integration_sequence",
-    "integration_variables",
+    // "integration_variables",
     // "integration_while"
 )
