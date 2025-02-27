@@ -21,10 +21,10 @@ _exit:
 inline def defaultExit: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
     program += A_Push(A_Reg(PTR_SIZE, A_RegName.BasePtr))
-    program += A_Mov(A_Reg(PTR_SIZE, A_RegName.BasePtr), A_Reg(PTR_SIZE, A_RegName.StackPtr))
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.BasePtr), A_Reg(PTR_SIZE, A_RegName.StackPtr))
     program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Call(A_ExternalLabel("exit"))
-    program += A_Mov(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Reg(PTR_SIZE, A_RegName.BasePtr))
     program += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
     program += A_Ret
 
@@ -53,7 +53,7 @@ inline def defaultOverflow: A_Func = {
     program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(OVERFLOW_LBL_STR_NAME))))
     // TODO: CHECK THE OVERFLOW_LBL_STR_NAME constant
     program += A_Call(A_InstrLabel("_prints"))
-    program += A_Mov(A_Reg(EXIT_CODE_SIZE, A_RegName.R1), A_Imm(-1)) // TODO: FACTOR OUT THIS MAGIC NUMBER - WHAT IS ITS NAME??
+    program += A_MovTo(A_Reg(EXIT_CODE_SIZE, A_RegName.R1), A_Imm(-1)) // TODO: FACTOR OUT THIS MAGIC NUMBER - WHAT IS ITS NAME??
     program += A_Call(A_ExternalLabel("exit"))
 
     A_Func(A_InstrLabel("_errOverflow"), program.toList)

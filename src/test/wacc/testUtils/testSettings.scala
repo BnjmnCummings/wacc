@@ -60,6 +60,6 @@ val testSettings = scala.collection.immutable.HashSet(
     // "integration_runtimeErr_nullDereference",
     // "integration_scope",
     // "integration_sequence",
-    // "integration_variables",
+    "integration_variables",
     // "integration_while"
 )
