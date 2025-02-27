@@ -172,7 +172,11 @@ private def genPrint(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Inst
 
     builder.toList
 
-private def genPrintln(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genPrintln(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+
+    builder ++= genPrint(x, ty)
+    builder += A_Call(A_InstrLabel("println"))
 
 private def genIfHelper(cond: T_Expr, body: List[T_Stmt], el: List[T_Stmt])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
