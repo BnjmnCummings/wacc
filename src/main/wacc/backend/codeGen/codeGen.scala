@@ -375,7 +375,16 @@ private def genIdent(v: Name)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
 private def genArrayElem(v: Name, indices: List[T_Expr])(using ctx: CodeGenCtx): List[A_Instr] = ???
 
-private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+
+    builder += A_Mov(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(opSizeToInt(PTR_SIZE) * 2))
+    builder += A_Call(A_ExternalLabel("malloc"))
+    builder += A_Mov(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
+    builder += A_MovDeref(A_RegDeref(sizeOf(ty1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Imm(ZERO_IMM))
+    builder += A_MovDeref(A_RegDeref(sizeOf(ty2), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Imm(ZERO_IMM))
+
+    builder.toList
 
 private def genPairElem(index: PairIndex, v: T_LValue)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
