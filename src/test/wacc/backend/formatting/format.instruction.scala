@@ -48,7 +48,7 @@ class format_memory_ops_test extends AnyFlatSpec {
     }
 
     it should "be able to format a mov instruction" in {
-        formatInstr(A_Mov(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(5))) should be ("mov eax, 5")
+        formatInstr(A_MovTo(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(5))) should be ("mov eax, 5")
     }
 
     it should "be able to format a lea instruction" in {
