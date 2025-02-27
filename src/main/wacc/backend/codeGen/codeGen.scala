@@ -97,15 +97,16 @@ private def gen(t: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: Code
     case T_PairNullLiteral => genPairNullLiteral()
     case T_PairElem(index, v) => genPairElem(index, v, stackTable)
 
-private def gen(t: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx) = t match
+private def gen(t: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = t match
     case T_Ident(v) => genIdent(v, stackTable)
     case T_ArrayElem(v, indices) => genArrayElem(v, indices, stackTable)
     case T_PairElem(index, v) => genPairElem(index, v, stackTable)
 
-private def gen(t: T_RValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx) = t match
+private def gen(t: T_RValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = t match
     case T_FuncCall(v, args) => genFuncCall(v, args, stackTable)
     case T_ArrayLiteral(xs, ty, length) => genArrayLiteral(xs, ty, length, stackTable)
     case T_NewPair(x1, x2, ty1, ty2) => genNewPair(x1, x2, ty1, ty2, stackTable)
+    case _ => gen(t.asInstanceOf[T_Expr], stackTable)
 
 private def gen(t: T_Func)(using ctx: CodeGenCtx): A_Func = ???
 
@@ -411,12 +412,12 @@ private def funcLabelGen(f: Name): A_InstrLabel = A_InstrLabel(s".F.${f.name}")
 def sizeOf(ty: SemType): A_OperandSize = ty match
     case ? => throw Exception("Should not have semType ? in codeGen")
     case X => throw Exception("Should not have semType X in codeGen")
-    case wacc.KnownType.Int => A_OperandSize.A_32
-    case wacc.KnownType.Boolean => A_OperandSize.A_8
-    case wacc.KnownType.Char => A_OperandSize.A_8
-    case wacc.KnownType.String => ???
-    case wacc.KnownType.Array(ty) => ???
-    case KnownType.Pair(_, _) => ??? // should be 16 bytes - A_128??
+    case wacc.KnownType.Int => INT_SIZE
+    case wacc.KnownType.Boolean => BOOL_SIZE
+    case wacc.KnownType.Char => CHAR_SIZE
+    case wacc.KnownType.String => PTR_SIZE
+    case wacc.KnownType.Array(ty) => PTR_SIZE
+    case KnownType.Pair(_, _) => ???
     case KnownType.Ident => ???
 
 def typeToLetter(ty: SemType): String = ty match
