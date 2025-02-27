@@ -150,7 +150,15 @@ private def genReturn(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Ins
 
     builder.toList
 
-private def genExit(x: T_Expr)(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genExit(x: T_Expr)(using ctx: CodeGenCtx): List[A_Instr] = 
+    val builder = new ListBuffer[A_Instr]
+
+    builder ++= gen(x)
+    // x will be an integer - we can only perform exit on integers
+    builder += A_Mov(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
+    // We need to move the exit code into edi (32-bit R1) for the exit code to be successfully passed to plt@exit
+
+    builder.toList
 
 private def genPrint(x: T_Expr, ty: SemType)(using ctx: CodeGenCtx): List[A_Instr] = ???
 
