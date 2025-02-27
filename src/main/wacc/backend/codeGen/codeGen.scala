@@ -435,14 +435,14 @@ def sizeOf(ty: SemType): A_OperandSize = ty match
     case KnownType.Ident => ???
 
 def typeToLetter(ty: SemType): String = ty match
-    case ? => ???
-    case X => ???
+    case ? => throw Exception("Should not have semType ? in codeGen")
+    case X => throw Exception("Should not have semType ? in codeGen")
     case wacc.KnownType.Int => "i"
-    case wacc.KnownType.Boolean => ???
-    case wacc.KnownType.Char => ???
-    case wacc.KnownType.String => ???
-    case wacc.KnownType.Array(ty) => ???
-    case KnownType.Pair(ty1, ty2) => ???
+    case wacc.KnownType.Boolean => "b"
+    case wacc.KnownType.Char => "c"
+    case wacc.KnownType.String => "s"
+    case wacc.KnownType.Array(ty) => "p"
+    case KnownType.Pair(ty1, ty2) => "p"
     case KnownType.Ident => ???
 
 def opSizeToInt(opSize: A_OperandSize): Int = opSize match
