@@ -2,3 +2,4 @@
 .bsp/
 .scala-build/
 .vscode/
+src/test/wacc/backend/integration/assembly/
