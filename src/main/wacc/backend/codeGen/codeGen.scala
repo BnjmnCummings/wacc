@@ -196,7 +196,10 @@ private def genPrint(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int
             ctx.addDefaultFunc(defaultPrintc)
             ctx.addStoredStr(A_DataLabel(PRINTC_LBL_STR_NAME), PRINTF_CHAR_STR)
         }
-        case KnownType.String => ??? // need implementation of prints
+        case KnownType.String => {
+            ctx.addDefaultFunc(defaultPrints)
+            ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+        }
         // here we must have a pointer print e.g. array/pair
         case _ => 
 
