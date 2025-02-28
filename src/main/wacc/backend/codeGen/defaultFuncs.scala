@@ -159,5 +159,5 @@ inline def defaultPrintb: A_Func = {
     program += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
     program += A_Ret
 
-    A_Func(A_InstrLabel(PRINTP_LABEL), program.toList)
+    A_Func(A_InstrLabel(PRINTB_LABEL), program.toList)
 }

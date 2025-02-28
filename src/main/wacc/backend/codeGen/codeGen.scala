@@ -22,10 +22,13 @@ val CHR_MASK = -128
 val PAIR_SIZE_BYTES = 16
 val PAIR_OFFSET_SIZE = 8
 
+val PRINTF_INT_STR = "%d"
+val PRINTF_CHAR_STR = "%c"
+
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx(typeInfo)
 
-    val _funcs = t_tree.funcs.map(gen) ++ ctx.defaultFuncsList
+    val _funcs = t_tree.funcs.map(gen)// ++ ctx.defaultFuncsList
 
     // --- generating main function ---
     // calculate frame size and add variables to stack table
@@ -52,7 +55,9 @@ def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
 
     val main = A_Func(A_InstrLabel("main"), builder.toList)
 
-    A_Prog(ctx.storedStringsList, main :: _funcs)
+    val _funcsWithDefaults = _funcs ++ ctx.defaultFuncsList
+
+    A_Prog(ctx.storedStringsList, main :: _funcsWithDefaults)
 }
 
 private def gen(t: T_Stmt, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = t match
@@ -174,7 +179,29 @@ private def genPrint(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int
     // x can be any type so use sizeOf(ty)
     builder += A_MovTo(A_Reg(sizeOf(ty), A_RegName.R1), A_Reg(sizeOf(ty), A_RegName.RetReg))
     // We need to move x into edi (32-bit R1) for the value to be successfully passed to plt@printf
-    builder += A_Call(A_InstrLabel(s"print${{typeToLetter(ty)}}"))
+
+    // add the right data and functions to the context
+    ty match
+        case KnownType.Int => {
+            ctx.addDefaultFunc(defaultPrinti)
+            ctx.addStoredStr(A_DataLabel(PRINTI_LBL_STR_NAME), PRINTF_INT_STR)
+        }
+        case KnownType.Boolean => {
+            ctx.addDefaultFunc(defaultPrintb)
+            ctx.addStoredStr(A_DataLabel(PRINTB_TRUE_LBL_STR_NAME), "true")
+            ctx.addStoredStr(A_DataLabel(PRINTB_FALSE_LBL_STR_NAME), "false")
+            ctx.addStoredStr(A_DataLabel(PRINTB_LBL_STR_NAME), "%.*s")
+        }
+        case KnownType.Char => {
+            ctx.addDefaultFunc(defaultPrintc)
+            ctx.addStoredStr(A_DataLabel(PRINTC_LBL_STR_NAME), PRINTF_CHAR_STR)
+        }
+        case KnownType.String => ??? // need implementation of prints
+        // here we must have a pointer print e.g. array/pair
+        case _ => 
+
+    // call the right function
+    builder += A_Call(A_InstrLabel(s"_print${{typeToLetter(ty)}}"))
 
     builder.toList
 
