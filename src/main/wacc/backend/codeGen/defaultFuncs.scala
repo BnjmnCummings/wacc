@@ -12,6 +12,7 @@ val BYTE_SIZE = A_OperandSize.A_8
 val OVERFLOW_LBL_STR_NAME = ".L._errOverflow_str"
 val DIV_ZERO_LBL_STR_NAME = ".L._errDivZero_str"
 val OUT_OF_BOUNDS_LBL_STR_NAME = ".L._errOutOfBounds_str"
+val OUT_OF_MEMORY_LBL_STR_NAME = ".L._errOutOfMemory_str"
 val PRINTLN_LBL_STR_NAME = ".L._println_str"
 val PRINTI_LBL_STR_NAME = ".L._printi_int"
 val PRINTC_LBL_STR_NAME = ".L._printc_str"
@@ -28,6 +29,7 @@ val PRINTF = "printf"
 
 val ERR_OVERFLOW_LABEL = "_errOverflow"
 val ERR_OUT_OF_BOUNDS_LABEL = "_errOutOfBounds"
+val ERR_OUT_OF_MEMORY_LABEL = "_errOutOfMemory"
 val PRINTLN_LABEL = "_println"
 val PRINTI_LABEL = "_printi"
 val PRINTC_LABEL = "_printc"
@@ -213,7 +215,7 @@ inline def defaultOutOfBounds: A_Func = {
     program += A_MovTo(A_Reg(BOOL_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE)) 
     program += A_Call(A_ExternalLabel("exit"))
 
-    A_Func(A_InstrLabel("_errOutOfBounds"), program.toList)
+    A_Func(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), program.toList)
 }
 
 inline def defaultArrLoad1: A_Func = {
@@ -292,4 +294,16 @@ inline def defaultArrLoad8: A_Func = {
     program += A_Ret
 
     A_Func(A_InstrLabel("_arrLoad4"), program.toList)
+}
+
+inline def defaultOutOfMemory: A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+    
+    program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
+    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(OUT_OF_MEMORY_LBL_STR_NAME))))
+    program += A_Call(A_InstrLabel("_prints"))
+    program += A_MovTo(A_Reg(BOOL_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE))
+    program += A_Call(A_ExternalLabel("exit"))
+
+    A_Func(A_InstrLabel(ERR_OUT_OF_MEMORY_LABEL), program.toList)
 }
