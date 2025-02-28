@@ -206,7 +206,7 @@ private def genPrintln(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, I
 
     builder.toList
 
-private def genIfHelper(cond: T_Expr, body: List[T_Stmt], el: List[T_Stmt], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+private def genIfHelper(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name], el: List[T_Stmt], scopedEl: Set[Name], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
     val bodyLabel = ctx.genNextInstrLabel() // .L0
@@ -216,12 +216,30 @@ private def genIfHelper(cond: T_Expr, body: List[T_Stmt], el: List[T_Stmt], stac
     builder += A_Cmp(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE)
     builder += A_Jmp(bodyLabel, A_Cond.Eq)
 
-    el.foreach(builder ++= gen(_, stackTable))
+    // set up new stack table for else
+
+    val (elseStackTable, elseStackSize) = createStackTable(scopedEl, ctx.typeInfo)
+
+    val offsetOldStackTableEl = stackTable.map((k, v) => (k, v + elseStackSize))
+
+    builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(elseStackSize), PTR_SIZE)
+    el.foreach(builder ++= gen(_, offsetOldStackTableEl ++ elseStackTable))
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(elseStackSize), PTR_SIZE)
 
     builder += A_Jmp(restLabel, A_Cond.Uncond) 
 
     builder += A_LabelStart(bodyLabel)
-    body.foreach(builder ++= gen(_, stackTable))
+
+    // set up new stack table for body
+
+    val (bodyStackTable, bodyStackSize) = createStackTable(scopedBody, ctx.typeInfo)
+
+    val offsetOldStackTableBody = stackTable.map((k, v) => (k, v + bodyStackSize))
+
+    builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
+    body.foreach(builder ++= gen(_, offsetOldStackTableBody ++ bodyStackTable))
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
+
     builder += A_LabelStart(restLabel)
 
     builder.toList
@@ -230,16 +248,16 @@ private def genIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name], el: L
     val builder = new ListBuffer[A_Instr]
 
     cond match
-        case T_GreaterThan(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_GreaterThanEq(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_LessThan(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_LessThanEq(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_Eq(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_NotEq(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_And(x, y) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_Or(x, y) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_Not(x) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_BoolLiteral(v) => builder ++= genIfHelper(cond, body, el, stackTable)
+        case T_GreaterThan(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_GreaterThanEq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_LessThan(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_LessThanEq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_Eq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_NotEq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_And(x, y) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_Or(x, y) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_Not(x) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_BoolLiteral(v) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
         case T_Ident(v) => ???
         case _ => throw Exception(s"Should not reach here. Got $cond")
 
@@ -254,7 +272,18 @@ private def genWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[Name], stackT
     builder += A_Jmp(condLabel, A_Cond.Uncond)
     
     builder += A_LabelStart(bodyLabel)
-    body.foreach(builder ++= gen(_, stackTable)) 
+
+    // setup new stack table for body
+
+    val (bodyStackTable, bodyStackSize) = createStackTable(scoped, ctx.typeInfo)
+
+    val offsetOldStackTable = stackTable.map((k, v) => (k, v + bodyStackSize))
+
+    builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
+    body.foreach(builder ++= gen(_, offsetOldStackTable ++ bodyStackTable)) 
+
+    // remove body stack table
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
 
     builder += A_LabelStart(condLabel)
     builder ++= gen(cond, stackTable)
@@ -263,7 +292,19 @@ private def genWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[Name], stackT
 
     builder.toList
 
-private def genCodeBlock(body: List[T_Stmt], scoped: Set[Name], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genCodeBlock(body: List[T_Stmt], scoped: Set[Name], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = {
+    val (newStackTable, frameSize) = createStackTable(scoped, ctx.typeInfo)
+
+    val offsetOldStackTable = stackTable.map((k, v) => (k, v + frameSize))
+
+    val builder = new ListBuffer[A_Instr]
+
+    builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    body.foreach(builder ++= gen(_, offsetOldStackTable ++ newStackTable))
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+
+    builder.toList    
+}
 
 private def genSkip(): List[A_Instr] = List()
 
