@@ -216,25 +216,31 @@ inline def defaultOutOfBounds: A_Func = {
     A_Func(A_InstrLabel("_errOutOfBounds"), program.toList)
 }
 
-/*
-_arrLoad4:
-	# Special calling convention: array ptr passed in R9, index in R10, and return into R9
-	push rbx
-	
-	# Check if index (R10D) is negative
-	test r10d, r10d
-	jl _errOutOfBounds  # If negative, jump to error
+inline def defaultArrLoad1: A_Func = {
+    // PRE: Index is in RetReg, ptr to array is in R1, and will return result into R1
 
-	mov ebx, dword ptr [r9 - 4]  # Load array size into EBX
-	cmp r10d, ebx
-	jge _errOutOfBounds  # If index >= size, jump to error
+    val program: ListBuffer[A_Instr] = ListBuffer()
 
-	# Load the value from the array
-	mov r9d, dword ptr [r9 + 4*r10]
+    program += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
 
-	pop rbx
-	ret
-    */
+    // check we don't have a negative index
+    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM), INT_SIZE)
+    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
+
+    A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+
+    // check our index isn't >= length:
+    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
+    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
+
+    program += A_Mul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
+    program += A_MovFromDeref(A_Reg(BOOL_SIZE, A_RegName.R2), A_RegDeref(BOOL_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetReg(A_Reg(PTR_SIZE, A_RegName.RetReg)))))
+
+    program += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+    program += A_Ret
+
+    A_Func(A_InstrLabel("_arrLoad4"), program.toList)
+}
 
 inline def defaultArrLoad4: A_Func = {
     // PRE: Index is in RetReg, ptr to array is in R1, and will return result into R1
@@ -255,6 +261,32 @@ inline def defaultArrLoad4: A_Func = {
 
     program += A_Mul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
     program += A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetReg(A_Reg(PTR_SIZE, A_RegName.RetReg)))))
+
+    program += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+    program += A_Ret
+
+    A_Func(A_InstrLabel("_arrLoad4"), program.toList)
+}
+
+inline def defaultArrLoad8: A_Func = {
+    // PRE: Index is in RetReg, ptr to array is in R1, and will return result into R1
+
+    val program: ListBuffer[A_Instr] = ListBuffer()
+
+    program += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
+
+    // check we don't have a negative index
+    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM), INT_SIZE)
+    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
+
+    A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+
+    // check our index isn't >= length:
+    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
+    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
+
+    program += A_Mul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
+    program += A_MovFromDeref(A_Reg(PTR_SIZE, A_RegName.R2), A_RegDeref(PTR_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetReg(A_Reg(PTR_SIZE, A_RegName.RetReg)))))
 
     program += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     program += A_Ret
