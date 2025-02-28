@@ -480,7 +480,7 @@ private def genFuncCall(v: Name, args: List[T_Expr], stackTable: immutable.Map[N
     builder.toList
 }
 
-private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
     val sizeBytes = opSizeToInt(INT_SIZE) + (intSizeOf(ty) * length)
 
@@ -490,7 +490,7 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: BigInt, stack
     builder += A_Add(A_Reg(PTR_SIZE, A_RegName.R11), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
     builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R11), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length))
 
-    for (i <- 0 to length.asInstanceOf[Int]) { // TODO: as instance of used! haha (ranges won't take BigInt - refactor or leave?)
+    for (i <- 0 to length) { 
         builder ++= gen(xs(i), stackTable)
         builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R11), A_OffsetImm(-i * intSizeOf(ty)))), A_Reg(sizeOf(ty), A_RegName.RetReg))
     }
