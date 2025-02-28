@@ -542,22 +542,18 @@ private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] =
 private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
+    // NOTE: WE NEED TO CHECK IF THE POINTER IS EVER 0 - THIS IS A NULL PAIR LITERAL - call _errNull
+
     builder ++= gen(v, stackTable)
 
     val optionalOffset = index match
         case PairIndex.First => 0 // factor out magic number
-        case PairIndex.Second => PTR_SIZE
+        case PairIndex.Second => opSizeToInt(PTR_SIZE)
     
     v match
         case T_Ident(name) =>
             // We assume pointer to fst p is stored in RetReg
-
-            // optional: add PTR_SIZE (bytes) to get pointer to snd p
-            val optOffset = index match
-                case PairIndex.First => 0 // magic number???
-                case PairIndex.Second => opSizeToInt(PTR_SIZE)
             
-
             // deref this value to get value stored
             val pairTy = ctx.typeInfo.varTys(name).asInstanceOf[KnownType.Pair] // TODO: as instance of!!! (crashing out)
 
@@ -567,15 +563,21 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map
             
             val tySize = sizeOf(ty)
 
-            builder += A_MovFromDeref(A_Reg(tySize, A_RegName.RetReg), A_RegDeref(???, A_MemOffset(???, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(optOffset))))
+            builder += A_MovFromDeref(A_Reg(tySize, A_RegName.RetReg), A_RegDeref(???, A_MemOffset(???, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(optionalOffset))))
         case T_ArrayElem(v, indicies) => ???
-            // we assume the final value in RetReg is a pointer to fst p
-            // optional: add PTR_SIZE (bytes) to get pointer to snd p
+            // we assume the value in RetReg is a pointer to fst p
+
             // deref this value to get value stored
+            val tySize = ??? // TODO: create a function to unwrap this as many times as required to get the inner type!
+        
+            builder += A_MovFromDeref(A_Reg(tySize, A_RegName.RetReg), A_RegDeref(???, A_MemOffset(???, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(optionalOffset))))
         case T_PairElem(index, v) => ???
-            // we assume the final value in RetReg is a pointer to fst p
-            // optional: add PTR_SIZE (bytes) to get pointer to snd p
+            // we assume the value in RetReg is a pointer to fst p
+
             // deref this value to get value stored
+            val tySize = ??? // TODO: create a function to unwrap this as many times as required to get the inner types!
+
+            builder += A_MovFromDeref(A_Reg(tySize, A_RegName.RetReg), A_RegDeref(???, A_MemOffset(???, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(optionalOffset))))
     
 
     builder.toList
