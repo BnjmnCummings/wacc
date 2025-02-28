@@ -539,7 +539,46 @@ private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] =
 
     builder.toList
 
-private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+
+    builder ++= gen(v, stackTable)
+
+    val optionalOffset = index match
+        case PairIndex.First => 0 // factor out magic number
+        case PairIndex.Second => PTR_SIZE
+    
+    v match
+        case T_Ident(name) =>
+            // We assume pointer to fst p is stored in RetReg
+
+            // optional: add PTR_SIZE (bytes) to get pointer to snd p
+            val optOffset = index match
+                case PairIndex.First => 0 // magic number???
+                case PairIndex.Second => opSizeToInt(PTR_SIZE)
+            
+
+            // deref this value to get value stored
+            val pairTy = ctx.typeInfo.varTys(name).asInstanceOf[KnownType.Pair] // TODO: as instance of!!! (crashing out)
+
+            val ty = index match
+                case PairIndex.First => pairTy.ty1
+                case PairIndex.Second => pairTy.ty2
+            
+            val tySize = sizeOf(ty)
+
+            builder += A_MovFromDeref(A_Reg(tySize, A_RegName.RetReg), A_RegDeref(???, A_MemOffset(???, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(optOffset))))
+        case T_ArrayElem(v, indicies) => ???
+            // we assume the final value in RetReg is a pointer to fst p
+            // optional: add PTR_SIZE (bytes) to get pointer to snd p
+            // deref this value to get value stored
+        case T_PairElem(index, v) => ???
+            // we assume the final value in RetReg is a pointer to fst p
+            // optional: add PTR_SIZE (bytes) to get pointer to snd p
+            // deref this value to get value stored
+    
+
+    builder.toList
 
 private def genFuncCall(v: Name, args: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = {
 
