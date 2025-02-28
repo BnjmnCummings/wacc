@@ -324,9 +324,8 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
 
     // Compare denominator with 0
     builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(0), INT_SIZE)
-    builder += A_Jmp(???, A_Cond.Eq)
-    // Above is a comparison of y (denominator) with 0
-    // TODO @Aidan: Add a divide by 0 flag + label
+    builder += A_Jmp(A_InstrLabel("_errDivZero"), A_Cond.Eq)
+    // Above is a comparison of y (denominator) with 0 - error if it succeeds
 
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_IDiv(A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)

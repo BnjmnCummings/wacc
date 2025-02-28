@@ -10,6 +10,7 @@ val ERR_EXIT_CODE = -1
 val BYTE_SIZE = A_OperandSize.A_8
 
 val OVERFLOW_LBL_STR_NAME = ".L._errOverflow_str"
+val DIV_ZERO_LBL_STR_NAME = ".L._errDivZero_str"
 val PRINTLN_LBL_STR_NAME = ".L._println_str"
 val PRINTI_LBL_STR_NAME = ".L._printi_int"
 val PRINTC_LBL_STR_NAME = ".L._printc_str"
@@ -181,4 +182,25 @@ inline def defaultPrints: A_Func = {
     program += A_Ret
 
     A_Func(A_InstrLabel("_prints"), program.toList)
+}
+
+/*
+_errDivZero:
+	# external calls must be stack-aligned to 16 bytes, accomplished by masking with fffffffffffffff0
+	and rsp, -16
+	lea rdi, [rip + .L._errDivZero_str0]
+	call _prints
+	mov dil, -1
+	call exit@plt
+    */
+inline def defaultDivZero: A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+
+    program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
+    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(DIV_ZERO_LBL_STR_NAME))))
+    program += A_Call(A_InstrLabel("prints"))
+    program += A_MovTo(A_Reg(BOOL_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE))
+    program += A_Call(A_ExternalLabel("exit"))
+
+    A_Func(A_InstrLabel("_errDivZero"), program.toList)
 }
