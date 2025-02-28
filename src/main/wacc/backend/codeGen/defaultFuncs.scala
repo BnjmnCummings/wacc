@@ -11,6 +11,7 @@ val BYTE_SIZE = A_OperandSize.A_8
 
 val OVERFLOW_LBL_STR_NAME = ".L._errOverflow_str"
 val DIV_ZERO_LBL_STR_NAME = ".L._errDivZero_str"
+val OUT_OF_BOUNDS_LBL_STR_NAME = ".L._errOutOfBounds_str"
 val PRINTLN_LBL_STR_NAME = ".L._println_str"
 val PRINTI_LBL_STR_NAME = ".L._printi_int"
 val PRINTC_LBL_STR_NAME = ".L._printc_str"
@@ -184,15 +185,6 @@ inline def defaultPrints: A_Func = {
     A_Func(A_InstrLabel("_prints"), program.toList)
 }
 
-/*
-_errDivZero:
-	# external calls must be stack-aligned to 16 bytes, accomplished by masking with fffffffffffffff0
-	and rsp, -16
-	lea rdi, [rip + .L._errDivZero_str0]
-	call _prints
-	mov dil, -1
-	call exit@plt
-    */
 inline def defaultDivZero: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
 
@@ -203,4 +195,35 @@ inline def defaultDivZero: A_Func = {
     program += A_Call(A_ExternalLabel("exit"))
 
     A_Func(A_InstrLabel("_errDivZero"), program.toList)
+}
+/*
+_errOutOfBounds:
+	# external calls must be stack-aligned to 16 bytes, accomplished by masking with fffffffffffffff0
+	and rsp, -16
+	lea rdi, [rip + .L._errOutOfBounds_str0]
+	# on x86, al represents the number of SIMD registers used as variadic arguments
+	mov al, 0
+	call printf@plt
+	mov rdi, 0
+	call fflush@plt
+	mov dil, -1
+	call exit@plt
+*/
+
+inline def defaultOutOfBounds: A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+
+    program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
+    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(OUT_OF_BOUNDS_LBL_STR_NAME))))
+    program += A_MovTo(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM))
+    program += A_Call(A_ExternalLabel("printf"))
+
+    // Put 0 into the 64-bit R1 (rdi) to flush all output streams. Note: PTR_SIZE because first argument of fflush is a ptr
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R1), A_Imm(ZERO_IMM)) 
+    program += A_Call(A_ExternalLabel("fflush"))
+
+    program += A_MovTo(A_Reg(BOOL_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE)) 
+    program += A_Call(A_ExternalLabel("exit"))
+
+    A_Func(A_InstrLabel("_errOutOfBounds"), program.toList)
 }
