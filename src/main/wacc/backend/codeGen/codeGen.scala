@@ -343,7 +343,8 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
     builder ++= gen(x, stackTable)
     builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
-    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += instrApply(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     // TODO @Aidan: Overflow can occur here - add flag system etc.
 
