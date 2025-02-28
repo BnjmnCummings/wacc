@@ -22,10 +22,15 @@ val CHR_MASK = -128
 val PAIR_SIZE_BYTES = 16
 val PAIR_OFFSET_SIZE = 8
 
+val PRINTF_INT_STR = "%d"
+val PRINTF_CHAR_STR = "%c"
+val PRINTF_STR_STR = "%.*s"
+val PRINTF_PTR_STR = "%p"
+
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx(typeInfo)
 
-    val _funcs = t_tree.funcs.map(gen) ++ ctx.defaultFuncsList
+    val _funcs = t_tree.funcs.map(gen)// ++ ctx.defaultFuncsList
 
     // --- generating main function ---
     // calculate frame size and add variables to stack table
@@ -45,7 +50,9 @@ def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
 
     val main = A_Func(A_InstrLabel("main"), builder.toList)
 
-    A_Prog(ctx.storedStringsList, main :: _funcs)
+    val _funcsWithDefaults = _funcs ++ ctx.defaultFuncsList
+
+    A_Prog(ctx.storedStringsList, main :: _funcsWithDefaults)
 }
 
 def createStackTable(scope: Set[Name], typeInfo: TypeInfo): (mutable.Map[Name, Int], Int) = {
@@ -194,7 +201,35 @@ private def genPrint(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int
     // x can be any type so use sizeOf(ty)
     builder += A_MovTo(A_Reg(sizeOf(ty), A_RegName.R1), A_Reg(sizeOf(ty), A_RegName.RetReg))
     // We need to move x into edi (32-bit R1) for the value to be successfully passed to plt@printf
-    builder += A_Call(A_InstrLabel(s"print${{typeToLetter(ty)}}"))
+
+    // add the right data and functions to the context
+    ty match
+        case KnownType.Int => {
+            ctx.addDefaultFunc(defaultPrinti)
+            ctx.addStoredStr(A_DataLabel(PRINTI_LBL_STR_NAME), PRINTF_INT_STR)
+        }
+        case KnownType.Boolean => {
+            ctx.addDefaultFunc(defaultPrintb)
+            ctx.addStoredStr(A_DataLabel(PRINTB_TRUE_LBL_STR_NAME), "true")
+            ctx.addStoredStr(A_DataLabel(PRINTB_FALSE_LBL_STR_NAME), "false")
+            ctx.addStoredStr(A_DataLabel(PRINTB_LBL_STR_NAME), "%.*s")
+        }
+        case KnownType.Char => {
+            ctx.addDefaultFunc(defaultPrintc)
+            ctx.addStoredStr(A_DataLabel(PRINTC_LBL_STR_NAME), PRINTF_CHAR_STR)
+        }
+        case KnownType.String => {
+            ctx.addDefaultFunc(defaultPrints)
+            ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+        }
+        // here we must have a pointer print e.g. array/pair
+        case _ => {
+            ctx.addDefaultFunc(defaultPrintp)
+            ctx.addStoredStr(A_DataLabel(PRINTP_LBL_STR_NAME), "%p")
+        }
+
+    // call the right function
+    builder += A_Call(A_InstrLabel(s"_print${{typeToLetter(ty)}}"))
 
     builder.toList
 
@@ -202,7 +237,11 @@ private def genPrintln(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, I
     val builder = new ListBuffer[A_Instr]
 
     builder ++= genPrint(x, ty, stackTable)
-    builder += A_Call(A_InstrLabel("println"))
+    // add data
+    ctx.addStoredStr(A_DataLabel(PRINTLN_LBL_STR_NAME), "")
+    // add and call default function
+    ctx.addDefaultFunc(defaultPrintln)
+    builder += A_Call(A_InstrLabel("_println"))
 
     builder.toList
 
@@ -315,7 +354,7 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
     // Note: IDiv stores remainder in edx(32bit) - R3
 
     builder ++= gen(x, stackTable)
-    builder += A_Push(A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1))
 
@@ -325,7 +364,7 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
     // Above is a comparison of y (denominator) with 0
     // TODO @Aidan: Add a divide by 0 flag + label
 
-    builder += A_Pop(A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_IDiv(A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     // TODO @Aidan: Overflow can occur here - add flag system etc.
     // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
@@ -338,9 +377,9 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
-    builder += A_Push(A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
-    builder += A_Pop(A_Reg(INT_SIZE, A_RegName.R1))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     builder += instrApply(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     // TODO @Aidan: Overflow can occur here - add flag system etc.
 
@@ -350,9 +389,9 @@ private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(u
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
-    builder += A_Push(A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
-    builder += A_Pop(A_Reg(INT_SIZE, A_RegName.R1))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     builder += A_IMul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     // TODO @Aidan: Overflow can occur here - add flag system etc.
 
@@ -365,9 +404,9 @@ private def genComparison(x: T_Expr, y: T_Expr, ty: SemType, cond: A_Cond, stack
     
     val sizeTy = sizeOf(ty)
 
-    builder += A_Push(A_Reg(sizeTy, A_RegName.RetReg))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
-    builder += A_Pop(A_Reg(sizeTy, A_RegName.R1))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     builder += A_Cmp(A_Reg(sizeTy, A_RegName.R1), A_Reg(sizeTy, A_RegName.RetReg), sizeTy)
     builder += A_Set(A_Reg(BOOL_SIZE, A_RegName.RetReg), cond)
 
@@ -377,9 +416,9 @@ private def genBitwiseOp(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
-    builder += A_Push(A_Reg(BOOL_SIZE, A_RegName.RetReg))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
-    builder += A_Pop(A_Reg(BOOL_SIZE, A_RegName.R1))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     builder += instrApply(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Reg(BOOL_SIZE, A_RegName.R1), BOOL_SIZE)
 
     builder.toList

@@ -32,6 +32,10 @@ class CodeGenCtx(val typeInfo: TypeInfo) {
         }
     }
 
+    def addStoredStr(lbl: A_DataLabel, str: String): Unit = {
+        storedStrings.add(A_StoredStr(lbl, str))
+    }
+
     def storedStringsList: List[A_StoredStr] = storedStrings.toList
     // TODO @Jack : Create a function that maps a KnownType to a size - this is useful for things like read (char/int)
 

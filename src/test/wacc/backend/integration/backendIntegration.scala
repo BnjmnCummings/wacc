@@ -173,21 +173,20 @@ class backend_integration_test extends ConditionalRun {
         
         paths.foreach {filePath => 
             val (tProg, typeInfo) = frontend(filePath)
-            val assembly: A_Prog = gen(tProg, typeInfo)
-
-            val progName = filePath
+            try {
+                val assembly: A_Prog = gen(tProg, typeInfo)
+                val progName = filePath
                 .split("/")
                 .last
                 .replace(".wacc", "")
             
-            val printWriter = new java.io.PrintWriter(s"src/test/wacc/backend/integration/assembly/$progName.s")
-            formatProg(assembly)(using printWriter)
-            printWriter.close()
-            
-            val expected = getExpectedOutput(filePath)
-            val actual = runAssembly(progName)
+                val printWriter = new java.io.PrintWriter(s"src/test/wacc/backend/integration/assembly/$progName.s")
+                formatProg(assembly)(using printWriter)
+                printWriter.close()
+                
+                val expected = getExpectedOutput(filePath)
+                val actual = runAssembly(progName)
 
-            try {
                 if(actual._1 == expected._1 && actual._2 == expected._2)
                     successes += filePath
                     s"./wipeAss $progName" .!
@@ -196,8 +195,13 @@ class backend_integration_test extends ConditionalRun {
                     info(s"expected: $expected")
                     info(s"actual: $actual")
                     info("naughty boy")
+
             } catch {
+                case e: NotImplementedError => 
+                    compileFailures += filePath
                 case e: InstantiationException => 
+                    compileFailures += filePath
+                case e: Exception => 
                     compileFailures += filePath
             }
         }
