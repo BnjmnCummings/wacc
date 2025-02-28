@@ -201,6 +201,8 @@ class backend_integration_test extends ConditionalRun {
                     compileFailures += filePath
                 case e: InstantiationException => 
                     compileFailures += filePath
+                case e: Exception => 
+                    compileFailures += filePath
             }
         }
 
