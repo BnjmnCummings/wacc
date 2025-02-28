@@ -330,7 +330,7 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
 
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_IDiv(A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
-    // TODO @Aidan: Overflow can occur here - add flag system etc.
+    builder += A_Jmp(A_InstrLabel("_errOverflow"), A_Cond.Overflow)
     // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.RetReg), (A_Reg(INT_SIZE, divResultReg)))
@@ -346,7 +346,7 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += instrApply(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
-    // TODO @Aidan: Overflow can occur here - add flag system etc.
+    builder += A_Jmp(A_InstrLabel("_errOverflow"), A_Cond.Overflow)
 
     builder.toList
 
@@ -358,7 +358,7 @@ private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(u
     builder ++= gen(y, stackTable)
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     builder += A_IMul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
-    // TODO @Aidan: Overflow can occur here - add flag system etc.
+    builder += A_Jmp(A_InstrLabel("_errOverflow"), A_Cond.Overflow)
 
     builder.toList
 
@@ -410,7 +410,8 @@ private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     // CONSIDER: DO WE NEED TO SAVE R1 BEFORE THIS?
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(ZERO_IMM))
     builder += A_Sub(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg), INT_SIZE)
-    // check overflow -2^32 case! TODO @Aidan
+    builder += A_Jmp(A_InstrLabel("_errOverflow"), A_Cond.Overflow)
+    // ^ overflow -2^32 case!
 
     builder.toList
 
