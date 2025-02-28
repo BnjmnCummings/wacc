@@ -27,6 +27,7 @@ val EXIT = "exit"
 val PRINTF = "printf"
 
 val ERR_OVERFLOW_LABEL = "_errOverflow"
+val ERR_OUT_OF_BOUNDS_LABEL = "_errOutOfBounds"
 val PRINTLN_LABEL = "_println"
 val PRINTI_LABEL = "_printi"
 val PRINTC_LABEL = "_printc"
@@ -196,19 +197,6 @@ inline def defaultDivZero: A_Func = {
 
     A_Func(A_InstrLabel("_errDivZero"), program.toList)
 }
-/*
-_errOutOfBounds:
-	# external calls must be stack-aligned to 16 bytes, accomplished by masking with fffffffffffffff0
-	and rsp, -16
-	lea rdi, [rip + .L._errOutOfBounds_str0]
-	# on x86, al represents the number of SIMD registers used as variadic arguments
-	mov al, 0
-	call printf@plt
-	mov rdi, 0
-	call fflush@plt
-	mov dil, -1
-	call exit@plt
-*/
 
 inline def defaultOutOfBounds: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
@@ -226,4 +214,50 @@ inline def defaultOutOfBounds: A_Func = {
     program += A_Call(A_ExternalLabel("exit"))
 
     A_Func(A_InstrLabel("_errOutOfBounds"), program.toList)
+}
+
+/*
+_arrLoad4:
+	# Special calling convention: array ptr passed in R9, index in R10, and return into R9
+	push rbx
+	
+	# Check if index (R10D) is negative
+	test r10d, r10d
+	jl _errOutOfBounds  # If negative, jump to error
+
+	mov ebx, dword ptr [r9 - 4]  # Load array size into EBX
+	cmp r10d, ebx
+	jge _errOutOfBounds  # If index >= size, jump to error
+
+	# Load the value from the array
+	mov r9d, dword ptr [r9 + 4*r10]
+
+	pop rbx
+	ret
+    */
+
+inline def defaultArrLoad4: A_Func = {
+    // PRE: Index is in RetReg, ptr to array is in R1, and will return result into R1
+
+    val program: ListBuffer[A_Instr] = ListBuffer()
+
+    program += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
+
+    // check we don't have a negative index
+    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM), INT_SIZE)
+    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
+
+    A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+
+    // check our index isn't >= length:
+    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
+    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
+
+    program += A_Mul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
+    program += A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetReg(A_Reg(PTR_SIZE, A_RegName.RetReg)))))
+
+    program += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+    program += A_Ret
+
+    A_Func(A_InstrLabel("_arrLoad4"), program.toList)
 }
