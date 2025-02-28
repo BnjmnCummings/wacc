@@ -402,7 +402,16 @@ private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
 
     builder.toList
 
-private def genLen(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genLen(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+    // PRE: WE KNOW x IS A LIST BECAUSE OF TYPE CHECKING
+    val builder = new ListBuffer[A_Instr]
+
+    builder ++= gen(x, stackTable)
+    // We now have the pointer to the first element stored in RAX (64-bit RetReg)
+    // We know the size is stored 4 bytes before the first element hence we can do a reg deref of retreg -4 to find the size
+    builder += A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.RetReg), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(INT_SIZE, A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+
+    builder.toList
 
 private def genOrd(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
@@ -488,11 +497,11 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTab
     builder += A_Call(A_ExternalLabel("malloc"))
     builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_Add(A_Reg(PTR_SIZE, A_RegName.R11), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
-    builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R11), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length))
+    builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R8), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length))
 
     for (i <- 0 to length) { 
         builder ++= gen(xs(i), stackTable)
-        builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R11), A_OffsetImm(-i * intSizeOf(ty)))), A_Reg(sizeOf(ty), A_RegName.RetReg))
+        builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R8), A_OffsetImm(-i * intSizeOf(ty)))), A_Reg(sizeOf(ty), A_RegName.RetReg))
     }
 
     builder.toList
