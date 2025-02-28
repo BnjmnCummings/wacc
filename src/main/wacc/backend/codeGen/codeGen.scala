@@ -186,11 +186,13 @@ private def genReturn(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, In
 private def genExit(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
 
+    ctx.addDefaultFunc(defaultExit)
+
     builder ++= gen(x, stackTable)
     // x will be an integer - we can only perform exit on integers
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
     // We need to move the exit code into edi (32-bit R1) for the exit code to be successfully passed to plt@exit
-    builder += A_Call(A_InstrLabel("exit"))
+    builder += A_Call(A_InstrLabel("_exit"))
 
     builder.toList
 
@@ -312,6 +314,11 @@ private def genCodeBlock(body: List[T_Stmt], scoped: Set[Name], stackTable: immu
 private def genSkip(): List[A_Instr] = List()
 
 private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+    ctx.addDefaultFunc(defaultDivZero)
+    ctx.addStoredStr(A_DataLabel(DIV_ZERO_LBL_STR_NAME), "fatal error: integer overflow or underflow occurred")
+    ctx.addDefaultFunc(defaultOverflow)
+    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), "fatal error: division or modulo by zero")
+    
     val builder = new ListBuffer[A_Instr]
 
     // Note: With IDiv, we need the numerator to be stored in eax and then we can divide by a given register
@@ -337,6 +344,8 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
     builder.toList
 
 private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr), stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx) =
+    ctx.addDefaultFunc(defaultOverflow)
+
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
@@ -350,6 +359,8 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
     builder.toList
 
 private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
+    ctx.addDefaultFunc(defaultOverflow)
+    
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
