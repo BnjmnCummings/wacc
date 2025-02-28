@@ -456,7 +456,77 @@ private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] = 
 private def genIdent(v: Name, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     List(A_MovTo(A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.RetReg), A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.StackPtr), A_OffsetImm(stackTable(v)))))
 
-private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def unwrapArr(ty: KnownType): SemType = ty match
+    case wacc.KnownType.Array(t) => t
+    case _ => throw Exception("Received a type that isn't an array")
+
+private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+    // PRE: We must have already generated the array somewhere to reference it (due to scope checker)
+    // PRE: every member of indices must be a numeric type (due to type checker) hence can use INT_SIZE 
+
+    val builder = new ListBuffer[A_Instr]
+
+    // TODO: IMPLEMENT _arrLoad[size in bytes] DEFAULT FUNCTIONS
+        // These will assume index is in RetReg, ptr to array is in R1, and will return result into R1
+
+    val ty = unwrapArr(ctx.typeInfo.varTys(v))
+    val tySize = opSizeToInt(sizeOf(ty))
+
+    // DEAL WITH FIRST INDEX
+    builder ++= gen(indices(0), stackTable)
+
+    // move ret reg to r2
+    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_Reg(INT_SIZE, A_RegName.RetReg))
+
+    // multiply r2 by [SIZE (bytes)]
+    builder += A_Mul(A_Reg(INT_SIZE, A_RegName.R2), A_Imm(tySize), INT_SIZE)
+
+    // add to r2 with stackTable(v)
+    builder += A_Add(A_Reg(INT_SIZE, A_RegName.R2), A_Imm(stackTable(v)), INT_SIZE)
+
+    // deref this (reg: rsp) & move into R1
+    builder += A_MovFromDeref(A_Reg(???, A_RegName.R1), A_RegDeref(???, A_MemOffset(???, A_Reg(???, A_RegName.StackPtr), A_OffsetReg(A_Reg(INT_SIZE, A_RegName.R2)))))
+
+    // call _arrLoad8 
+    builder += A_Call(A_InstrLabel("_arrLoad8"))
+
+    for (i <- 1 to indices.length - 2) { // TODO: factor out magic numbers
+        // We choose -2 so in this loop we are only dealing with arrays
+        // We assume the ptr of array is stored in R1 from above
+
+        builder ++= gen(indices(i), stackTable)
+        // Now RetReg stores the idx we want to access, as required.
+
+        // move ret reg to r2
+        builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_Reg(INT_SIZE, A_RegName.RetReg))
+
+        // multiply r2 by PTR_SIZE (bytes)
+        builder += A_Mul(A_Reg(INT_SIZE, A_RegName.R2), A_Imm(opSizeToInt(PTR_SIZE)), INT_SIZE)
+
+        // deref this (reg: R1) & move into R1 
+        // note: we are dealing with a pointer to an array here so we can use PTR_SIZE
+        builder += A_MovFromDeref(A_Reg(PTR_SIZE, A_RegName.R1), A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetReg(A_Reg(INT_SIZE, A_RegName.R2)))))
+
+        // call _arrLoad8
+        builder += A_Call(A_InstrLabel("_arrLoad8"))
+    }
+
+    // We should now have a ptr to the final result stored in R1
+    builder ++= gen(indices(indices.length - 1), stackTable)
+
+    // move retReg to r2
+    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_Reg(INT_SIZE, A_RegName.RetReg))
+
+    // multiply r2 by [SIZE (bytes)]
+    builder += A_Mul(A_Reg(INT_SIZE, A_RegName.R2), ???, INT_SIZE)
+
+    // deref this (reg: R1) & move into R1
+    builder += A_MovFromDeref(A_Reg(???, A_RegName.R1), A_RegDeref(???, A_MemOffset(???, A_Reg(???, A_RegName.R1), A_OffsetReg(A_Reg(INT_SIZE, A_RegName.R2)))))
+
+    // call _arrLoad[SIZE]
+    builder += A_Call(A_InstrLabel(s"_arrLoad${???}"))
+
+    builder.toList
 
 private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
