@@ -212,7 +212,11 @@ private def genPrintln(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, I
     val builder = new ListBuffer[A_Instr]
 
     builder ++= genPrint(x, ty, stackTable)
-    builder += A_Call(A_InstrLabel("println"))
+    // add data
+    ctx.addStoredStr(A_DataLabel(PRINTLN_LBL_STR_NAME), "")
+    // add and call default function
+    ctx.addDefaultFunc(defaultPrintln)
+    builder += A_Call(A_InstrLabel("_println"))
 
     builder.toList
 

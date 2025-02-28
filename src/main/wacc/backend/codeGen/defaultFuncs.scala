@@ -76,7 +76,7 @@ inline def defaultPrintln: A_Func = {
     program += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
     program += A_Ret
 
-    A_Func(A_InstrLabel(PRINTLN_LBL_STR_NAME), program.toList)
+    A_Func(A_InstrLabel(PRINTLN_LABEL), program.toList)
 }
 
 inline def defaultPrinti: A_Func = {
