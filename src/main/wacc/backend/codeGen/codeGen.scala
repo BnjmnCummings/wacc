@@ -302,7 +302,12 @@ private def genWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[Name], stackT
 
     builder.toList
 
-private def genCodeBlock(body: List[T_Stmt], scoped: Set[Name], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = ???
+private def genCodeBlock(body: List[T_Stmt], scoped: Set[Name], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+
+    body.foreach(builder ++= gen(_, stackTable)) 
+
+    builder.toList
 
 private def genSkip(): List[A_Instr] = List()
 
@@ -518,7 +523,6 @@ private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType, stack
     builder += A_MovDeref(A_RegDeref(sizeOf(ty2), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Reg(sizeOf(ty2), A_RegName.RetReg))
 
     builder.toList
-
 
 private def funcLabelGen(f: Name): A_InstrLabel = A_InstrLabel(s".F.${f.name}")
 
