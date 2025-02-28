@@ -24,6 +24,8 @@ val PAIR_OFFSET_SIZE = 8
 
 val PRINTF_INT_STR = "%d"
 val PRINTF_CHAR_STR = "%c"
+val PRINTF_STR_STR = "%.*s"
+val PRINTF_PTR_STR = "%p"
 
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx(typeInfo)
@@ -201,7 +203,10 @@ private def genPrint(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int
             ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
         }
         // here we must have a pointer print e.g. array/pair
-        case _ => 
+        case _ => {
+            ctx.addDefaultFunc(defaultPrintp)
+            ctx.addStoredStr(A_DataLabel(PRINTP_LBL_STR_NAME), "%p")
+        }
 
     // call the right function
     builder += A_Call(A_InstrLabel(s"_print${{typeToLetter(ty)}}"))
