@@ -318,7 +318,7 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
     // Note: IDiv stores remainder in edx(32bit) - R3
 
     builder ++= gen(x, stackTable)
-    builder += A_Push(A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1))
 
@@ -328,7 +328,7 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
     // Above is a comparison of y (denominator) with 0
     // TODO @Aidan: Add a divide by 0 flag + label
 
-    builder += A_Pop(A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_IDiv(A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     // TODO @Aidan: Overflow can occur here - add flag system etc.
     // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
@@ -341,9 +341,9 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
-    builder += A_Push(A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
-    builder += A_Pop(A_Reg(INT_SIZE, A_RegName.R1))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     builder += instrApply(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     // TODO @Aidan: Overflow can occur here - add flag system etc.
 
@@ -353,9 +353,9 @@ private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(u
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
-    builder += A_Push(A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
-    builder += A_Pop(A_Reg(INT_SIZE, A_RegName.R1))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     builder += A_IMul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     // TODO @Aidan: Overflow can occur here - add flag system etc.
 
@@ -368,9 +368,9 @@ private def genComparison(x: T_Expr, y: T_Expr, ty: SemType, cond: A_Cond, stack
     
     val sizeTy = sizeOf(ty)
 
-    builder += A_Push(A_Reg(sizeTy, A_RegName.RetReg))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
-    builder += A_Pop(A_Reg(sizeTy, A_RegName.R1))
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     builder += A_Cmp(A_Reg(sizeTy, A_RegName.R1), A_Reg(sizeTy, A_RegName.RetReg), sizeTy)
     builder += A_Set(A_Reg(BOOL_SIZE, A_RegName.RetReg), cond)
 
