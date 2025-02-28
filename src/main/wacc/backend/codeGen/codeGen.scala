@@ -93,8 +93,8 @@ private def gen(t: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: Code
     case T_LessThanEq(x, y, ty) => genComparison(x, y, ty, A_Cond.LEq, stackTable)
     case T_Eq(x, y, ty) => genComparison(x, y, ty, A_Cond.Eq, stackTable)
     case T_NotEq(x, y, ty) => genComparison(x, y, ty, A_Cond.NEq, stackTable)
-    case T_And(x, y) => genBitwiseOp(x, y, A_And.apply, stackTable)
-    case T_Or(x, y) => genBitwiseOp(x, y, A_Or.apply, stackTable)
+    case T_And(x, y) => genBitwiseOp(x, y, stackTable, A_Cond.NEq)
+    case T_Or(x, y) => genBitwiseOp(x, y, stackTable, A_Cond.Eq)
     case T_Not(x) => genNot(x, stackTable)
     case T_Neg(x) => genNeg(x, stackTable)
     case T_Len(x) => genLen(x, stackTable)
@@ -376,14 +376,20 @@ private def genComparison(x: T_Expr, y: T_Expr, ty: SemType, cond: A_Cond, stack
 
     builder.toList
 
-private def genBitwiseOp(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr), stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+private def genBitwiseOp(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int], cond: A_Cond)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
+    val label = ctx.genNextInstrLabel()
+
     builder ++= gen(x, stackTable)
-    builder += A_Push(A_Reg(BOOL_SIZE, A_RegName.RetReg))
+    builder += A_Cmp(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE)
+    builder += A_Jmp(label, cond)
+    
     builder ++= gen(y, stackTable)
-    builder += A_Pop(A_Reg(BOOL_SIZE, A_RegName.R1))
-    builder += instrApply(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Reg(BOOL_SIZE, A_RegName.R1), BOOL_SIZE)
+    builder += A_Cmp(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE)
+
+    builder += A_LabelStart(label)
+    builder += A_Set(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Cond.Eq)
 
     builder.toList
 
