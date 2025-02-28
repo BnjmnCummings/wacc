@@ -23,7 +23,7 @@ val PAIR_SIZE_BYTES = 16
 val PAIR_OFFSET_SIZE = 8
 
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
-    given ctx: CodeGenCtx = CodeGenCtx()
+    given ctx: CodeGenCtx = CodeGenCtx(typeInfo)
 
     val _funcs = t_tree.funcs.map(gen) ++ ctx.defaultFuncsList
 
@@ -395,9 +395,6 @@ private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] = ???
 private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = ???
 
 private def genFuncCall(v: Name, args: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = {
-    // generate initial info - types of variables, offsets etc. Is a special new stack table based on offset for new function.
-    // modify sp
-    // generate each argument and move into the correct location
 
     val builder = new ListBuffer[A_Instr]
 
