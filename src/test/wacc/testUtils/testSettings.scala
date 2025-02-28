@@ -41,7 +41,7 @@ val testSettings = scala.collection.immutable.HashSet(
     "format_headers_test",
     "format_data_test",
     "format_function_test",
-    // "integration_exit",
+    "integration_exit",
     "integration_skip",
     // "integration_advanced",
     // "integration_array",
