@@ -18,12 +18,14 @@ val PRINTB_TRUE_LBL_STR_NAME = ".L._printb_str_true"
 val PRINTB_FALSE_LBL_STR_NAME = ".L._printb_str_false"
 val PRINTB_LBL_STR_NAME = ".L._printb_str"
 val PRINTS_LBL_STR_NAME = ".L._prints_str"
+val ERR_BAD_CHAR_STR_NAME = ".L._errBadChar_str"
 
 val F_FLUSH = "fflush"
 val PUTS = "puts"
 val EXIT = "exit"
 val PRINTF = "printf"
 
+val ERR_BAD_CHAR_LABEL = "_errBadChar"
 val ERR_OVERFLOW_LABEL = "_errOverflow"
 val PRINTLN_LABEL = "_println"
 val PRINTI_LABEL = "_printi"
@@ -182,4 +184,19 @@ inline def defaultPrints: A_Func = {
     program += A_Ret
 
     A_Func(A_InstrLabel("_prints"), program.toList)
+}
+
+inline def defaultBadChar: A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+    
+    program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
+    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(ERR_BAD_CHAR_STR_NAME))))
+    program += A_MovTo(A_Reg(BYTE_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM))
+    program += A_Call(A_ExternalLabel(PRINTF))
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R1), A_Imm(ZERO_IMM))
+    program += A_Call(A_ExternalLabel(F_FLUSH))
+    program += A_MovTo(A_Reg(BYTE_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE))
+    program += A_Call(A_ExternalLabel(EXIT))
+
+    A_Func(A_InstrLabel(ERR_BAD_CHAR_LABEL), program.toList)
 }
