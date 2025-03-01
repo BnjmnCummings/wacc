@@ -169,8 +169,14 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int]
     ty match
         case KnownType.Array(_) =>
             builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.R1), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
+
+            ctx.addDefaultFunc(FREE_LABEL)
+
             builder += A_Call(A_InstrLabel(FREE_LABEL))
         case KnownType.Pair(_, _) =>
+
+            ctx.addDefaultFunc(FREE_PAIR_LABEL)
+
             builder += A_Call(A_InstrLabel(FREE_PAIR_LABEL))
         case _ => throw Exception("Invalid type with free. Should be caught in type checker!")
     
