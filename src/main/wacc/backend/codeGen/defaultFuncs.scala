@@ -30,13 +30,19 @@ val PRINTF = "printf"
 val ERR_OVERFLOW_LABEL = "_errOverflow"
 val ERR_OUT_OF_BOUNDS_LABEL = "_errOutOfBounds"
 val ERR_OUT_OF_MEMORY_LABEL = "_errOutOfMemory"
+val ERR_DIV_ZERO_LABEL = "_errDivZero"
 val PRINTLN_LABEL = "_println"
 val PRINTI_LABEL = "_printi"
 val PRINTC_LABEL = "_printc"
 val PRINTP_LABEL = "_printp"
 val PRINTB_LABEL = "_printb"
+val PRINTS_LABEL = "_prints"
 val PRINTB_FALSE_LABEL = "_printb_false"
 val PRINTB_TRUE_LABEL = "_printb_true"
+val EXIT_LABEL = "_exit"
+val ARR_LD1_LABEL = "_arrLoad1"
+val ARR_LD4_LABEL = "_arrLoad4"
+val ARR_LD8_LABEL = "_arrLoad8"
 
 inline def defaultExit: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
@@ -48,18 +54,18 @@ inline def defaultExit: A_Func = {
     program += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
     program += A_Ret
 
-    A_Func(A_InstrLabel("_exit"), program.toList)
+    A_Func(A_InstrLabel(EXIT_LABEL), program.toList)
 }
 
 inline def defaultOverflow: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
     program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(OVERFLOW_LBL_STR_NAME))))
-    program += A_Call(A_InstrLabel("_prints"))
+    program += A_Call(A_InstrLabel(PRINTS_LABEL))
     program += A_MovTo(A_Reg(EXIT_CODE_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE))
     program += A_Call(A_ExternalLabel("exit"))
 
-    A_Func(A_InstrLabel("_errOverflow"), program.toList)
+    A_Func(A_InstrLabel(ERR_OVERFLOW_LABEL), program.toList)
 }
 
 // When calling print:
@@ -185,7 +191,7 @@ inline def defaultPrints: A_Func = {
     program += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
     program += A_Ret
 
-    A_Func(A_InstrLabel("_prints"), program.toList)
+    A_Func(A_InstrLabel(PRINTS_LABEL), program.toList)
 }
 
 inline def defaultDivZero: A_Func = {
@@ -197,7 +203,7 @@ inline def defaultDivZero: A_Func = {
     program += A_MovTo(A_Reg(BOOL_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE))
     program += A_Call(A_ExternalLabel("exit"))
 
-    A_Func(A_InstrLabel("_errDivZero"), program.toList)
+    A_Func(A_InstrLabel(ERR_DIV_ZERO_LABEL), program.toList)
 }
 
 inline def defaultOutOfBounds: A_Func = {
@@ -241,7 +247,7 @@ inline def defaultArrLoad1: A_Func = {
     program += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     program += A_Ret
 
-    A_Func(A_InstrLabel("_arrLoad4"), program.toList)
+    A_Func(A_InstrLabel(ARR_LD1_LABEL), program.toList)
 }
 
 inline def defaultArrLoad4: A_Func = {
@@ -267,7 +273,7 @@ inline def defaultArrLoad4: A_Func = {
     program += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     program += A_Ret
 
-    A_Func(A_InstrLabel("_arrLoad4"), program.toList)
+    A_Func(A_InstrLabel(ARR_LD4_LABEL), program.toList)
 }
 
 inline def defaultArrLoad8: A_Func = {
@@ -293,7 +299,7 @@ inline def defaultArrLoad8: A_Func = {
     program += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     program += A_Ret
 
-    A_Func(A_InstrLabel("_arrLoad4"), program.toList)
+    A_Func(A_InstrLabel(ARR_LD8_LABEL), program.toList)
 }
 
 inline def defaultOutOfMemory: A_Func = {
@@ -301,7 +307,7 @@ inline def defaultOutOfMemory: A_Func = {
     
     program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(OUT_OF_MEMORY_LBL_STR_NAME))))
-    program += A_Call(A_InstrLabel("_prints"))
+    program += A_Call(A_InstrLabel(PRINTS_LABEL))
     program += A_MovTo(A_Reg(BOOL_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE))
     program += A_Call(A_ExternalLabel("exit"))
 

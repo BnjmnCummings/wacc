@@ -192,7 +192,7 @@ private def genExit(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: 
     // x will be an integer - we can only perform exit on integers
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
     // We need to move the exit code into edi (32-bit R1) for the exit code to be successfully passed to plt@exit
-    builder += A_Call(A_InstrLabel("_exit"))
+    builder += A_Call(A_InstrLabel(EXIT_LABEL))
 
     builder.toList
 
@@ -243,7 +243,7 @@ private def genPrintln(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, I
     ctx.addStoredStr(A_DataLabel(PRINTLN_LBL_STR_NAME), "")
     // add and call default function
     ctx.addDefaultFunc(defaultPrintln)
-    builder += A_Call(A_InstrLabel("_println"))
+    builder += A_Call(A_InstrLabel(PRINTLN_LABEL))
 
     builder.toList
 
@@ -331,12 +331,12 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
 
     // Compare denominator with 0
     builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(0), INT_SIZE)
-    builder += A_Jmp(A_InstrLabel("_errDivZero"), A_Cond.Eq)
+    builder += A_Jmp(A_InstrLabel(ERR_DIV_ZERO_LABEL), A_Cond.Eq)
     // Above is a comparison of y (denominator) with 0 - error if it succeeds
 
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_IDiv(A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
-    builder += A_Jmp(A_InstrLabel("_errOverflow"), A_Cond.Overflow)
+    builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
     // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.RetReg), (A_Reg(INT_SIZE, divResultReg)))
@@ -354,7 +354,7 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += instrApply(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
-    builder += A_Jmp(A_InstrLabel("_errOverflow"), A_Cond.Overflow)
+    builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
 
     builder.toList
 
@@ -368,7 +368,7 @@ private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(u
     builder ++= gen(y, stackTable)
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     builder += A_IMul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
-    builder += A_Jmp(A_InstrLabel("_errOverflow"), A_Cond.Overflow)
+    builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
 
     builder.toList
 
@@ -506,7 +506,7 @@ private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.M
     builder += A_MovFromDeref(A_Reg(???, A_RegName.R1), A_RegDeref(???, A_MemOffset(???, A_Reg(???, A_RegName.StackPtr), A_OffsetReg(A_Reg(INT_SIZE, A_RegName.R2)))))
 
     // call _arrLoad8 
-    builder += A_Call(A_InstrLabel("_arrLoad8"))
+    builder += A_Call(A_InstrLabel(ARR_LD8_LABEL))
 
     for (i <- 1 to indices.length - 2) { // TODO: factor out magic numbers
         // We choose -2 so in this loop we are only dealing with arrays
@@ -526,7 +526,7 @@ private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.M
         builder += A_MovFromDeref(A_Reg(PTR_SIZE, A_RegName.R1), A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetReg(A_Reg(INT_SIZE, A_RegName.R2)))))
 
         // call _arrLoad8
-        builder += A_Call(A_InstrLabel("_arrLoad8"))
+        builder += A_Call(A_InstrLabel(ARR_LD8_LABEL))
     }
 
     // We should now have a ptr to the final result stored in R1
