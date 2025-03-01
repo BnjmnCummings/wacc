@@ -459,10 +459,10 @@ private def genChr(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     builder ++= gen(x, stackTable)
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
-    builder += A_And(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(CHR_MASK), INT_SIZE)
-    builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(ZERO_IMM), INT_SIZE)
-    builder += A_Jmp(???, A_Cond.NEq)
-    // TODO: @Aidan Create bad character label - this is when you chr(x) |x| > 127 (0b1111111)
+    ctx.addStoredStr(A_DataLabel(ERR_BAD_CHAR_STR_NAME), "fatal error: int %d is not ascii character 0-127 \n")
+    ctx.addDefaultFunc(defaultBadChar)
+    builder += A_And(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(-128), INT_SIZE)
+    builder += A_Jmp(A_InstrLabel("_errBadChar"), A_Cond.NEq)
 
     builder.toList
 
