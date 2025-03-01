@@ -254,13 +254,10 @@ class backend_integration_test extends ConditionalRun {
         val buildExitStatus = s"./buildAss $fileName" .!
 
         if (buildExitStatus == 0) {
-            val cmd = s"./src/test/wacc/backend/integration/$fileName"
+            s"touch ./src/test/wacc/backend/integration/output/$progName.out" .!
+            val cmd = s"./src/test/wacc/backend/integration/$fileName > ./src/test/wacc/backend/integration/output/$progName.out"
             val exitStatus = cmd .!
-            val output: ListBuffer[String] = ListBuffer.empty[String]
-
-            if(exitStatus == 0) {
-                output ++= (cmd .!!).split('\n')
-            }
+            val output = os.read(os.pwd / "src" / "test" / "wacc" / "backend" / "integration" / "output" / s"$progName.out").split('\n').toList
             
             /* clean up after ourselves and return */
             s"./wipeObj $fileName" .!

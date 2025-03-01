@@ -3,3 +3,4 @@
 .scala-build/
 .vscode/
 src/test/wacc/backend/integration/assembly/*
+src/test/wacc/backend/integration/output/*
