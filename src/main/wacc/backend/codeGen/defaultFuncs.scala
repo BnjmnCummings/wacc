@@ -45,6 +45,9 @@ val EXIT_LABEL = "_exit"
 val ARR_LD1_LABEL = "_arrLoad1"
 val ARR_LD4_LABEL = "_arrLoad4"
 val ARR_LD8_LABEL = "_arrLoad8"
+val MALLOC_LABEL = "_malloc"
+val FREE_LABEL = "_free"
+val FREE_PAIR_LABEL = "_freePair"
 
 inline def defaultExit: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
@@ -329,4 +332,20 @@ inline def defaultOutOfMemory: A_Func = {
     program += A_Call(A_ExternalLabel("exit"))
 
     A_Func(A_InstrLabel(ERR_OUT_OF_MEMORY_LABEL), program.toList)
+}
+
+inline def defaultMalloc: A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+
+    program += A_Push(A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.BasePtr), A_Reg(PTR_SIZE, A_RegName.StackPtr))
+    program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
+    program += A_Call(A_ExternalLabel("malloc"))
+    program += A_Cmp(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
+    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_MEMORY_LABEL), A_Cond.Eq)
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_Ret
+
+    A_Func(A_InstrLabel(MALLOC_LABEL), program.toList)
 }
