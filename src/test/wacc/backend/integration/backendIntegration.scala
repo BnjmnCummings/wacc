@@ -285,6 +285,7 @@ class backend_integration_test extends ConditionalRun {
                 .takeWhile(s => s != "# Program:" && s != "# Exit:")
                 .map(_.replace("#", "").trim)
                 .filter(_.nonEmpty)
+                .filter(_ != "runtime_error")
             
             val exitCode: Int = lines.dropWhile( _ != "# Exit:") match
                 /* 'Exit:' comment isn't always present */
@@ -294,10 +295,6 @@ class backend_integration_test extends ConditionalRun {
                     .map(_.replace("#", "").trim)
                     .filter(_.nonEmpty)
                     .map(_.toInt)(0)
-            
-            if (output.length == 1 && output(0) == "runtime_error") {
-                return (exitCode, List())
-            }
 
             return (exitCode, output) 
         } catch {

@@ -146,7 +146,6 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
 
     l match
         case T_Ident(v) =>
-            // need to be able to move it into the offset... help @Zakk
             builder += A_MovFrom(A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(stackTable(v))), A_Reg(sizeOf(ty), A_RegName.RetReg))
         case T_ArrayElem(v, indices) => ???
         case T_PairElem(index, v) => ???
@@ -365,7 +364,7 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
     builder ++= gen(x, stackTable)
     builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
-    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1))
+    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
 
     // Compare denominator with 0
     builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(0), INT_SIZE)
@@ -373,6 +372,7 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
     // Above is a comparison of y (denominator) with 0 - error if it succeeds
 
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
+    builder += A_CDQ
     builder += A_IDiv(A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
     // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
@@ -411,7 +411,7 @@ private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(u
     builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
-    builder += A_IMul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
+    builder += A_IMul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
     builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
 
     builder.toList
@@ -470,6 +470,7 @@ private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(ZERO_IMM))
     builder += A_Sub(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg), INT_SIZE)
     builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
+    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1))
     // ^ overflow -2^32 case!
 
     builder.toList
@@ -521,7 +522,7 @@ private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] = 
 }
 
 private def genIdent(v: Name, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
-    List(A_MovTo(A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.RetReg), A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.StackPtr), A_OffsetImm(stackTable(v)))))
+    List(A_MovTo(A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.RetReg), A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(stackTable(v)))))
 
 private def unwrapArr(ty: KnownType): SemType = ty match
     case wacc.KnownType.Array(t) => t
