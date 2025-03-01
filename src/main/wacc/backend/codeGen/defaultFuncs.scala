@@ -15,10 +15,10 @@ val OVERFLOW_LBL_STR_NAME = ".L._errOverflow_str"
 val DIV_ZERO_LBL_STR = "fatal error: division or modulo by zero"
 val DIV_ZERO_LBL_STR_NAME = ".L._errDivZero_str"
 
-val OUT_OF_BOUNDS_LBL_STR = "Error: Array index out of bounds\n"
+val OUT_OF_BOUNDS_LBL_STR = "Error: Array index out of bounds"
 val OUT_OF_BOUNDS_LBL_STR_NAME = ".L._errOutOfBounds_str"
 
-val OUT_OF_MEMORY_LBL_STR = "Error: Out of memory\n"
+val OUT_OF_MEMORY_LBL_STR = "Error: Out of memory"
 val OUT_OF_MEMORY_LBL_STR_NAME = ".L._errOutOfMemory_str"
 
 val PRINTLN_LBL_STR = ""
