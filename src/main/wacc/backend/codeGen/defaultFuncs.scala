@@ -9,18 +9,42 @@ val ERR_EXIT_CODE = -1
 
 val BYTE_SIZE = A_OperandSize.A_8
 
+val OVERFLOW_LBL_STR = "fatal error: integer overflow or underflow occurred"
 val OVERFLOW_LBL_STR_NAME = ".L._errOverflow_str"
+
+val DIV_ZERO_LBL_STR = "fatal error: division or modulo by zero"
 val DIV_ZERO_LBL_STR_NAME = ".L._errDivZero_str"
+
+val OUT_OF_BOUNDS_LBL_STR = "Error: Array index out of bounds\n"
 val OUT_OF_BOUNDS_LBL_STR_NAME = ".L._errOutOfBounds_str"
+
+val OUT_OF_MEMORY_LBL_STR = "Error: Out of memory\n"
 val OUT_OF_MEMORY_LBL_STR_NAME = ".L._errOutOfMemory_str"
+
 val PRINTLN_LBL_STR_NAME = ".L._println_str"
+
+val PRINTI_LBL_STR = "%d"
 val PRINTI_LBL_STR_NAME = ".L._printi_int"
+
+val PRINTC_LBL_STR = "%c"
 val PRINTC_LBL_STR_NAME = ".L._printc_str"
+
+val PRINTP_LBL_STR = "%p"
 val PRINTP_LBL_STR_NAME = ".L._printp_str"
+
+val PRINTB_TRUE_LBL_STR = "true"
 val PRINTB_TRUE_LBL_STR_NAME = ".L._printb_str_true"
+
+val PRINTB_FALSE_LBL_STR = "false"
 val PRINTB_FALSE_LBL_STR_NAME = ".L._printb_str_false"
+
+val PRINTB_LBL_STR = "%.*s"
 val PRINTB_LBL_STR_NAME = ".L._printb_str"
+
+val PRINTS_LBL_STR = "%.*s"
 val PRINTS_LBL_STR_NAME = ".L._prints_str"
+
+val ERR_BAD_CHAR_STR = "fatal error: int %d is not ascii character 0-127 \n"
 val ERR_BAD_CHAR_STR_NAME = ".L._errBadChar_str"
 
 val F_FLUSH = "fflush"
