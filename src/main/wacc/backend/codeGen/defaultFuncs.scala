@@ -349,3 +349,17 @@ inline def defaultMalloc: A_Func = {
 
     A_Func(A_InstrLabel(MALLOC_LABEL), program.toList)
 }
+
+inline def defaultFree: A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+
+    program += A_Push(A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.BasePtr), A_Reg(PTR_SIZE, A_RegName.StackPtr))
+    program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
+    program += A_Call(A_ExternalLabel("free"))
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_Ret
+
+    A_Func(A_InstrLabel(FREE_LABEL), program.toList)
+}
