@@ -22,10 +22,7 @@ val CHR_MASK = -128
 val PAIR_SIZE_BYTES = 16
 val PAIR_OFFSET_SIZE = 8
 
-val PRINTF_INT_STR = "%d"
-val PRINTF_CHAR_STR = "%c"
-val PRINTF_STR_STR = "%.*s"
-val PRINTF_PTR_STR = "%p"
+val MAIN_FUNC_NAME = "main"
 
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx(typeInfo)
@@ -48,7 +45,7 @@ def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
     builder += A_Ret
 
-    val main = A_Func(A_InstrLabel("main"), builder.toList)
+    val main = A_Func(A_InstrLabel(MAIN_FUNC_NAME), builder.toList)
 
     val _funcsWithDefaults = _funcs ++ ctx.defaultFuncsList
 
@@ -172,9 +169,9 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int]
     ty match
         case KnownType.Array(_) =>
             builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.R1), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
-            builder += A_Call(A_InstrLabel("_free"))
+            builder += A_Call(A_InstrLabel(FREE_LABEL))
         case KnownType.Pair(_, _) =>
-            builder += A_Call(A_InstrLabel("_freepair"))
+            builder += A_Call(A_InstrLabel(FREE_PAIR_LABEL))
         case _ => throw Exception("Invalid type with free. Should be caught in type checker!")
     
     builder.toList
@@ -207,26 +204,26 @@ private def genPrint(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int
     ty match
         case KnownType.Int => {
             ctx.addDefaultFunc(defaultPrinti)
-            ctx.addStoredStr(A_DataLabel(PRINTI_LBL_STR_NAME), PRINTF_INT_STR)
+            ctx.addStoredStr(A_DataLabel(PRINTI_LBL_STR_NAME), PRINTI_LBL_STR)
         }
         case KnownType.Boolean => {
             ctx.addDefaultFunc(defaultPrintb)
-            ctx.addStoredStr(A_DataLabel(PRINTB_TRUE_LBL_STR_NAME), "true")
-            ctx.addStoredStr(A_DataLabel(PRINTB_FALSE_LBL_STR_NAME), "false")
-            ctx.addStoredStr(A_DataLabel(PRINTB_LBL_STR_NAME), "%.*s")
+            ctx.addStoredStr(A_DataLabel(PRINTB_TRUE_LBL_STR_NAME), PRINTB_TRUE_LBL_STR)
+            ctx.addStoredStr(A_DataLabel(PRINTB_FALSE_LBL_STR_NAME), PRINTB_FALSE_LBL_STR)
+            ctx.addStoredStr(A_DataLabel(PRINTB_LBL_STR_NAME), PRINTB_LBL_STR)
         }
         case KnownType.Char => {
             ctx.addDefaultFunc(defaultPrintc)
-            ctx.addStoredStr(A_DataLabel(PRINTC_LBL_STR_NAME), PRINTF_CHAR_STR)
+            ctx.addStoredStr(A_DataLabel(PRINTC_LBL_STR_NAME), PRINTC_LBL_STR)
         }
         case KnownType.String => {
             ctx.addDefaultFunc(defaultPrints)
-            ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+            ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
         }
         // here we must have a pointer print e.g. array/pair
         case _ => {
             ctx.addDefaultFunc(defaultPrintp)
-            ctx.addStoredStr(A_DataLabel(PRINTP_LBL_STR_NAME), "%p")
+            ctx.addStoredStr(A_DataLabel(PRINTP_LBL_STR_NAME), PRINTP_LBL_STR)
         }
 
     // call the right function
@@ -350,11 +347,11 @@ private def genSkip(): List[A_Instr] = List()
 
 private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     ctx.addDefaultFunc(defaultDivZero)
-    ctx.addStoredStr(A_DataLabel(DIV_ZERO_LBL_STR_NAME), "fatal error: integer overflow or underflow occurred")
+    ctx.addStoredStr(A_DataLabel(DIV_ZERO_LBL_STR_NAME), DIV_ZERO_LBL_STR)
     ctx.addDefaultFunc(defaultOverflow)
-    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), "fatal error: division or modulo by zero")
+    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), OVERFLOW_LBL_STR)
     ctx.addDefaultFunc(defaultPrints)
-    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
 
     val builder = new ListBuffer[A_Instr]
 
@@ -383,9 +380,9 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
 
 private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr), stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx) =
     ctx.addDefaultFunc(defaultOverflow)
-    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), "fatal error: division or modulo by zero")
+    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), OVERFLOW_LBL_STR)
     ctx.addDefaultFunc(defaultPrints)
-    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
 
     val builder = new ListBuffer[A_Instr]
 
@@ -401,9 +398,9 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
 
 private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     ctx.addDefaultFunc(defaultOverflow)
-    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), "fatal error: division or modulo by zero")
+    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), OVERFLOW_LBL_STR)
     ctx.addDefaultFunc(defaultPrints)
-    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
     
     val builder = new ListBuffer[A_Instr]
 
@@ -458,9 +455,9 @@ private def genNot(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
 
 private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     ctx.addDefaultFunc(defaultOverflow)
-    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), "fatal error: division or modulo by zero")
+    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), OVERFLOW_LBL_STR)
     ctx.addDefaultFunc(defaultPrints)
-    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
     
     val builder = new ListBuffer[A_Instr]
 
@@ -500,10 +497,11 @@ private def genChr(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     builder ++= gen(x, stackTable)
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
-    ctx.addStoredStr(A_DataLabel(ERR_BAD_CHAR_STR_NAME), "fatal error: int %d is not ascii character 0-127 \n")
-    ctx.addDefaultFunc(defaultBadChar)
     builder += A_And(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(-128), INT_SIZE)
-    builder += A_Jmp(A_InstrLabel("_errBadChar"), A_Cond.NEq)
+
+    ctx.addStoredStr(A_DataLabel(ERR_BAD_CHAR_STR_NAME), ERR_BAD_CHAR_STR)
+    ctx.addDefaultFunc(defaultBadChar)
+    builder += A_Jmp(A_InstrLabel(ERR_BAD_CHAR_LABEL), A_Cond.NEq)
 
     builder.toList
 
@@ -600,7 +598,14 @@ private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(opSizeToInt(PTR_SIZE) * 2))
-    builder += A_Call(A_ExternalLabel("malloc"))
+    
+    ctx.addDefaultFunc(defaultMalloc)
+    ctx.addDefaultFunc(defaultOutOfMemory)
+    ctx.addStoredStr(A_DataLabel(OUT_OF_MEMORY_LBL_STR_NAME), "Error: Out of memory\n")
+    ctx.addDefaultFunc(defaultPrints)
+    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+
+    builder += A_Call(A_ExternalLabel(MALLOC_LABEL))
     builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_MovDeref(A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Imm(ZERO_IMM))
     builder += A_MovDeref(A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Imm(ZERO_IMM))
@@ -678,14 +683,21 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTab
     val sizeBytes = opSizeToInt(INT_SIZE) + (intSizeOf(ty) * length)
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(sizeBytes))
-    builder += A_Call(A_ExternalLabel("malloc"))
+    // TODO: Call proper malloc
+    ctx.addDefaultFunc(defaultMalloc)
+    ctx.addDefaultFunc(defaultOutOfMemory)
+    ctx.addStoredStr(A_DataLabel(OUT_OF_MEMORY_LBL_STR_NAME), OUT_OF_MEMORY_LBL_STR)
+    ctx.addDefaultFunc(defaultPrints)
+    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
+
+    builder += A_Call(A_InstrLabel(MALLOC_LABEL))
     builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_Add(A_Reg(PTR_SIZE, A_RegName.R11), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
-    builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R8), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length))
+    builder += A_MovDeref(A_RegDeref(INT_SIZE, A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.R8), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length))
 
     for (i <- 0 to length - 1) { 
         builder ++= gen(xs(i), stackTable)
-        builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R8), A_OffsetImm(-i * intSizeOf(ty)))), A_Reg(sizeOf(ty), A_RegName.RetReg))
+        builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.R8), A_OffsetImm(i * intSizeOf(ty)))), A_Reg(sizeOf(ty), A_RegName.RetReg))
     }
 
     builder.toList
@@ -694,7 +706,15 @@ private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType, stack
     val builder = new ListBuffer[A_Instr]
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(opSizeToInt(PTR_SIZE) * 2))
-    builder += A_Call(A_ExternalLabel("malloc"))
+    
+    ctx.addDefaultFunc(defaultMalloc)
+    ctx.addDefaultFunc(defaultOutOfMemory)
+    ctx.addStoredStr(A_DataLabel(OUT_OF_MEMORY_LBL_STR_NAME), OUT_OF_MEMORY_LBL_STR)
+    ctx.addDefaultFunc(defaultPrints)
+    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
+
+    builder += A_Call(A_InstrLabel(MALLOC_LABEL))
+
     builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(x1, stackTable)
     builder += A_MovDeref(A_RegDeref(sizeOf(ty1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Reg(sizeOf(ty1), A_RegName.RetReg))
