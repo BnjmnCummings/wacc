@@ -156,15 +156,15 @@ inline def defaultPrintb: A_Func = {
     program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Cmp(A_Reg(BYTE_SIZE, A_RegName.R1), A_Imm(ZERO_IMM), BYTE_SIZE)
     program += A_Jmp(A_InstrLabel(PRINTB_FALSE_LABEL), A_Cond.NEq)
-    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R3), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(PRINTB_LBL_STR_NAME))))
+    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R3), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(PRINTB_FALSE_LBL_STR_NAME))))
     program += A_Jmp(A_InstrLabel(PRINTB_TRUE_LABEL), A_Cond.Uncond)
 
     program += A_LabelStart(A_InstrLabel(PRINTB_FALSE_LABEL))
-    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R3), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(PRINTB_FALSE_LBL_STR_NAME))))
+    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R3), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(PRINTB_TRUE_LBL_STR_NAME))))
 
     program += A_LabelStart(A_InstrLabel(PRINTB_TRUE_LABEL))
     program += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.R3), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
-    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(PRINTB_TRUE_LBL_STR_NAME))))
+    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(PRINTB_LBL_STR_NAME))))
     program += A_MovTo(A_Reg(BYTE_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM))
     program += A_Call(A_ExternalLabel(PRINTF))
     program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R1), A_Imm(ZERO_IMM))
@@ -216,9 +216,9 @@ inline def defaultDivZero: A_Func = {
 
     program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(DIV_ZERO_LBL_STR_NAME))))
-    program += A_Call(A_InstrLabel("prints"))
-    program += A_MovTo(A_Reg(BOOL_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE))
-    program += A_Call(A_ExternalLabel("exit"))
+    program += A_Call(A_InstrLabel(PRINTS_LABEL))
+    program += A_MovTo(A_Reg(BYTE_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE))
+    program += A_Call(A_ExternalLabel(EXIT))
 
     A_Func(A_InstrLabel(ERR_DIV_ZERO_LABEL), program.toList)
 }
@@ -229,14 +229,14 @@ inline def defaultOutOfBounds: A_Func = {
     program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(OUT_OF_BOUNDS_LBL_STR_NAME))))
     program += A_MovTo(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM))
-    program += A_Call(A_ExternalLabel("printf"))
+    program += A_Call(A_ExternalLabel(PRINTF))
 
     // Put 0 into the 64-bit R1 (rdi) to flush all output streams. Note: PTR_SIZE because first argument of fflush is a ptr
     program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R1), A_Imm(ZERO_IMM)) 
-    program += A_Call(A_ExternalLabel("fflush"))
+    program += A_Call(A_ExternalLabel(F_FLUSH))
 
     program += A_MovTo(A_Reg(BOOL_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE)) 
-    program += A_Call(A_ExternalLabel("exit"))
+    program += A_Call(A_ExternalLabel(EXIT))
 
     A_Func(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), program.toList)
 }
