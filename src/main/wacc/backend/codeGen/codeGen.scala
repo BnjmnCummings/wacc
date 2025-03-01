@@ -147,7 +147,7 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
     l match
         case T_Ident(v) =>
             // need to be able to move it into the offset... help @Zakk
-            builder += A_MovFrom(A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(- stackTable(v))), A_Reg(sizeOf(ty), A_RegName.RetReg))
+            builder += A_MovFrom(A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(stackTable(v))), A_Reg(sizeOf(ty), A_RegName.RetReg))
         case T_ArrayElem(v, indices) => ???
         case T_PairElem(index, v) => ???
     
@@ -354,7 +354,9 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
     ctx.addStoredStr(A_DataLabel(DIV_ZERO_LBL_STR_NAME), "fatal error: integer overflow or underflow occurred")
     ctx.addDefaultFunc(defaultOverflow)
     ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), "fatal error: division or modulo by zero")
-    
+    ctx.addDefaultFunc(defaultPrints)
+    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+
     val builder = new ListBuffer[A_Instr]
 
     // Note: With IDiv, we need the numerator to be stored in eax and then we can divide by a given register
@@ -381,6 +383,9 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
 
 private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr), stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx) =
     ctx.addDefaultFunc(defaultOverflow)
+    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), "fatal error: division or modulo by zero")
+    ctx.addDefaultFunc(defaultPrints)
+    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
 
     val builder = new ListBuffer[A_Instr]
 
@@ -396,6 +401,9 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
 
 private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     ctx.addDefaultFunc(defaultOverflow)
+    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), "fatal error: division or modulo by zero")
+    ctx.addDefaultFunc(defaultPrints)
+    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
     
     val builder = new ListBuffer[A_Instr]
 
@@ -449,6 +457,11 @@ private def genNot(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     builder.toList
 
 private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+    ctx.addDefaultFunc(defaultOverflow)
+    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), "fatal error: division or modulo by zero")
+    ctx.addDefaultFunc(defaultPrints)
+    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+    
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
@@ -456,7 +469,7 @@ private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     // CONSIDER: DO WE NEED TO SAVE R1 BEFORE THIS?
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(ZERO_IMM))
     builder += A_Sub(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg), INT_SIZE)
-    builder += A_Jmp(A_InstrLabel("_errOverflow"), A_Cond.Overflow)
+    builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
     // ^ overflow -2^32 case!
 
     builder.toList
