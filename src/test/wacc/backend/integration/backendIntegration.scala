@@ -188,7 +188,7 @@ class backend_integration_test extends ConditionalRun {
                 val actual = runAssembly(progName)
 
                 if(actual._1 == expected._1 && actual._2.zip(expected._2).forall{_ match 
-                    case (a, "runtime_error") => a.contains("fatal error")
+                    case (a, "#runtime_error#") => a.contains("fatal error")
                     case (a, b) => a == b
                 })
                                                                                     
@@ -207,6 +207,8 @@ class backend_integration_test extends ConditionalRun {
                     compileFailures += filePath
                 case e: Exception => 
                     compileFailures += filePath
+                    println(e)
+                    println(e.getStackTrace().mkString("\n"))
             }
         }
 
@@ -258,7 +260,6 @@ class backend_integration_test extends ConditionalRun {
         val buildExitStatus = s"./buildAss $fileName" .!
 
         if (buildExitStatus == 0) {
-            s"touch ./src/test/wacc/backend/integration/output/$progName.out" .!
             val cmd = s"./src/test/wacc/backend/integration/$fileName"
 
             val output: ListBuffer[String] = ListBuffer()
@@ -286,7 +287,9 @@ class backend_integration_test extends ConditionalRun {
             val output = lines
                 .dropWhile( _ != "# Output:").tail
                 .takeWhile(s => s != "# Program:" && s != "# Exit:")
-                .map(_.replace("#", "").trim)
+                // filter so it only takes lines of the format "# .*" and removes the "# "
+                .filter(_.startsWith("# "))
+                .map(_.drop(2))
                 .filter(_.nonEmpty)
             
             val exitCode: Int = lines.dropWhile( _ != "# Exit:") match
