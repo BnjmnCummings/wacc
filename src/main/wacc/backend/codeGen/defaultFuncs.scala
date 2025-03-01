@@ -363,3 +363,19 @@ inline def defaultFree: A_Func = {
 
     A_Func(A_InstrLabel(FREE_LABEL), program.toList)
 }
+
+inline def defaultFreePair: A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+
+    program += A_Push(A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.BasePtr), A_Reg(PTR_SIZE, A_RegName.StackPtr))
+    program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
+    program += A_Cmp(A_Reg(PTR_SIZE, A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE)
+    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_MEMORY_LABEL), A_Cond.Eq)
+    program += A_Call(A_ExternalLabel("free"))
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_Ret
+
+    A_Func(A_InstrLabel(FREE_PAIR_LABEL), program.toList)
+}
