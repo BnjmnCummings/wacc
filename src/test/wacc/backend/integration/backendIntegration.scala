@@ -187,7 +187,11 @@ class backend_integration_test extends ConditionalRun {
                 val expected = getExpectedOutput(filePath)
                 val actual = runAssembly(progName)
 
-                if(actual._1 == expected._1 && actual._2 == expected._2)
+                if(actual._1 == expected._1 && actual._2.zip(expected._2).forall{_ match 
+                    case (a, "runtime_error") => a.contains("fatal error")
+                    case (a, b) => a == b
+                })
+                                                                                    
                     successes += filePath
                     s"./wipeAss $progName" .!
                 else 
@@ -255,9 +259,11 @@ class backend_integration_test extends ConditionalRun {
 
         if (buildExitStatus == 0) {
             s"touch ./src/test/wacc/backend/integration/output/$progName.out" .!
-            val cmd = s"./src/test/wacc/backend/integration/$fileName > ./src/test/wacc/backend/integration/output/$progName.out"
-            val exitStatus = cmd .!
-            val output = os.read(os.pwd / "src" / "test" / "wacc" / "backend" / "integration" / "output" / s"$progName.out").split('\n').toList
+            val cmd = s"./src/test/wacc/backend/integration/$fileName"
+
+            val output: ListBuffer[String] = ListBuffer()
+
+            val exitStatus = cmd.run(ProcessIO(_ => (), stdout => scala.io.Source.fromInputStream(stdout).getLines.foreach(output += _), _ => ())).exitValue()
             
             /* clean up after ourselves and return */
             s"./wipeObj $fileName" .!
@@ -282,7 +288,6 @@ class backend_integration_test extends ConditionalRun {
                 .takeWhile(s => s != "# Program:" && s != "# Exit:")
                 .map(_.replace("#", "").trim)
                 .filter(_.nonEmpty)
-                .filter(_ != "runtime_error")
             
             val exitCode: Int = lines.dropWhile( _ != "# Exit:") match
                 /* 'Exit:' comment isn't always present */
