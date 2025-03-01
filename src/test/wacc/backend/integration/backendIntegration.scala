@@ -189,7 +189,8 @@ class backend_integration_test extends ConditionalRun {
 
                 if(actual._1 == expected._1 && actual._2.zip(expected._2).forall{_ match 
                     case (a, "#runtime_error#") => a.contains("fatal error")
-                    case (a, b) => a == b
+                    case (a, "Printing an array variable gives an address, such as #addrs#") => a.contains("Printing an array variable gives an address, such as 0x")
+                    case (a, e) => a == e
                 })
                                                                                     
                     successes += filePath

@@ -45,7 +45,7 @@ val PRINTB_LBL_STR_NAME = ".L._printb_str"
 val PRINTS_LBL_STR = "%.*s"
 val PRINTS_LBL_STR_NAME = ".L._prints_str"
 
-val ERR_BAD_CHAR_STR = "fatal error: int %d is not ascii character 0-127 \n"
+val ERR_BAD_CHAR_STR = "fatal error: int %d is not ascii character 0-127"
 val ERR_BAD_CHAR_STR_NAME = ".L._errBadChar_str"
 
 val F_FLUSH = "fflush"

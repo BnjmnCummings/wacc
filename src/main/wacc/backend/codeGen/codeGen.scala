@@ -143,7 +143,7 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
 
     l match
         case T_Ident(v) =>
-            builder += A_MovFrom(A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(stackTable(v))), A_Reg(sizeOf(ty), A_RegName.RetReg))
+            builder += A_MovFrom(A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(stackTable(v))), A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.RetReg))
         case T_ArrayElem(v, indices) => ???
         case T_PairElem(index, v) => ???
     
@@ -218,6 +218,9 @@ private def genPrint(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int
             ctx.addDefaultFunc(PRINTC_LABEL)
         }
         case KnownType.String => {
+            ctx.addDefaultFunc(PRINTS_LABEL)
+        }
+        case KnownType.Array(KnownType.Char) => {
             ctx.addDefaultFunc(PRINTS_LABEL)
         }
         // here we must have a pointer print e.g. array/pair
@@ -472,7 +475,7 @@ private def genLen(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     builder ++= gen(x, stackTable)
     // We now have the pointer to the first element stored in RAX (64-bit RetReg)
     // We know the size is stored 4 bytes before the first element hence we can do a reg deref of retreg -4 to find the size
-    builder += A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.RetReg), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(INT_SIZE, A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+    builder += A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.RetReg), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
 
     builder.toList
 
@@ -677,12 +680,14 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTab
     builder += A_Call(A_InstrLabel(MALLOC_LABEL))
     builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_Add(A_Reg(PTR_SIZE, A_RegName.R11), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
-    builder += A_MovDeref(A_RegDeref(INT_SIZE, A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.R8), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length))
+    builder += A_MovDeref(A_RegDeref(INT_SIZE, A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length))
 
     for (i <- 0 to length - 1) { 
         builder ++= gen(xs(i), stackTable)
-        builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.R8), A_OffsetImm(i * intSizeOf(ty)))), A_Reg(sizeOf(ty), A_RegName.RetReg))
+        builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(i * intSizeOf(ty)))), A_Reg(sizeOf(ty), A_RegName.RetReg))
     }
+
+    builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Reg(PTR_SIZE, A_RegName.R11))
 
     builder.toList
 
@@ -714,7 +719,7 @@ def sizeOf(ty: SemType): A_OperandSize = ty match
     case wacc.KnownType.String => PTR_SIZE
     case wacc.KnownType.Array(ty) => PTR_SIZE
     case KnownType.Pair(_, _) => ???
-    case KnownType.Ident => println(ty)
+    case KnownType.Ident =>
          ???
 
 def typeToLetter(ty: SemType): String = ty match
@@ -724,6 +729,7 @@ def typeToLetter(ty: SemType): String = ty match
     case wacc.KnownType.Boolean => "b"
     case wacc.KnownType.Char => "c"
     case wacc.KnownType.String => "s"
+    case wacc.KnownType.Array(wacc.KnownType.Char) => "s"
     case wacc.KnownType.Array(ty) => "p"
     case KnownType.Pair(ty1, ty2) => "p"
     case KnownType.Ident => ???
