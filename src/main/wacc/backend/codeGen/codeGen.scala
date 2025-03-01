@@ -182,7 +182,7 @@ private def genReturn(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, In
 private def genExit(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
 
-    ctx.addDefaultFunc(defaultExit)
+    ctx.addDefaultFunc(EXIT_LABEL)
 
     builder ++= gen(x, stackTable)
     // x will be an integer - we can only perform exit on integers
@@ -203,27 +203,20 @@ private def genPrint(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int
     // add the right data and functions to the context
     ty match
         case KnownType.Int => {
-            ctx.addDefaultFunc(defaultPrinti)
-            ctx.addStoredStr(A_DataLabel(PRINTI_LBL_STR_NAME), PRINTI_LBL_STR)
+            ctx.addDefaultFunc(PRINTI_LABEL)
         }
         case KnownType.Boolean => {
-            ctx.addDefaultFunc(defaultPrintb)
-            ctx.addStoredStr(A_DataLabel(PRINTB_TRUE_LBL_STR_NAME), PRINTB_TRUE_LBL_STR)
-            ctx.addStoredStr(A_DataLabel(PRINTB_FALSE_LBL_STR_NAME), PRINTB_FALSE_LBL_STR)
-            ctx.addStoredStr(A_DataLabel(PRINTB_LBL_STR_NAME), PRINTB_LBL_STR)
+            ctx.addDefaultFunc(PRINTB_LABEL)
         }
         case KnownType.Char => {
-            ctx.addDefaultFunc(defaultPrintc)
-            ctx.addStoredStr(A_DataLabel(PRINTC_LBL_STR_NAME), PRINTC_LBL_STR)
+            ctx.addDefaultFunc(PRINTC_LABEL)
         }
         case KnownType.String => {
-            ctx.addDefaultFunc(defaultPrints)
-            ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
+            ctx.addDefaultFunc(PRINTS_LABEL)
         }
         // here we must have a pointer print e.g. array/pair
         case _ => {
-            ctx.addDefaultFunc(defaultPrintp)
-            ctx.addStoredStr(A_DataLabel(PRINTP_LBL_STR_NAME), PRINTP_LBL_STR)
+            ctx.addDefaultFunc(PRINTP_LABEL)
         }
 
     // call the right function
@@ -235,10 +228,8 @@ private def genPrintln(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, I
     val builder = new ListBuffer[A_Instr]
 
     builder ++= genPrint(x, ty, stackTable)
-    // add data
-    ctx.addStoredStr(A_DataLabel(PRINTLN_LBL_STR_NAME), "")
-    // add and call default function
-    ctx.addDefaultFunc(defaultPrintln)
+    
+    ctx.addDefaultFunc(PRINTLN_LABEL)
     builder += A_Call(A_InstrLabel(PRINTLN_LABEL))
 
     builder.toList
@@ -346,12 +337,6 @@ private def genCodeBlock(body: List[T_Stmt], scoped: Set[Name], stackTable: immu
 private def genSkip(): List[A_Instr] = List()
 
 private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
-    ctx.addDefaultFunc(defaultDivZero)
-    ctx.addStoredStr(A_DataLabel(DIV_ZERO_LBL_STR_NAME), DIV_ZERO_LBL_STR)
-    ctx.addDefaultFunc(defaultOverflow)
-    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), OVERFLOW_LBL_STR)
-    ctx.addDefaultFunc(defaultPrints)
-    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
 
     val builder = new ListBuffer[A_Instr]
 
@@ -365,12 +350,18 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
 
     // Compare denominator with 0
     builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(0), INT_SIZE)
+
+    ctx.addDefaultFunc(ERR_DIV_ZERO_LABEL)
+
     builder += A_Jmp(A_InstrLabel(ERR_DIV_ZERO_LABEL), A_Cond.Eq)
     // Above is a comparison of y (denominator) with 0 - error if it succeeds
 
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_CDQ
     builder += A_IDiv(A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
+
+    ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
+
     builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
     // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
 
@@ -379,10 +370,6 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
     builder.toList
 
 private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr), stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx) =
-    ctx.addDefaultFunc(defaultOverflow)
-    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), OVERFLOW_LBL_STR)
-    ctx.addDefaultFunc(defaultPrints)
-    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
 
     val builder = new ListBuffer[A_Instr]
 
@@ -392,15 +379,14 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += instrApply(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
+
+    ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
+
     builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
 
     builder.toList
 
 private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
-    ctx.addDefaultFunc(defaultOverflow)
-    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), OVERFLOW_LBL_STR)
-    ctx.addDefaultFunc(defaultPrints)
-    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
     
     val builder = new ListBuffer[A_Instr]
 
@@ -409,6 +395,9 @@ private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(u
     builder ++= gen(y, stackTable)
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
     builder += A_IMul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
+
+    ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
+
     builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
 
     builder.toList
@@ -453,12 +442,7 @@ private def genNot(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
 
     builder.toList
 
-private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
-    ctx.addDefaultFunc(defaultOverflow)
-    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), OVERFLOW_LBL_STR)
-    ctx.addDefaultFunc(defaultPrints)
-    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
-    
+private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =    
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
@@ -466,6 +450,9 @@ private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     // CONSIDER: DO WE NEED TO SAVE R1 BEFORE THIS?
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(ZERO_IMM))
     builder += A_Sub(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg), INT_SIZE)
+
+    ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
+
     builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1))
     // ^ overflow -2^32 case!
@@ -499,8 +486,7 @@ private def genChr(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
     builder += A_And(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(-128), INT_SIZE)
 
-    ctx.addStoredStr(A_DataLabel(ERR_BAD_CHAR_STR_NAME), ERR_BAD_CHAR_STR)
-    ctx.addDefaultFunc(defaultBadChar)
+    ctx.addDefaultFunc(ERR_BAD_CHAR_LABEL)
     builder += A_Jmp(A_InstrLabel(ERR_BAD_CHAR_LABEL), A_Cond.NEq)
 
     builder.toList
@@ -598,12 +584,8 @@ private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(opSizeToInt(PTR_SIZE) * 2))
-    
-    ctx.addDefaultFunc(defaultMalloc)
-    ctx.addDefaultFunc(defaultOutOfMemory)
-    ctx.addStoredStr(A_DataLabel(OUT_OF_MEMORY_LBL_STR_NAME), "Error: Out of memory\n")
-    ctx.addDefaultFunc(defaultPrints)
-    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+
+    ctx.addDefaultFunc(MALLOC_LABEL)
 
     builder += A_Call(A_ExternalLabel(MALLOC_LABEL))
     builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
@@ -683,12 +665,8 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTab
     val sizeBytes = opSizeToInt(INT_SIZE) + (intSizeOf(ty) * length)
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(sizeBytes))
-    // TODO: Call proper malloc
-    ctx.addDefaultFunc(defaultMalloc)
-    ctx.addDefaultFunc(defaultOutOfMemory)
-    ctx.addStoredStr(A_DataLabel(OUT_OF_MEMORY_LBL_STR_NAME), OUT_OF_MEMORY_LBL_STR)
-    ctx.addDefaultFunc(defaultPrints)
-    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
+    
+    ctx.addDefaultFunc(MALLOC_LABEL)
 
     builder += A_Call(A_InstrLabel(MALLOC_LABEL))
     builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
@@ -707,11 +685,7 @@ private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType, stack
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(opSizeToInt(PTR_SIZE) * 2))
     
-    ctx.addDefaultFunc(defaultMalloc)
-    ctx.addDefaultFunc(defaultOutOfMemory)
-    ctx.addStoredStr(A_DataLabel(OUT_OF_MEMORY_LBL_STR_NAME), OUT_OF_MEMORY_LBL_STR)
-    ctx.addDefaultFunc(defaultPrints)
-    ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), PRINTS_LBL_STR)
+    ctx.addDefaultFunc(MALLOC_LABEL)
 
     builder += A_Call(A_InstrLabel(MALLOC_LABEL))
 

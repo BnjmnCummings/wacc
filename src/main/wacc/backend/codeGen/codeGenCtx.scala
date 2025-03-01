@@ -10,7 +10,11 @@ class CodeGenCtx(val typeInfo: TypeInfo) {
 
     private val defaultFuncs: mutable.Set[A_Func] = mutable.Set()
 
-    def addDefaultFunc(f: A_Func) = defaultFuncs.add(f)
+    def addDefaultFunc(lbl: String): Unit = {
+        defaultFuncs.add(defaultFuncsLabelToFunc(lbl))
+        defaultFuncsFuncDependency(lbl).foreach(addDefaultFunc)
+        defaultFuncsStrDependency(lbl).foreach((name, str) => addStoredStr(A_DataLabel(name), str))
+    }
 
     def defaultFuncsList: List[A_Func] = defaultFuncs.toList
 

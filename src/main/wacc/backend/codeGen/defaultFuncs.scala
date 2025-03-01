@@ -21,6 +21,7 @@ val OUT_OF_BOUNDS_LBL_STR_NAME = ".L._errOutOfBounds_str"
 val OUT_OF_MEMORY_LBL_STR = "Error: Out of memory\n"
 val OUT_OF_MEMORY_LBL_STR_NAME = ".L._errOutOfMemory_str"
 
+val PRINTLN_LBL_STR = ""
 val PRINTLN_LBL_STR_NAME = ".L._println_str"
 
 val PRINTI_LBL_STR = "%d"
@@ -72,6 +73,69 @@ val ARR_LD8_LABEL = "_arrLoad8"
 val MALLOC_LABEL = "_malloc"
 val FREE_LABEL = "_free"
 val FREE_PAIR_LABEL = "_freePair"
+
+def defaultFuncsFuncDependency: Map[String, Set[String]] = Map(
+    ERR_OVERFLOW_LABEL -> Set(PRINTS_LABEL),
+    ERR_OUT_OF_BOUNDS_LABEL -> Set(PRINTS_LABEL),
+    ERR_OUT_OF_MEMORY_LABEL -> Set(PRINTS_LABEL),
+    ERR_DIV_ZERO_LABEL -> Set(PRINTS_LABEL),
+    ERR_BAD_CHAR_LABEL -> Set(PRINTS_LABEL),
+    PRINTLN_LABEL -> Set(),
+    PRINTI_LABEL -> Set(),
+    PRINTC_LABEL -> Set(),
+    PRINTP_LABEL -> Set(),
+    PRINTB_LABEL -> Set(),
+    PRINTS_LABEL -> Set(),
+    EXIT_LABEL -> Set(),
+    ARR_LD1_LABEL -> Set(ERR_OUT_OF_BOUNDS_LABEL),
+    ARR_LD4_LABEL -> Set(ERR_OUT_OF_BOUNDS_LABEL),
+    ARR_LD8_LABEL -> Set(ERR_OUT_OF_BOUNDS_LABEL),
+    MALLOC_LABEL -> Set(ERR_OUT_OF_MEMORY_LABEL),
+    FREE_LABEL -> Set(),
+    FREE_PAIR_LABEL -> Set(ERR_OUT_OF_MEMORY_LABEL)
+)
+
+def defaultFuncsStrDependency: Map[String, Set[(String, String)]] = Map(
+    ERR_OVERFLOW_LABEL -> Set((OVERFLOW_LBL_STR_NAME, OVERFLOW_LBL_STR)),
+    ERR_OUT_OF_BOUNDS_LABEL -> Set((OUT_OF_BOUNDS_LBL_STR_NAME, OUT_OF_BOUNDS_LBL_STR)),
+    ERR_OUT_OF_MEMORY_LABEL -> Set((OUT_OF_MEMORY_LBL_STR_NAME, OUT_OF_MEMORY_LBL_STR)),
+    ERR_DIV_ZERO_LABEL -> Set((DIV_ZERO_LBL_STR_NAME, DIV_ZERO_LBL_STR)),
+    ERR_BAD_CHAR_LABEL -> Set((ERR_BAD_CHAR_STR_NAME, ERR_BAD_CHAR_STR)),
+    PRINTLN_LABEL -> Set((PRINTLN_LBL_STR_NAME, PRINTLN_LBL_STR)),
+    PRINTI_LABEL -> Set((PRINTI_LBL_STR_NAME, PRINTI_LBL_STR)),
+    PRINTC_LABEL -> Set((PRINTC_LBL_STR_NAME, PRINTC_LBL_STR)),
+    PRINTP_LABEL -> Set((PRINTP_LBL_STR_NAME, PRINTP_LBL_STR)),
+    PRINTB_LABEL -> Set((PRINTB_LBL_STR_NAME, PRINTB_LBL_STR), (PRINTB_TRUE_LBL_STR_NAME, PRINTB_TRUE_LBL_STR), (PRINTB_FALSE_LBL_STR_NAME, PRINTB_FALSE_LBL_STR)),
+    PRINTS_LABEL -> Set((PRINTS_LBL_STR_NAME, PRINTS_LBL_STR)),
+    EXIT_LABEL -> Set(),
+    ARR_LD1_LABEL -> Set(),
+    ARR_LD4_LABEL -> Set(),
+    ARR_LD8_LABEL -> Set(),
+    MALLOC_LABEL -> Set(),
+    FREE_LABEL -> Set(),
+    FREE_PAIR_LABEL -> Set()
+)  
+
+def defaultFuncsLabelToFunc: Map[String, A_Func] = Map(
+    ERR_OVERFLOW_LABEL -> defaultOverflow,
+    ERR_OUT_OF_BOUNDS_LABEL -> defaultOutOfBounds,
+    ERR_OUT_OF_MEMORY_LABEL -> defaultOutOfMemory,
+    ERR_DIV_ZERO_LABEL -> defaultDivZero,
+    ERR_BAD_CHAR_LABEL -> defaultBadChar,
+    PRINTLN_LABEL -> defaultPrintln,
+    PRINTI_LABEL -> defaultPrinti,
+    PRINTC_LABEL -> defaultPrintc,
+    PRINTP_LABEL -> defaultPrintp,
+    PRINTB_LABEL -> defaultPrintb,
+    PRINTS_LABEL -> defaultPrints,
+    EXIT_LABEL -> defaultExit,
+    ARR_LD1_LABEL -> defaultArrLoad1,
+    ARR_LD4_LABEL -> defaultArrLoad4,
+    ARR_LD8_LABEL -> defaultArrLoad8,
+    MALLOC_LABEL -> defaultMalloc,
+    FREE_LABEL -> defaultFree,
+    FREE_PAIR_LABEL -> defaultFreePair
+)
 
 inline def defaultExit: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
