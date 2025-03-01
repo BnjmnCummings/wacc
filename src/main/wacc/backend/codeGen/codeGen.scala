@@ -683,7 +683,7 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTab
     builder += A_Add(A_Reg(PTR_SIZE, A_RegName.R11), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
     builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R8), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length))
 
-    for (i <- 0 to length) { 
+    for (i <- 0 to length - 1) { 
         builder ++= gen(xs(i), stackTable)
         builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R8), A_OffsetImm(-i * intSizeOf(ty)))), A_Reg(sizeOf(ty), A_RegName.RetReg))
     }
