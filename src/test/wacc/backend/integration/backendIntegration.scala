@@ -179,7 +179,7 @@ class backend_integration_test extends ConditionalRun {
                 .split("/")
                 .last
                 .replace(".wacc", "")
-            
+                
                 val printWriter = new java.io.PrintWriter(s"src/test/wacc/backend/integration/assembly/$progName.s")
                 formatProg(assembly)(using printWriter)
                 printWriter.close()
