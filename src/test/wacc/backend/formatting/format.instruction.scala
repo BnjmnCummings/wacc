@@ -14,9 +14,9 @@ class format_arithmetic_op_test extends AnyFlatSpec {
         formatInstr(A_Sub(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(5), INT_SIZE)) should be ("sub eax, 5")
     }
 
-    it should "be able to format a mul instruction" in {
-        formatInstr(A_Mul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(5), INT_SIZE)) should be ("mul eax, 5")
-    }
+    // it should "be able to format a mul instruction" in {
+    //     formatInstr(A_Mul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(5), INT_SIZE)) should be ("mul eax, 5")
+    // }
 
     it should "be able to format a div instruction" in {
         formatInstr(A_Div(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(5), INT_SIZE)) should be ("div eax, 5")

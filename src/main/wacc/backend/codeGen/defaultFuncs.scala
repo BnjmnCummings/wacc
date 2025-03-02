@@ -129,9 +129,6 @@ def defaultFuncsLabelToFunc: Map[String, A_Func] = Map(
     PRINTB_LABEL -> defaultPrintb,
     PRINTS_LABEL -> defaultPrints,
     EXIT_LABEL -> defaultExit,
-    ARR_LD1_LABEL -> defaultArrLoad1,
-    ARR_LD4_LABEL -> defaultArrLoad4,
-    ARR_LD8_LABEL -> defaultArrLoad8,
     MALLOC_LABEL -> defaultMalloc,
     FREE_LABEL -> defaultFree,
     FREE_PAIR_LABEL -> defaultFreePair
@@ -330,84 +327,6 @@ inline def defaultOutOfBounds: A_Func = {
     program += A_Call(A_ExternalLabel(EXIT))
 
     A_Func(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), program.toList)
-}
-
-inline def defaultArrLoad1: A_Func = {
-    // PRE: Index is in RetReg, ptr to array is in R1, and will return result into R1
-
-    val program: ListBuffer[A_Instr] = ListBuffer()
-
-    program += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
-
-    // check we don't have a negative index
-    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM), INT_SIZE)
-    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
-
-    A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
-
-    // check our index isn't >= length:
-    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
-    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
-
-    program += A_Mul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
-    program += A_MovFromDeref(A_Reg(BOOL_SIZE, A_RegName.R2), A_RegDeref(BOOL_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetReg(A_Reg(PTR_SIZE, A_RegName.RetReg)))))
-
-    program += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
-    program += A_Ret
-
-    A_Func(A_InstrLabel(ARR_LD1_LABEL), program.toList)
-}
-
-inline def defaultArrLoad4: A_Func = {
-    // PRE: Index is in RetReg, ptr to array is in R1, and will return result into R1
-
-    val program: ListBuffer[A_Instr] = ListBuffer()
-
-    program += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
-
-    // check we don't have a negative index
-    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM), INT_SIZE)
-    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
-
-    A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
-
-    // check our index isn't >= length:
-    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
-    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
-
-    program += A_Mul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
-    program += A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetReg(A_Reg(PTR_SIZE, A_RegName.RetReg)))))
-
-    program += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
-    program += A_Ret
-
-    A_Func(A_InstrLabel(ARR_LD4_LABEL), program.toList)
-}
-
-inline def defaultArrLoad8: A_Func = {
-    // PRE: Index is in RetReg, ptr to array is in R1, and will return result into R1
-
-    val program: ListBuffer[A_Instr] = ListBuffer()
-
-    program += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
-
-    // check we don't have a negative index
-    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM), INT_SIZE)
-    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
-
-    A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
-
-    // check our index isn't >= length:
-    program += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
-    program += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
-
-    program += A_Mul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
-    program += A_MovFromDeref(A_Reg(PTR_SIZE, A_RegName.R2), A_RegDeref(PTR_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetReg(A_Reg(PTR_SIZE, A_RegName.RetReg)))))
-
-    program += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
-    program += A_Ret
-
-    A_Func(A_InstrLabel(ARR_LD8_LABEL), program.toList)
 }
 
 inline def defaultOutOfMemory: A_Func = {

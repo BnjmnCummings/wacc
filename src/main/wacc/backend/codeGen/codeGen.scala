@@ -144,7 +144,52 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
     l match
         case T_Ident(v) =>
             builder += A_MovFrom(A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(stackTable(v))), A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.RetReg))
-        case T_ArrayElem(v, indices) => ???
+        case T_ArrayElem(v, indices) => {
+            val ty = unwrapArr(ctx.typeInfo.varTys(v))
+
+            ctx.addDefaultFunc(ERR_OUT_OF_BOUNDS_LABEL)
+
+            builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
+
+            builder ++= genIdent(v, stackTable)
+
+            for i <- 0 to indices.length - 2 do
+                builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
+                builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(0))
+                builder ++= gen(indices(i), stackTable)
+                // check in range
+                builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(0), INT_SIZE)
+                builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
+                builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+                builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+                builder += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
+                builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
+                builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
+
+                builder += A_IMul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(PTR_SIZE)), PTR_SIZE)
+                builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+                builder += A_Add(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Reg(PTR_SIZE, A_RegName.R1), PTR_SIZE)
+                builder += A_MovFromDeref(A_Reg(PTR_SIZE, A_RegName.RetReg), A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(0))))
+            
+            builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
+            builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(0))
+            builder ++= gen(indices(indices.length - 1), stackTable)
+            // check in range
+            builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(0), INT_SIZE)
+            builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
+            builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+            builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+            builder += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
+            builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
+            builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
+
+            builder += A_IMul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(sizeOf(ty))), PTR_SIZE)
+            builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+            builder += A_Add(A_Reg(PTR_SIZE, A_RegName.R1), A_Reg(PTR_SIZE, A_RegName.RetReg), PTR_SIZE)
+
+            builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
+            builder += A_MovFrom(A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetImm(0)), A_Reg(sizeOf(ty), A_RegName.RetReg))
+        }
         case T_PairElem(index, v) => ???
     
     builder.toList
@@ -522,70 +567,48 @@ private def unwrapArr(ty: KnownType): SemType = ty match
     case _ => throw Exception("Received a type that isn't an array")
 
 private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
-    // PRE: We must have already generated the array somewhere to reference it (due to scope checker)
-    // PRE: every member of indices must be a numeric type (due to type checker) hence can use INT_SIZE 
-
-    val builder = new ListBuffer[A_Instr]
-
-    // TODO: IMPLEMENT _arrLoad[size in bytes] DEFAULT FUNCTIONS
-        // These will assume index is in RetReg, ptr to array is in R1, and will return result into R1
+    val builder: ListBuffer[A_Instr] = ListBuffer()
 
     val ty = unwrapArr(ctx.typeInfo.varTys(v))
-    val tySize = opSizeToInt(sizeOf(ty))
 
-    // DEAL WITH FIRST INDEX
-    builder ++= gen(indices(0), stackTable)
+    ctx.addDefaultFunc(ERR_OUT_OF_BOUNDS_LABEL)
 
-    // move ret reg to r2
-    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder ++= genIdent(v, stackTable)
 
-    // multiply r2 by [SIZE (bytes)]
-    builder += A_Mul(A_Reg(INT_SIZE, A_RegName.R2), A_Imm(tySize), INT_SIZE)
-
-    // add to r2 with stackTable(v)
-    builder += A_Add(A_Reg(INT_SIZE, A_RegName.R2), A_Imm(stackTable(v)), INT_SIZE)
-
-    // deref this (reg: rsp) & move into R1
-    builder += A_MovFromDeref(A_Reg(???, A_RegName.R1), A_RegDeref(???, A_MemOffset(???, A_Reg(???, A_RegName.StackPtr), A_OffsetReg(A_Reg(INT_SIZE, A_RegName.R2)))))
-
-    // call _arrLoad8 
-    builder += A_Call(A_InstrLabel(ARR_LD8_LABEL))
-
-    for (i <- 1 to indices.length - 2) { // TODO: factor out magic numbers
-        // We choose -2 so in this loop we are only dealing with arrays
-        // We assume the ptr of array is stored in R1 from above
-
+    for i <- 0 to indices.length - 2 do
+        builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
+        builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(0))
         builder ++= gen(indices(i), stackTable)
-        // Now RetReg stores the idx we want to access, as required.
+        // check in range
+        builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(0), INT_SIZE)
+        builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
+        builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+        builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+        builder += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
+        builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
+        builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
 
-        // move ret reg to r2
-        builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_Reg(INT_SIZE, A_RegName.RetReg))
-
-        // multiply r2 by PTR_SIZE (bytes)
-        builder += A_Mul(A_Reg(INT_SIZE, A_RegName.R2), A_Imm(opSizeToInt(PTR_SIZE)), INT_SIZE)
-
-        // deref this (reg: R1) & move into R1 
-        // note: we are dealing with a pointer to an array here so we can use PTR_SIZE
-        builder += A_MovFromDeref(A_Reg(PTR_SIZE, A_RegName.R1), A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetReg(A_Reg(INT_SIZE, A_RegName.R2)))))
-
-        // call _arrLoad8
-        builder += A_Call(A_InstrLabel(ARR_LD8_LABEL))
-    }
-
-    // We should now have a ptr to the final result stored in R1
+        builder += A_IMul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(PTR_SIZE)), PTR_SIZE)
+        builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+        builder += A_Add(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Reg(PTR_SIZE, A_RegName.R1), PTR_SIZE)
+        builder += A_MovFromDeref(A_Reg(PTR_SIZE, A_RegName.RetReg), A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(0))))
+    
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
+    builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(0))
     builder ++= gen(indices(indices.length - 1), stackTable)
+    // check in range
+    builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(0), INT_SIZE)
+    builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
+    builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
+    builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
 
-    // move retReg to r2
-    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_Reg(INT_SIZE, A_RegName.RetReg))
-
-    // multiply r2 by [SIZE (bytes)]
-    builder += A_Mul(A_Reg(INT_SIZE, A_RegName.R2), ???, INT_SIZE)
-
-    // deref this (reg: R1) & move into R1
-    builder += A_MovFromDeref(A_Reg(???, A_RegName.R1), A_RegDeref(???, A_MemOffset(???, A_Reg(???, A_RegName.R1), A_OffsetReg(A_Reg(INT_SIZE, A_RegName.R2)))))
-
-    // call _arrLoad[SIZE]
-    builder += A_Call(A_InstrLabel(s"_arrLoad${???}"))
+    builder += A_IMul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(sizeOf(ty))), PTR_SIZE)
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Reg(PTR_SIZE, A_RegName.R1), PTR_SIZE)
+    builder += A_MovFromDeref(A_Reg(sizeOf(ty), A_RegName.RetReg), A_RegDeref(sizeOf(ty), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(0))))
 
     builder.toList
 

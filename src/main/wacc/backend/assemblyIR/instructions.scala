@@ -17,7 +17,6 @@ sealed trait A_BitwiseOp extends A_Instr
 
 case class A_Add(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp 
 case class A_Sub(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp
-case class A_Mul(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp
 case class A_Div(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp
 case class A_IMul(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_ArithmeticOp
 case class A_IDiv(op: A_Reg, opSize: A_OperandSize) extends A_ArithmeticOp

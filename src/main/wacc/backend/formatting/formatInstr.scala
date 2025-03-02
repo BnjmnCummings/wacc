@@ -5,7 +5,6 @@ import wacc.assemblyIR.*
 def formatInstr(instr: A_Instr): String = instr match
     case A_Add(opD, opS, _) => s"add ${formatReg(opD)}, ${formatOperand(opS)}"
     case A_Sub(opD, opS, _) => s"sub ${formatReg(opD)}, ${formatOperand(opS)}"
-    case A_Mul(opD, opS, _) => s"mul ${formatReg(opD)}, ${formatOperand(opS)}"
     case A_Div(opD, opS, _) => s"div ${formatReg(opD)}, ${formatOperand(opS)}"
     case A_IMul(opD, opS, _) => s"imul ${formatReg(opD)}, ${formatOperand(opS)}"
     case A_IDiv(opD, _) => s"idiv ${formatReg(opD)}"
