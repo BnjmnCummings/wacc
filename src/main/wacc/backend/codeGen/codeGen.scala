@@ -198,9 +198,16 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
 private def genRead(l: T_LValue, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
     
-    builder += A_MovTo(A_Reg(sizeOf(ty), A_RegName.R1), A_Reg(sizeOf(ty), A_RegName.R10))
-    builder += A_Call(A_InstrLabel(s"_read${{typeToLetter(ty)}}"))
-    // Result left in eax
+    if ty == KnownType.Int then
+        ctx.addDefaultFunc(READI_LABEL)
+        builder += A_Call(A_InstrLabel(READI_LABEL))
+    else if ty == KnownType.Char then
+        ctx.addDefaultFunc(READC_LABEL)
+        builder += A_Call(A_InstrLabel(READC_LABEL))
+    else
+        ???
+
+    // TODO: assign this value to the LValue...
 
     builder.toList
 

@@ -45,6 +45,12 @@ val PRINTB_LBL_STR_NAME = ".L._printb_str"
 val PRINTS_LBL_STR = "%.*s"
 val PRINTS_LBL_STR_NAME = ".L._prints_str"
 
+val READI_LBL_STR = "%d"
+val READI_LBL_STR_NAME = ".L._readi_str"
+
+val READC_LBL_STR = "%c"
+val READC_LBL_STR_NAME = ".L._readc_str"
+
 val ERR_BAD_CHAR_STR = "fatal error: int %d is not ascii character 0-127"
 val ERR_BAD_CHAR_STR_NAME = ".L._errBadChar_str"
 
@@ -52,6 +58,7 @@ val F_FLUSH = "fflush"
 val PUTS = "puts"
 val EXIT = "exit"
 val PRINTF = "printf"
+val SCANF = "scanf"
 
 val ERR_BAD_CHAR_LABEL = "_errBadChar"
 val ERR_OVERFLOW_LABEL = "_errOverflow"
@@ -66,6 +73,8 @@ val PRINTB_LABEL = "_printb"
 val PRINTS_LABEL = "_prints"
 val PRINTB_FALSE_LABEL = "_printb_false"
 val PRINTB_TRUE_LABEL = "_printb_true"
+val READI_LABEL = "_readi"
+val READC_LABEL = "_readc"
 val EXIT_LABEL = "_exit"
 val ARR_LD1_LABEL = "_arrLoad1"
 val ARR_LD4_LABEL = "_arrLoad4"
@@ -86,6 +95,8 @@ def defaultFuncsFuncDependency: Map[String, Set[String]] = Map(
     PRINTP_LABEL -> Set(),
     PRINTB_LABEL -> Set(),
     PRINTS_LABEL -> Set(),
+    READC_LABEL -> Set(),
+    READI_LABEL -> Set(),
     EXIT_LABEL -> Set(),
     ARR_LD1_LABEL -> Set(ERR_OUT_OF_BOUNDS_LABEL),
     ARR_LD4_LABEL -> Set(ERR_OUT_OF_BOUNDS_LABEL),
@@ -107,6 +118,8 @@ def defaultFuncsStrDependency: Map[String, Set[(String, String)]] = Map(
     PRINTP_LABEL -> Set((PRINTP_LBL_STR_NAME, PRINTP_LBL_STR)),
     PRINTB_LABEL -> Set((PRINTB_LBL_STR_NAME, PRINTB_LBL_STR), (PRINTB_TRUE_LBL_STR_NAME, PRINTB_TRUE_LBL_STR), (PRINTB_FALSE_LBL_STR_NAME, PRINTB_FALSE_LBL_STR)),
     PRINTS_LABEL -> Set((PRINTS_LBL_STR_NAME, PRINTS_LBL_STR)),
+    READI_LABEL -> Set((READI_LBL_STR_NAME, READI_LBL_STR)),
+    READC_LABEL -> Set((READC_LBL_STR_NAME, READC_LBL_STR)),
     EXIT_LABEL -> Set(),
     ARR_LD1_LABEL -> Set(),
     ARR_LD4_LABEL -> Set(),
@@ -128,6 +141,8 @@ def defaultFuncsLabelToFunc: Map[String, A_Func] = Map(
     PRINTP_LABEL -> defaultPrintp,
     PRINTB_LABEL -> defaultPrintb,
     PRINTS_LABEL -> defaultPrints,
+    READI_LABEL -> defaultReadi,
+    READC_LABEL -> defaultReadc,
     EXIT_LABEL -> defaultExit,
     MALLOC_LABEL -> defaultMalloc,
     FREE_LABEL -> defaultFree,
@@ -282,6 +297,42 @@ inline def defaultPrints: A_Func = {
     program += A_Ret
 
     A_Func(A_InstrLabel(PRINTS_LABEL), program.toList)
+}
+
+inline def defaultReadc: A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+
+    program += A_Push(A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.BasePtr), A_Reg(PTR_SIZE, A_RegName.StackPtr))
+    program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
+    program += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
+    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(READC_LBL_STR_NAME))))
+    program += A_MovTo(A_Reg(BYTE_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM))
+    program += A_Call(A_ExternalLabel(SCANF))
+    program += A_MovFromDeref(A_Reg(CHAR_SIZE, A_RegName.RetReg), A_RegDeref(CHAR_SIZE, A_MemOffset(CHAR_SIZE, A_Reg(PTR_SIZE, A_RegName.StackPtr), A_OffsetImm(0))))
+    program += A_Add(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
+
+    A_Func(A_InstrLabel(READC_LABEL), program.toList)
+}
+
+inline def defaultReadi: A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+
+    program += A_Push(A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.BasePtr), A_Reg(PTR_SIZE, A_RegName.StackPtr))
+    program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
+    program += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
+    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(READI_LBL_STR_NAME))))
+    program += A_MovTo(A_Reg(BYTE_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM))
+    program += A_Call(A_ExternalLabel(SCANF))
+    program += A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.RetReg), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.StackPtr), A_OffsetImm(0))))
+    program += A_Add(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
+    program += A_MovTo(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Reg(PTR_SIZE, A_RegName.BasePtr))
+    program += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
+
+    A_Func(A_InstrLabel(READI_LABEL), program.toList)
 }
 
 inline def defaultBadChar: A_Func = {
