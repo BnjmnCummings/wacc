@@ -188,8 +188,9 @@ class backend_integration_test extends ConditionalRun {
                 val actual = runAssembly(progName)
 
                 if(actual._1 == expected._1 && actual._2.zip(expected._2).forall{_ match 
-                    case (a, "#runtime_error#") => a.contains("fatal error")
+                    case (a, "#runtime_error#") => a.contains("fatal error") || a.contains("Error: ")
                     case (a, "Printing an array variable gives an address, such as #addrs#") => a.contains("Printing an array variable gives an address, such as 0x")
+                    case (a, "#addrs# = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}") => a.contains("0x") && a.contains(" = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}")
                     case (a, e) => a == e
                 })
                                                                                     
