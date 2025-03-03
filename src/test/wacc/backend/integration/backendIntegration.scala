@@ -163,7 +163,6 @@ class backend_integration_test extends ConditionalRun {
     })
 
     def runTests(paths: List[String]) = {
-        //runAssembly("andExpr")
         val successes: ListBuffer[String] = ListBuffer.empty[String]
         val outputFailures: ListBuffer[String] = ListBuffer.empty[String]
         val compileFailures: ListBuffer[String] = ListBuffer.empty[String]
@@ -268,20 +267,24 @@ class backend_integration_test extends ConditionalRun {
             val cmd = s"./src/test/wacc/backend/integration/$fileName"
 
             val output: ListBuffer[String] = ListBuffer()
-
-            val exitStatus = cmd.run(ProcessIO(
-                stdin => {
-                    if (input.nonEmpty) {
-                        stdin.write(input.getBytes)
-                        stdin.close()
-                    }
-                },
-                stdout => scala.io.Source
-                            .fromInputStream(stdout)
-                            .getLines
-                            .foreach(output += _),
-                _ => ()
-            )).exitValue()
+            val exitStatus = s"$cmd" #< new java.io.ByteArrayInputStream(input.getBytes) ! ProcessLogger(
+                line => output += line,
+                line => output += line
+            )
+            // val exitStatus = cmd.run(ProcessIO(
+            //     stdin => {
+            //         if (input.nonEmpty) {
+            //             println("good input: " + input)
+            //             stdin.write(input.getBytes)
+            //             stdin.close()
+            //         }
+            //     },
+            //     stdout => scala.io.Source
+            //                 .fromInputStream(stdout)
+            //                 .getLines
+            //                 .foreach(output += _),
+            //     _ => ()
+            // )).exitValue()
             
             /* clean up after ourselves and return */
             s"./wipeObj $fileName" .!
@@ -302,9 +305,9 @@ class backend_integration_test extends ConditionalRun {
         try {
             val lines = Source.fromFile(fileName).getLines().toList
             val input = {
-                val filtered = lines.filter(_.startsWith("# Input:"))
+                val filtered = lines.filter(_.startsWith("# Input: "))
                 if filtered.length == 0 then ""
-                else filtered(0).drop(8)
+                else filtered(0).drop(9)
             }
             val output = lines
                 .dropWhile( _ != "# Output:").tail
