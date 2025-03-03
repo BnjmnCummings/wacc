@@ -22,10 +22,7 @@ val CHR_MASK = -128
 val PAIR_SIZE_BYTES = 16
 val PAIR_OFFSET_SIZE = 8
 
-val PRINTF_INT_STR = "%d"
-val PRINTF_CHAR_STR = "%c"
-val PRINTF_STR_STR = "%.*s"
-val PRINTF_PTR_STR = "%p"
+val MAIN_FUNC_NAME = "main"
 
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx(typeInfo)
@@ -48,7 +45,7 @@ def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.BasePtr))
     builder += A_Ret
 
-    val main = A_Func(A_InstrLabel("main"), builder.toList)
+    val main = A_Func(A_InstrLabel(MAIN_FUNC_NAME), builder.toList)
 
     val _funcsWithDefaults = _funcs ++ ctx.defaultFuncsList
 
@@ -146,9 +143,53 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
 
     l match
         case T_Ident(v) =>
-            // need to be able to move it into the offset... help @Zakk
-            builder += A_MovFrom(A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(- stackTable(v))), A_Reg(sizeOf(ty), A_RegName.RetReg))
-        case T_ArrayElem(v, indices) => ???
+            builder += A_MovFrom(A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(stackTable(v))), A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.RetReg))
+        case T_ArrayElem(v, indices) => {
+            val ty = unwrapArr(ctx.typeInfo.varTys(v))
+
+            ctx.addDefaultFunc(ERR_OUT_OF_BOUNDS_LABEL)
+
+            builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
+
+            builder ++= genIdent(v, stackTable)
+
+            for i <- 0 to indices.length - 2 do
+                builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
+                builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(0))
+                builder ++= gen(indices(i), stackTable)
+                // check in range
+                builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(0), INT_SIZE)
+                builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
+                builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+                builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+                builder += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
+                builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
+                builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
+
+                builder += A_IMul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(PTR_SIZE)), PTR_SIZE)
+                builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+                builder += A_Add(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Reg(PTR_SIZE, A_RegName.R1), PTR_SIZE)
+                builder += A_MovFromDeref(A_Reg(PTR_SIZE, A_RegName.RetReg), A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(0))))
+            
+            builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
+            builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(0))
+            builder ++= gen(indices(indices.length - 1), stackTable)
+            // check in range
+            builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(0), INT_SIZE)
+            builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
+            builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+            builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+            builder += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
+            builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
+            builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
+
+            builder += A_IMul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(sizeOf(ty))), PTR_SIZE)
+            builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+            builder += A_Add(A_Reg(PTR_SIZE, A_RegName.R1), A_Reg(PTR_SIZE, A_RegName.RetReg), PTR_SIZE)
+
+            builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
+            builder += A_MovFrom(A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetImm(0)), A_Reg(sizeOf(ty), A_RegName.RetReg))
+        }
         case T_PairElem(index, v) => ???
     
     builder.toList
@@ -157,9 +198,16 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
 private def genRead(l: T_LValue, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
     
-    builder += A_MovTo(A_Reg(sizeOf(ty), A_RegName.R1), A_Reg(sizeOf(ty), A_RegName.R10))
-    builder += A_Call(A_InstrLabel(s"_read${{typeToLetter(ty)}}"))
-    // Result left in eax
+    if ty == KnownType.Int then
+        ctx.addDefaultFunc(READI_LABEL)
+        builder += A_Call(A_InstrLabel(READI_LABEL))
+    else if ty == KnownType.Char then
+        ctx.addDefaultFunc(READC_LABEL)
+        builder += A_Call(A_InstrLabel(READC_LABEL))
+    else
+        ???
+
+    // TODO: assign this value to the LValue...
 
     builder.toList
 
@@ -173,9 +221,15 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int]
     ty match
         case KnownType.Array(_) =>
             builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.R1), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
-            builder += A_Call(A_InstrLabel("_free"))
+
+            ctx.addDefaultFunc(FREE_LABEL)
+
+            builder += A_Call(A_InstrLabel(FREE_LABEL))
         case KnownType.Pair(_, _) =>
-            builder += A_Call(A_InstrLabel("_freepair"))
+
+            ctx.addDefaultFunc(FREE_PAIR_LABEL)
+
+            builder += A_Call(A_InstrLabel(FREE_PAIR_LABEL))
         case _ => throw Exception("Invalid type with free. Should be caught in type checker!")
     
     builder.toList
@@ -186,7 +240,7 @@ private def genReturn(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, In
 private def genExit(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
 
-    ctx.addDefaultFunc(defaultExit)
+    ctx.addDefaultFunc(EXIT_LABEL)
 
     builder ++= gen(x, stackTable)
     // x will be an integer - we can only perform exit on integers
@@ -207,27 +261,23 @@ private def genPrint(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int
     // add the right data and functions to the context
     ty match
         case KnownType.Int => {
-            ctx.addDefaultFunc(defaultPrinti)
-            ctx.addStoredStr(A_DataLabel(PRINTI_LBL_STR_NAME), PRINTF_INT_STR)
+            ctx.addDefaultFunc(PRINTI_LABEL)
         }
         case KnownType.Boolean => {
-            ctx.addDefaultFunc(defaultPrintb)
-            ctx.addStoredStr(A_DataLabel(PRINTB_TRUE_LBL_STR_NAME), "true")
-            ctx.addStoredStr(A_DataLabel(PRINTB_FALSE_LBL_STR_NAME), "false")
-            ctx.addStoredStr(A_DataLabel(PRINTB_LBL_STR_NAME), "%.*s")
+            ctx.addDefaultFunc(PRINTB_LABEL)
         }
         case KnownType.Char => {
-            ctx.addDefaultFunc(defaultPrintc)
-            ctx.addStoredStr(A_DataLabel(PRINTC_LBL_STR_NAME), PRINTF_CHAR_STR)
+            ctx.addDefaultFunc(PRINTC_LABEL)
         }
         case KnownType.String => {
-            ctx.addDefaultFunc(defaultPrints)
-            ctx.addStoredStr(A_DataLabel(PRINTS_LBL_STR_NAME), "%.*s")
+            ctx.addDefaultFunc(PRINTS_LABEL)
+        }
+        case KnownType.Array(KnownType.Char) => {
+            ctx.addDefaultFunc(PRINTS_LABEL)
         }
         // here we must have a pointer print e.g. array/pair
         case _ => {
-            ctx.addDefaultFunc(defaultPrintp)
-            ctx.addStoredStr(A_DataLabel(PRINTP_LBL_STR_NAME), "%p")
+            ctx.addDefaultFunc(PRINTP_LABEL)
         }
 
     // call the right function
@@ -239,15 +289,13 @@ private def genPrintln(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, I
     val builder = new ListBuffer[A_Instr]
 
     builder ++= genPrint(x, ty, stackTable)
-    // add data
-    ctx.addStoredStr(A_DataLabel(PRINTLN_LBL_STR_NAME), "")
-    // add and call default function
-    ctx.addDefaultFunc(defaultPrintln)
+    
+    ctx.addDefaultFunc(PRINTLN_LABEL)
     builder += A_Call(A_InstrLabel(PRINTLN_LABEL))
 
     builder.toList
 
-private def genIfHelper(cond: T_Expr, body: List[T_Stmt], el: List[T_Stmt], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+private def genIfHelper(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name], el: List[T_Stmt], scopedEl: Set[Name], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
     val bodyLabel = ctx.genNextInstrLabel() // .L0
@@ -257,12 +305,30 @@ private def genIfHelper(cond: T_Expr, body: List[T_Stmt], el: List[T_Stmt], stac
     builder += A_Cmp(A_Reg(BOOL_SIZE, A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE)
     builder += A_Jmp(bodyLabel, A_Cond.Eq)
 
-    el.foreach(builder ++= gen(_, stackTable))
+    // set up new stack table for else
+
+    val (elseStackTable, elseStackSize) = createStackTable(scopedEl, ctx.typeInfo)
+
+    val offsetOldStackTableEl = stackTable.map((k, v) => (k, v + elseStackSize))
+
+    builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(elseStackSize), PTR_SIZE)
+    el.foreach(builder ++= gen(_, offsetOldStackTableEl ++ elseStackTable))
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(elseStackSize), PTR_SIZE)
 
     builder += A_Jmp(restLabel, A_Cond.Uncond) 
 
     builder += A_LabelStart(bodyLabel)
-    body.foreach(builder ++= gen(_, stackTable))
+
+    // set up new stack table for body
+
+    val (bodyStackTable, bodyStackSize) = createStackTable(scopedBody, ctx.typeInfo)
+
+    val offsetOldStackTableBody = stackTable.map((k, v) => (k, v + bodyStackSize))
+
+    builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
+    body.foreach(builder ++= gen(_, offsetOldStackTableBody ++ bodyStackTable))
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
+
     builder += A_LabelStart(restLabel)
 
     builder.toList
@@ -271,16 +337,16 @@ private def genIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name], el: L
     val builder = new ListBuffer[A_Instr]
 
     cond match
-        case T_GreaterThan(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_GreaterThanEq(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_LessThan(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_LessThanEq(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_Eq(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_NotEq(x, y, ty) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_And(x, y) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_Or(x, y) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_Not(x) => builder ++= genIfHelper(cond, body, el, stackTable)
-        case T_BoolLiteral(v) => builder ++= genIfHelper(cond, body, el, stackTable)
+        case T_GreaterThan(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_GreaterThanEq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_LessThan(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_LessThanEq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_Eq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_NotEq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_And(x, y) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_Or(x, y) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_Not(x) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_BoolLiteral(v) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
         case T_Ident(v) => ???
         case _ => throw Exception(s"Should not reach here. Got $cond")
 
@@ -295,7 +361,18 @@ private def genWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[Name], stackT
     builder += A_Jmp(condLabel, A_Cond.Uncond)
     
     builder += A_LabelStart(bodyLabel)
-    body.foreach(builder ++= gen(_, stackTable)) 
+
+    // setup new stack table for body
+
+    val (bodyStackTable, bodyStackSize) = createStackTable(scoped, ctx.typeInfo)
+
+    val offsetOldStackTable = stackTable.map((k, v) => (k, v + bodyStackSize))
+
+    builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
+    body.foreach(builder ++= gen(_, offsetOldStackTable ++ bodyStackTable)) 
+
+    // remove body stack table
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
 
     builder += A_LabelStart(condLabel)
     builder ++= gen(cond, stackTable)
@@ -304,21 +381,24 @@ private def genWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[Name], stackT
 
     builder.toList
 
-private def genCodeBlock(body: List[T_Stmt], scoped: Set[Name], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+private def genCodeBlock(body: List[T_Stmt], scoped: Set[Name], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = {
+    val (newStackTable, frameSize) = createStackTable(scoped, ctx.typeInfo)
+
+    val offsetOldStackTable = stackTable.map((k, v) => (k, v + frameSize))
+
     val builder = new ListBuffer[A_Instr]
 
-    body.foreach(builder ++= gen(_, stackTable)) 
+    builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    body.foreach(builder ++= gen(_, offsetOldStackTable ++ newStackTable))
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
 
-    builder.toList
+    builder.toList    
+}
 
 private def genSkip(): List[A_Instr] = List()
 
 private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
-    ctx.addDefaultFunc(defaultDivZero)
-    ctx.addStoredStr(A_DataLabel(DIV_ZERO_LBL_STR_NAME), "fatal error: integer overflow or underflow occurred")
-    ctx.addDefaultFunc(defaultOverflow)
-    ctx.addStoredStr(A_DataLabel(OVERFLOW_LBL_STR_NAME), "fatal error: division or modulo by zero")
-    
+
     val builder = new ListBuffer[A_Instr]
 
     // Note: With IDiv, we need the numerator to be stored in eax and then we can divide by a given register
@@ -327,15 +407,22 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
     builder ++= gen(x, stackTable)
     builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
-    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1))
+    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
 
     // Compare denominator with 0
     builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(0), INT_SIZE)
+
+    ctx.addDefaultFunc(ERR_DIV_ZERO_LABEL)
+
     builder += A_Jmp(A_InstrLabel(ERR_DIV_ZERO_LABEL), A_Cond.Eq)
     // Above is a comparison of y (denominator) with 0 - error if it succeeds
 
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
+    builder += A_CDQ
     builder += A_IDiv(A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
+
+    ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
+
     builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
     // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
 
@@ -344,7 +431,6 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
     builder.toList
 
 private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr), stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx) =
-    ctx.addDefaultFunc(defaultOverflow)
 
     val builder = new ListBuffer[A_Instr]
 
@@ -354,12 +440,14 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += instrApply(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
+
+    ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
+
     builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
 
     builder.toList
 
 private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
-    ctx.addDefaultFunc(defaultOverflow)
     
     val builder = new ListBuffer[A_Instr]
 
@@ -367,7 +455,10 @@ private def genMul(x: T_Expr, y: T_Expr, stackTable: immutable.Map[Name, Int])(u
     builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(y, stackTable)
     builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
-    builder += A_IMul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
+    builder += A_IMul(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1), INT_SIZE)
+
+    ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
+
     builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
 
     builder.toList
@@ -412,7 +503,7 @@ private def genNot(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
 
     builder.toList
 
-private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =    
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
@@ -420,7 +511,11 @@ private def genNeg(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     // CONSIDER: DO WE NEED TO SAVE R1 BEFORE THIS?
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(ZERO_IMM))
     builder += A_Sub(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg), INT_SIZE)
-    builder += A_Jmp(A_InstrLabel("_errOverflow"), A_Cond.Overflow)
+
+    ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
+
+    builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
+    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R1))
     // ^ overflow -2^32 case!
 
     builder.toList
@@ -432,7 +527,7 @@ private def genLen(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     builder ++= gen(x, stackTable)
     // We now have the pointer to the first element stored in RAX (64-bit RetReg)
     // We know the size is stored 4 bytes before the first element hence we can do a reg deref of retreg -4 to find the size
-    builder += A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.RetReg), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(INT_SIZE, A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+    builder += A_MovFromDeref(A_Reg(INT_SIZE, A_RegName.RetReg), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
 
     builder.toList
 
@@ -450,10 +545,10 @@ private def genChr(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: C
     builder ++= gen(x, stackTable)
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Reg(INT_SIZE, A_RegName.RetReg))
-    builder += A_And(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(CHR_MASK), INT_SIZE)
-    builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(ZERO_IMM), INT_SIZE)
-    builder += A_Jmp(???, A_Cond.NEq)
-    // TODO: @Aidan Create bad character label - this is when you chr(x) |x| > 127 (0b1111111)
+    builder += A_And(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(-128), INT_SIZE)
+
+    ctx.addDefaultFunc(ERR_BAD_CHAR_LABEL)
+    builder += A_Jmp(A_InstrLabel(ERR_BAD_CHAR_LABEL), A_Cond.NEq)
 
     builder.toList
 
@@ -472,77 +567,55 @@ private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] = 
 }
 
 private def genIdent(v: Name, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
-    List(A_MovTo(A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.RetReg), A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.StackPtr), A_OffsetImm(stackTable(v)))))
+    List(A_MovTo(A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.RetReg), A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(stackTable(v)))))
 
 private def unwrapArr(ty: KnownType): SemType = ty match
     case wacc.KnownType.Array(t) => t
     case _ => throw Exception("Received a type that isn't an array")
 
 private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
-    // PRE: We must have already generated the array somewhere to reference it (due to scope checker)
-    // PRE: every member of indices must be a numeric type (due to type checker) hence can use INT_SIZE 
-
-    val builder = new ListBuffer[A_Instr]
-
-    // TODO: IMPLEMENT _arrLoad[size in bytes] DEFAULT FUNCTIONS
-        // These will assume index is in RetReg, ptr to array is in R1, and will return result into R1
+    val builder: ListBuffer[A_Instr] = ListBuffer()
 
     val ty = unwrapArr(ctx.typeInfo.varTys(v))
-    val tySize = opSizeToInt(sizeOf(ty))
 
-    // DEAL WITH FIRST INDEX
-    builder ++= gen(indices(0), stackTable)
+    ctx.addDefaultFunc(ERR_OUT_OF_BOUNDS_LABEL)
 
-    // move ret reg to r2
-    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_Reg(INT_SIZE, A_RegName.RetReg))
+    builder ++= genIdent(v, stackTable)
 
-    // multiply r2 by [SIZE (bytes)]
-    builder += A_Mul(A_Reg(INT_SIZE, A_RegName.R2), A_Imm(tySize), INT_SIZE)
-
-    // add to r2 with stackTable(v)
-    builder += A_Add(A_Reg(INT_SIZE, A_RegName.R2), A_Imm(stackTable(v)), INT_SIZE)
-
-    // deref this (reg: rsp) & move into R1
-    builder += A_MovFromDeref(A_Reg(???, A_RegName.R1), A_RegDeref(???, A_MemOffset(???, A_Reg(???, A_RegName.StackPtr), A_OffsetReg(A_Reg(INT_SIZE, A_RegName.R2)))))
-
-    // call _arrLoad8 
-    builder += A_Call(A_InstrLabel(ARR_LD8_LABEL))
-
-    for (i <- 1 to indices.length - 2) { // TODO: factor out magic numbers
-        // We choose -2 so in this loop we are only dealing with arrays
-        // We assume the ptr of array is stored in R1 from above
-
+    for i <- 0 to indices.length - 2 do
+        builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
+        builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(0))
         builder ++= gen(indices(i), stackTable)
-        // Now RetReg stores the idx we want to access, as required.
+        // check in range
+        builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(0), INT_SIZE)
+        builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
+        builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+        builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+        builder += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
+        builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
+        builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
 
-        // move ret reg to r2
-        builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_Reg(INT_SIZE, A_RegName.RetReg))
-
-        // multiply r2 by PTR_SIZE (bytes)
-        builder += A_Mul(A_Reg(INT_SIZE, A_RegName.R2), A_Imm(opSizeToInt(PTR_SIZE)), INT_SIZE)
-
-        // deref this (reg: R1) & move into R1 
-        // note: we are dealing with a pointer to an array here so we can use PTR_SIZE
-        builder += A_MovFromDeref(A_Reg(PTR_SIZE, A_RegName.R1), A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetReg(A_Reg(INT_SIZE, A_RegName.R2)))))
-
-        // call _arrLoad8
-        builder += A_Call(A_InstrLabel(ARR_LD8_LABEL))
-    }
-
-    // We should now have a ptr to the final result stored in R1
+        builder += A_IMul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(PTR_SIZE)), PTR_SIZE)
+        builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+        builder += A_Add(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Reg(PTR_SIZE, A_RegName.R1), PTR_SIZE)
+        builder += A_MovFromDeref(A_Reg(PTR_SIZE, A_RegName.RetReg), A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(0))))
+    
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.RetReg))
+    builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(0))
     builder ++= gen(indices(indices.length - 1), stackTable)
+    // check in range
+    builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Imm(0), INT_SIZE)
+    builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_RegDeref(INT_SIZE, A_MemOffset(INT_SIZE, A_Reg(PTR_SIZE, A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))))
+    builder += A_Push(A_Reg(PTR_SIZE, A_RegName.R1))
+    builder += A_Cmp(A_Reg(INT_SIZE, A_RegName.RetReg), A_Reg(INT_SIZE, A_RegName.R2), INT_SIZE)
+    builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
 
-    // move retReg to r2
-    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R2), A_Reg(INT_SIZE, A_RegName.RetReg))
-
-    // multiply r2 by [SIZE (bytes)]
-    builder += A_Mul(A_Reg(INT_SIZE, A_RegName.R2), ???, INT_SIZE)
-
-    // deref this (reg: R1) & move into R1
-    builder += A_MovFromDeref(A_Reg(???, A_RegName.R1), A_RegDeref(???, A_MemOffset(???, A_Reg(???, A_RegName.R1), A_OffsetReg(A_Reg(INT_SIZE, A_RegName.R2)))))
-
-    // call _arrLoad[SIZE]
-    builder += A_Call(A_InstrLabel(s"_arrLoad${???}"))
+    builder += A_IMul(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(opSizeToInt(sizeOf(ty))), PTR_SIZE)
+    builder += A_Pop(A_Reg(PTR_SIZE, A_RegName.R1))
+    builder += A_Add(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Reg(PTR_SIZE, A_RegName.R1), PTR_SIZE)
+    builder += A_MovFromDeref(A_Reg(sizeOf(ty), A_RegName.RetReg), A_RegDeref(sizeOf(ty), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(0))))
 
     builder.toList
 
@@ -550,7 +623,10 @@ private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(opSizeToInt(PTR_SIZE) * 2))
-    builder += A_Call(A_ExternalLabel("malloc"))
+
+    ctx.addDefaultFunc(MALLOC_LABEL)
+
+    builder += A_Call(A_ExternalLabel(MALLOC_LABEL))
     builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_MovDeref(A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Imm(ZERO_IMM))
     builder += A_MovDeref(A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Imm(ZERO_IMM))
@@ -603,7 +679,7 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map
 private def genFuncCall(v: Name, args: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = {
 
     val builder = new ListBuffer[A_Instr]
-
+    
     val argNames: List[Name] = ctx.typeInfo.funcTys(v)._2
 
     val (newStackTable, frameSize) = createStackTable(argNames.toSet, ctx.typeInfo)
@@ -613,7 +689,7 @@ private def genFuncCall(v: Name, args: List[T_Expr], stackTable: immutable.Map[N
     builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
     argNames.zip(args).foreach((arg, expr) => {
         builder ++= gen(expr, offsetOldStackTable)
-        builder += A_MovFrom(A_MemOffset(sizeOf(ctx.typeInfo.varTys(arg)), A_Reg(PTR_SIZE, A_RegName.StackPtr), A_OffsetImm(-newStackTable(arg))), A_Reg(sizeOf(ctx.typeInfo.varTys(arg)), A_RegName.RetReg))
+        builder += A_MovFrom(A_MemOffset(sizeOf(ctx.typeInfo.varTys(arg)), A_Reg(PTR_SIZE, A_RegName.StackPtr), A_OffsetImm(newStackTable(arg))), A_Reg(sizeOf(ctx.typeInfo.varTys(arg)), A_RegName.RetReg))
     })
 
     builder += A_Call(funcLabelGen(v))
@@ -628,15 +704,20 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTab
     val sizeBytes = opSizeToInt(INT_SIZE) + (intSizeOf(ty) * length)
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(sizeBytes))
-    builder += A_Call(A_ExternalLabel("malloc"))
+    
+    ctx.addDefaultFunc(MALLOC_LABEL)
+
+    builder += A_Call(A_InstrLabel(MALLOC_LABEL))
     builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder += A_Add(A_Reg(PTR_SIZE, A_RegName.R11), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
-    builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R8), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length))
+    builder += A_MovDeref(A_RegDeref(INT_SIZE, A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length))
 
-    for (i <- 0 to length) { 
+    for (i <- 0 to length - 1) { 
         builder ++= gen(xs(i), stackTable)
-        builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(sizeOf(ty), A_RegName.R8), A_OffsetImm(-i * intSizeOf(ty)))), A_Reg(sizeOf(ty), A_RegName.RetReg))
+        builder += A_MovDeref(A_RegDeref(sizeOf(ty), A_MemOffset(sizeOf(ty), A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(i * intSizeOf(ty)))), A_Reg(sizeOf(ty), A_RegName.RetReg))
     }
+
+    builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Reg(PTR_SIZE, A_RegName.R11))
 
     builder.toList
 
@@ -644,7 +725,11 @@ private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType, stack
     val builder = new ListBuffer[A_Instr]
 
     builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(opSizeToInt(PTR_SIZE) * 2))
-    builder += A_Call(A_ExternalLabel("malloc"))
+    
+    ctx.addDefaultFunc(MALLOC_LABEL)
+
+    builder += A_Call(A_InstrLabel(MALLOC_LABEL))
+
     builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
     builder ++= gen(x1, stackTable)
     builder += A_MovDeref(A_RegDeref(sizeOf(ty1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Reg(sizeOf(ty1), A_RegName.RetReg))
@@ -664,7 +749,7 @@ def sizeOf(ty: SemType): A_OperandSize = ty match
     case wacc.KnownType.String => PTR_SIZE
     case wacc.KnownType.Array(ty) => PTR_SIZE
     case KnownType.Pair(_, _) => ???
-    case KnownType.Ident => println(ty)
+    case KnownType.Ident =>
          ???
 
 def typeToLetter(ty: SemType): String = ty match
@@ -674,6 +759,7 @@ def typeToLetter(ty: SemType): String = ty match
     case wacc.KnownType.Boolean => "b"
     case wacc.KnownType.Char => "c"
     case wacc.KnownType.String => "s"
+    case wacc.KnownType.Array(wacc.KnownType.Char) => "s"
     case wacc.KnownType.Array(ty) => "p"
     case KnownType.Pair(ty1, ty2) => "p"
     case KnownType.Ident => ???

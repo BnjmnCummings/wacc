@@ -179,20 +179,29 @@ class backend_integration_test extends ConditionalRun {
                 .split("/")
                 .last
                 .replace(".wacc", "")
-            
+                
                 val printWriter = new java.io.PrintWriter(s"src/test/wacc/backend/integration/assembly/$progName.s")
                 formatProg(assembly)(using printWriter)
                 printWriter.close()
                 
-                val expected = getExpectedOutput(filePath)
-                val actual = runAssembly(progName)
+                val (expExitCode, expOutput, input) = getExpectedOutput(filePath)
+                val actual = runAssembly(progName, input)
 
-                if(actual._1 == expected._1 && actual._2 == expected._2)
+                if(actual._1 == expExitCode && actual._2.zip(expOutput).forall{_ match 
+                    case (a, "#runtime_error#") => a.contains("fatal error") || a.contains("Error: ")
+                    case (a, "Printing an array variable gives an address, such as #addrs#") => a.contains("Printing an array variable gives an address, such as 0x")
+                    case (a, "#addrs# = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}") => a.contains("0x") && a.contains(" = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}")
+                    case (a, e) => a == e
+                })
+                                                                                    
                     successes += filePath
                     s"./wipeAss $progName" .!
                 else 
                     outputFailures += filePath
-                    info(s"expected: $expected")
+                    if (input.nonEmpty) {
+                        info(s"input: ${input.mkString(" ")}")
+                    }
+                    info(s"expected: $expOutput")
                     info(s"actual: $actual")
                     info("naughty boy")
 
@@ -203,6 +212,8 @@ class backend_integration_test extends ConditionalRun {
                     compileFailures += filePath
                 case e: Exception => 
                     compileFailures += filePath
+                    println(e)
+                    println(e.getStackTrace().mkString("\n"))
             }
         }
 
@@ -248,19 +259,29 @@ class backend_integration_test extends ConditionalRun {
     * @param progName the path to the gend 'progName.s' assembly file
     * @return a pair: (exit code, output)
     */
-    def runAssembly(progName: String): (Int, List[String]) = {
+    def runAssembly(progName: String, input: String): (Int, List[String]) = {
         /* TODO: refactor with regex*/
         val fileName = "assembly/" + progName
         val buildExitStatus = s"./buildAss $fileName" .!
 
         if (buildExitStatus == 0) {
             val cmd = s"./src/test/wacc/backend/integration/$fileName"
-            val exitStatus = cmd .!
-            val output: ListBuffer[String] = ListBuffer.empty[String]
 
-            if(exitStatus == 0) {
-                output ++= (cmd .!!).split('\n')
-            }
+            val output: ListBuffer[String] = ListBuffer()
+
+            val exitStatus = cmd.run(ProcessIO(
+                stdin => {
+                    if (input.nonEmpty) {
+                        stdin.write(input.getBytes)
+                        stdin.close()
+                    }
+                },
+                stdout => scala.io.Source
+                            .fromInputStream(stdout)
+                            .getLines
+                            .foreach(output += _),
+                _ => ()
+            )).exitValue()
             
             /* clean up after ourselves and return */
             s"./wipeObj $fileName" .!
@@ -277,15 +298,21 @@ class backend_integration_test extends ConditionalRun {
      * @param fileName the path to the .wacc file
      * @return an expected pair: (exit code, output)
      */
-    def getExpectedOutput(fileName: String): (Int, List[String]) =
+    def getExpectedOutput(fileName: String): (Int, List[String], String) =
         try {
             val lines = Source.fromFile(fileName).getLines().toList
+            val input = {
+                val filtered = lines.filter(_.startsWith("# Input:"))
+                if filtered.length == 0 then ""
+                else filtered(0).drop(8)
+            }
             val output = lines
                 .dropWhile( _ != "# Output:").tail
                 .takeWhile(s => s != "# Program:" && s != "# Exit:")
-                .map(_.replace("#", "").trim)
+                // filter so it only takes lines of the format "# .*" and removes the "# "
+                .filter(_.startsWith("# "))
+                .map(_.drop(2))
                 .filter(_.nonEmpty)
-
             
             val exitCode: Int = lines.dropWhile( _ != "# Exit:") match
                 /* 'Exit:' comment isn't always present */
@@ -295,8 +322,8 @@ class backend_integration_test extends ConditionalRun {
                     .map(_.replace("#", "").trim)
                     .filter(_.nonEmpty)
                     .map(_.toInt)(0)
-       
-            return (exitCode, output) 
+
+            return (exitCode, output, input) 
         } catch {
             case e: FileNotFoundException => {
                 throw FileNotFoundException(s"File Not Found: $fileName")
