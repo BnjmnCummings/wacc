@@ -8,6 +8,7 @@ import wacc.formatting.*
 
 import java.io.FileNotFoundException
 import java.io.File
+import java.io.ByteArrayInputStream as ByteArrayIn
 import org.scalatest.flatspec.AnyFlatSpec
 import sys.process._
 import scala.io.Source
@@ -163,7 +164,6 @@ class backend_integration_test extends ConditionalRun {
     })
 
     def runTests(paths: List[String]) = {
-        //runAssembly("andExpr")
         val successes: ListBuffer[String] = ListBuffer.empty[String]
         val outputFailures: ListBuffer[String] = ListBuffer.empty[String]
         val compileFailures: ListBuffer[String] = ListBuffer.empty[String]
@@ -187,13 +187,12 @@ class backend_integration_test extends ConditionalRun {
                 val (expExitCode, expOutput, input) = getExpectedOutput(filePath)
                 val actual = runAssembly(progName, input)
 
-                if(actual._1 == expExitCode && actual._2.zip(expOutput).forall{_ match 
+                if(actual._1 == expExitCode && actual._2.length == expOutput.length && actual._2.zip(expOutput).forall{_ match 
                     case (a, "#runtime_error#") => a.contains("fatal error") || a.contains("Error: ")
                     case (a, "Printing an array variable gives an address, such as #addrs#") => a.contains("Printing an array variable gives an address, such as 0x")
                     case (a, "#addrs# = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}") => a.contains("0x") && a.contains(" = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}")
                     case (a, e) => a == e
-                })
-                                                                                    
+                })                                       
                     successes += filePath
                     s"./wipeAss $progName" .!
                 else 
@@ -268,20 +267,12 @@ class backend_integration_test extends ConditionalRun {
             val cmd = s"./src/test/wacc/backend/integration/$fileName"
 
             val output: ListBuffer[String] = ListBuffer()
-
-            val exitStatus = cmd.run(ProcessIO(
-                stdin => {
-                    if (input.nonEmpty) {
-                        stdin.write(input.getBytes)
-                        stdin.close()
-                    }
-                },
-                stdout => scala.io.Source
-                            .fromInputStream(stdout)
-                            .getLines
-                            .foreach(output += _),
-                _ => ()
-            )).exitValue()
+            val exitStatus = s"$cmd" #< new ByteArrayIn(input.getBytes) ! ProcessLogger(
+                // fout
+                line => output += line,
+                // ferr
+                line => output += line
+            )
             
             /* clean up after ourselves and return */
             s"./wipeObj $fileName" .!
@@ -301,11 +292,11 @@ class backend_integration_test extends ConditionalRun {
     def getExpectedOutput(fileName: String): (Int, List[String], String) =
         try {
             val lines = Source.fromFile(fileName).getLines().toList
-            val input = {
-                val filtered = lines.filter(_.startsWith("# Input:"))
-                if filtered.length == 0 then ""
-                else filtered(0).drop(8)
+            val input = lines.filter(_.startsWith("# Input: ")) match {
+                case Nil => ""
+                case (headInput::_) => headInput.replace("# Input: ", "")
             }
+            
             val output = lines
                 .dropWhile( _ != "# Output:").tail
                 .takeWhile(s => s != "# Program:" && s != "# Exit:")
@@ -329,13 +320,4 @@ class backend_integration_test extends ConditionalRun {
                 throw FileNotFoundException(s"File Not Found: $fileName")
             } 
         }
-    
-    // /** 
-    //  * Helper function to collect all the filepaths to valid wacc programs
-    //  * TODO: change back to all wacc programs
-    //  */ 
-    // def getFilePaths(fPathStart: String): List[String] = {
-    //     //searchDir(File(fPathStart))
-    //     List("wacc-examples/valid/expressions/andExpr.wacc")
-    // }
 }

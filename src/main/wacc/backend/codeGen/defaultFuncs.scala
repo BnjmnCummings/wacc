@@ -57,6 +57,8 @@ val ERR_BAD_CHAR_STR_NAME = ".L._errBadChar_str"
 val F_FLUSH = "fflush"
 val PUTS = "puts"
 val EXIT = "exit"
+val MALLOC = "malloc"
+val FREE = "free"
 val PRINTF = "printf"
 val SCANF = "scanf"
 
@@ -314,6 +316,7 @@ inline def defaultReadc: A_Func = {
     program += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
     program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
+    program += A_Ret
 
     A_Func(A_InstrLabel(READC_LABEL), program.toList)
 }
@@ -333,6 +336,7 @@ inline def defaultReadi: A_Func = {
     program += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
     program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
+    program += A_Ret
 
     A_Func(A_InstrLabel(READI_LABEL), program.toList)
 }
@@ -389,7 +393,7 @@ inline def defaultOutOfMemory: A_Func = {
     program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(OUT_OF_MEMORY_LBL_STR_NAME))))
     program += A_Call(A_InstrLabel(PRINTS_LABEL))
     program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ERR_EXIT_CODE), BOOL_SIZE)
-    program += A_Call(A_ExternalLabel("exit"))
+    program += A_Call(A_ExternalLabel(EXIT))
 
     A_Func(A_InstrLabel(ERR_OUT_OF_MEMORY_LABEL), program.toList)
 }
@@ -400,7 +404,7 @@ inline def defaultMalloc: A_Func = {
     program += A_Push(A_Reg(A_RegName.BasePtr))
     program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_Call(A_ExternalLabel("malloc"))
+    program += A_Call(A_ExternalLabel(MALLOC))
     program += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
     program += A_Jmp(A_InstrLabel(ERR_OUT_OF_MEMORY_LABEL), A_Cond.Eq)
     program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
@@ -416,7 +420,7 @@ inline def defaultFree: A_Func = {
     program += A_Push(A_Reg(A_RegName.BasePtr))
     program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_Call(A_ExternalLabel("free"))
+    program += A_Call(A_ExternalLabel(FREE))
     program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
     program += A_Ret
@@ -432,7 +436,7 @@ inline def defaultFreePair: A_Func = {
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Cmp(A_Reg(A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE)
     program += A_Jmp(A_InstrLabel(ERR_OUT_OF_MEMORY_LABEL), A_Cond.Eq)
-    program += A_Call(A_ExternalLabel("free"))
+    program += A_Call(A_ExternalLabel(FREE))
     program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
     program += A_Ret
