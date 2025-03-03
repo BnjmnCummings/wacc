@@ -198,6 +198,16 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
 private def genRead(l: T_LValue, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
     
+    // load current value of lvalue into register
+    l match
+        case T_Ident(v) => 
+            builder += A_MovTo(
+                A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.R1), 
+                A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(stackTable(v)))
+            )
+        case T_ArrayElem(v, indicies) => ???
+        case T_PairElem(index, v) => ???
+
     if ty == KnownType.Int then
         ctx.addDefaultFunc(READI_LABEL)
         builder += A_Call(A_InstrLabel(READI_LABEL))
@@ -205,9 +215,18 @@ private def genRead(l: T_LValue, ty: SemType, stackTable: immutable.Map[Name, In
         ctx.addDefaultFunc(READC_LABEL)
         builder += A_Call(A_InstrLabel(READC_LABEL))
     else
-        ???
+        // naughty
+        throw new Exception("Invalid type for read")
 
-    // TODO: assign this value to the LValue...
+    // move eax value back into lvalue
+    l match
+        case T_Ident(v) =>
+            builder += A_MovFrom( 
+                A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(stackTable(v))),
+                A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.RetReg)
+            )
+        case T_ArrayElem(v, indices) => ???
+        case T_PairElem(index, v) => ???
 
     builder.toList
 
