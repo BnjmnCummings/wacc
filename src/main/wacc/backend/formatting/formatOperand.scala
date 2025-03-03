@@ -2,19 +2,19 @@ package wacc.formatting
 
 import wacc.assemblyIR.*
 
-def formatOperand(op: A_Operand): String = op match
+def formatOperand(op: A_Operand, opSize: A_OperandSize): String = op match
     case A_Imm(n) => n.toString
-    case A_RegDeref(opSize, mem) => formatRegDeref(op.asInstanceOf[A_RegDeref])
-    case A_MemOffset(opSize, reg, offset) => formatMemOffset(op.asInstanceOf[A_MemOffset])
-    case A_Reg(regSize, regName) => formatReg(op.asInstanceOf[A_Reg])
+    case A_RegDeref(mem) => formatRegDeref(op.asInstanceOf[A_RegDeref], opSize)
+    case A_MemOffset(reg, offset) => formatMemOffset(op.asInstanceOf[A_MemOffset])
+    case A_Reg(regName) => formatReg(op.asInstanceOf[A_Reg], opSize)
 
-def formatRegDeref(op: A_RegDeref): String = op.opSize match
+def formatRegDeref(op: A_RegDeref, opSize: A_OperandSize): String = opSize match
     case A_OperandSize.A_8 => s"byte ptr ${formatMemOffset(op.mem)}"
     case A_OperandSize.A_16 => s"word ptr ${formatMemOffset(op.mem)}"
     case A_OperandSize.A_32 => s"dword ptr ${formatMemOffset(op.mem)}"
     case A_OperandSize.A_64 => s"qword ptr ${formatMemOffset(op.mem)}"
 
-def formatMemOffset(op: A_MemOffset): String = s"[${formatReg(op.reg)} ${formatOffset(op.offset)}]"
+def formatMemOffset(op: A_MemOffset): String = s"[${formatReg(op.reg, PTR_SIZE)} ${formatOffset(op.offset)}]"
 
 def formatOffset(op: A_Offset): String = op match
     case A_OffsetImm(n) => {
@@ -23,11 +23,10 @@ def formatOffset(op: A_Offset): String = op match
         else
             s"- ${-n}"
     }
-    case A_OffsetReg(reg) => s"+ ${formatReg(reg)}"
-    // case A_OffsetScaledReg(reg, scale) => s"+ ${formatReg(reg)} * $scale"
+    case A_OffsetReg(reg) => s"+ ${formatReg(reg, PTR_SIZE)}"
     case A_OffsetLbl(lbl) => s"+ ${lbl.name}"
 
-def formatReg(op: A_Reg): String = op.regSize match
+def formatReg(op: A_Reg, opSize: A_OperandSize): String = opSize match
     case A_OperandSize.A_8 => op.regName match
         case A_RegName.RetReg => "al"
         case A_RegName.R1 => "dil"
