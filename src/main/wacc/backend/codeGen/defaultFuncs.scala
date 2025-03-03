@@ -54,6 +54,9 @@ val READC_LBL_STR_NAME = ".L._readc_str"
 val ERR_BAD_CHAR_STR = "fatal error: int %d is not ascii character 0-127"
 val ERR_BAD_CHAR_STR_NAME = ".L._errBadChar_str"
 
+val ERR_NULL_PAIR_STR = "fatal error: null pair dereferenced or freed"
+val ERR_NULL_PAIR_STR_NAME = ".L._errNull_str"
+
 val F_FLUSH = "fflush"
 val PUTS = "puts"
 val EXIT = "exit"
@@ -67,6 +70,7 @@ val ERR_OVERFLOW_LABEL = "_errOverflow"
 val ERR_OUT_OF_BOUNDS_LABEL = "_errOutOfBounds"
 val ERR_OUT_OF_MEMORY_LABEL = "_errOutOfMemory"
 val ERR_DIV_ZERO_LABEL = "_errDivZero"
+val ERR_NULL_PAIR_LABEL = "_errNull"
 val PRINTLN_LABEL = "_println"
 val PRINTI_LABEL = "_printi"
 val PRINTC_LABEL = "_printc"
@@ -91,6 +95,7 @@ def defaultFuncsFuncDependency: Map[String, Set[String]] = Map(
     ERR_OUT_OF_MEMORY_LABEL -> Set(PRINTS_LABEL),
     ERR_DIV_ZERO_LABEL -> Set(PRINTS_LABEL),
     ERR_BAD_CHAR_LABEL -> Set(PRINTS_LABEL),
+    ERR_NULL_PAIR_LABEL -> Set(PRINTS_LABEL),
     PRINTLN_LABEL -> Set(),
     PRINTI_LABEL -> Set(),
     PRINTC_LABEL -> Set(),
@@ -104,7 +109,7 @@ def defaultFuncsFuncDependency: Map[String, Set[String]] = Map(
     ARR_LD4_LABEL -> Set(ERR_OUT_OF_BOUNDS_LABEL),
     ARR_LD8_LABEL -> Set(ERR_OUT_OF_BOUNDS_LABEL),
     MALLOC_LABEL -> Set(ERR_OUT_OF_MEMORY_LABEL),
-    FREE_LABEL -> Set(),
+    FREE_LABEL -> Set(ERR_NULL_PAIR_LABEL),
     FREE_PAIR_LABEL -> Set(ERR_OUT_OF_MEMORY_LABEL)
 )
 
@@ -114,6 +119,7 @@ def defaultFuncsStrDependency: Map[String, Set[(String, String)]] = Map(
     ERR_OUT_OF_MEMORY_LABEL -> Set((OUT_OF_MEMORY_LBL_STR_NAME, OUT_OF_MEMORY_LBL_STR)),
     ERR_DIV_ZERO_LABEL -> Set((DIV_ZERO_LBL_STR_NAME, DIV_ZERO_LBL_STR)),
     ERR_BAD_CHAR_LABEL -> Set((ERR_BAD_CHAR_STR_NAME, ERR_BAD_CHAR_STR)),
+    ERR_NULL_PAIR_LABEL -> Set((ERR_NULL_PAIR_STR_NAME, ERR_NULL_PAIR_STR)),
     PRINTLN_LABEL -> Set((PRINTLN_LBL_STR_NAME, PRINTLN_LBL_STR)),
     PRINTI_LABEL -> Set((PRINTI_LBL_STR_NAME, PRINTI_LBL_STR)),
     PRINTC_LABEL -> Set((PRINTC_LBL_STR_NAME, PRINTC_LBL_STR)),
@@ -137,6 +143,7 @@ def defaultFuncsLabelToFunc: Map[String, A_Func] = Map(
     ERR_OUT_OF_MEMORY_LABEL -> defaultOutOfMemory,
     ERR_DIV_ZERO_LABEL -> defaultDivZero,
     ERR_BAD_CHAR_LABEL -> defaultBadChar,
+    ERR_NULL_PAIR_LABEL -> defaultErrNull,
     PRINTLN_LABEL -> defaultPrintln,
     PRINTI_LABEL -> defaultPrinti,
     PRINTC_LABEL -> defaultPrintc,
@@ -444,4 +451,16 @@ inline def defaultFreePair: A_Func = {
     program += A_Ret
 
     A_Func(A_InstrLabel(FREE_PAIR_LABEL), program.toList)
+}
+
+inline def defaultErrNull: A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+
+    program += A_And(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
+    program += A_Lea(A_Reg(PTR_SIZE, A_RegName.R1), A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(ERR_NULL_PAIR_STR_NAME))))
+    program += A_Call(A_InstrLabel(PRINTS_LABEL))
+    program += A_MovTo(A_Reg(BYTE_SIZE, A_RegName.R1), A_Imm(ERR_EXIT_CODE))
+    program += A_Call(A_ExternalLabel(EXIT))
+
+    A_Func(A_InstrLabel(ERR_NULL_PAIR_LABEL), program.toList)
 }

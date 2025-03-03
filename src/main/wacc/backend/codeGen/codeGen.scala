@@ -237,6 +237,7 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int]
 
     builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R1), A_Reg(PTR_SIZE, A_RegName.R11))
     
+
     ty match
         case KnownType.Array(_) =>
             builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.R1), A_Imm(opSizeToInt(INT_SIZE)), INT_SIZE)
@@ -245,8 +246,12 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int]
 
             builder += A_Call(A_InstrLabel(FREE_LABEL))
         case KnownType.Pair(_, _) =>
+            println("WE ARE HERE")
+            builder += A_Cmp(A_Reg(PTR_SIZE, A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE)
+            builder += A_Jmp(A_InstrLabel(ERR_NULL_PAIR_LABEL), A_Cond.Eq)
 
             ctx.addDefaultFunc(FREE_PAIR_LABEL)
+            ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
 
             builder += A_Call(A_InstrLabel(FREE_PAIR_LABEL))
         case _ => throw Exception("Invalid type with free. Should be caught in type checker!")
@@ -638,26 +643,14 @@ private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.M
 
     builder.toList
 
-private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] =
-    val builder = new ListBuffer[A_Instr]
-
-    builder += A_MovTo(A_Reg(INT_SIZE, A_RegName.R1), A_Imm(opSizeToInt(PTR_SIZE) * 2))
-
-    ctx.addDefaultFunc(MALLOC_LABEL)
-
-    builder += A_Call(A_ExternalLabel(MALLOC_LABEL))
-    builder += A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Reg(PTR_SIZE, A_RegName.RetReg))
-    builder += A_MovDeref(A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Imm(ZERO_IMM))
-    builder += A_MovDeref(A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Imm(ZERO_IMM))
-
-    builder.toList
+private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] = List(A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Imm(ZERO_IMM)))
 
 private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
-    // NOTE: WE NEED TO CHECK IF THE POINTER IS EVER 0 - THIS IS A NULL PAIR LITERAL - call _errNull
-
     builder ++= gen(v, stackTable)
+
+    ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
 
     val optionalOffset = index match
         case PairIndex.First => 0 // factor out magic number
@@ -696,7 +689,6 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map
     builder.toList
 
 private def genFuncCall(v: Name, args: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = {
-
     val builder = new ListBuffer[A_Instr]
     
     val argNames: List[Name] = ctx.typeInfo.funcTys(v)._2
@@ -767,7 +759,7 @@ def sizeOf(ty: SemType): A_OperandSize = ty match
     case wacc.KnownType.Char => CHAR_SIZE
     case wacc.KnownType.String => PTR_SIZE
     case wacc.KnownType.Array(ty) => PTR_SIZE
-    case KnownType.Pair(_, _) => ???
+    case KnownType.Pair(_, _) => PTR_SIZE
     case KnownType.Ident =>
          ???
 
