@@ -204,27 +204,6 @@ private def genRead(l: T_LValue, ty: SemType, stackTable: immutable.Map[Name, In
     builder ++= gen(l, stackTable)
     builder += A_MovTo(A_Reg(tySize, A_RegName.R1), A_Reg(tySize, A_RegName.RetReg))
 
-    /*
-    // load current value of lvalue into register
-    l match
-        case T_Ident(v) => 
-            builder ++= gen(l, stackTable) // TODO: DOES THIS PRODUCE ADDRESS OR ACTUAL VALUE?
-            builder += A_MovTo(A_Reg(tySize, A_RegName.R1), A_Reg(tySize, A_RegName.RetReg))
-        case T_ArrayElem(v, indicies) =>
-            builder ++= gen(l, stackTable) 
-            // asm value is in ret reg
-
-            builder += A_Mov(A_Reg(tySize, A_RegName.R1), A_Reg(tySize, A_RegName.RetReg))
-        case T_PairElem(index, v) => 
-            builder ++= gen(l, stackTable) 
-            // asm value is in ret reg
-            val offset = index match
-                case PairIndex.First => ZERO_IMM
-                case PairIndex.Second => opSizeToInt(PTR_SIZE)
-
-            builder += A_MovFromDeref(A_Reg(tySize, A_RegName.R1), A_RegDeref(tySize, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(offset))))
-*/
-
     if ty == KnownType.Int then
         ctx.addDefaultFunc(READI_LABEL)
         builder += A_Call(A_InstrLabel(READI_LABEL))
@@ -252,18 +231,21 @@ private def genRead(l: T_LValue, ty: SemType, stackTable: immutable.Map[Name, In
                 A_RegDeref(PTR_SIZE, A_MemOffset(tySize, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), 
                 A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.R1)
             )
-        case T_PairElem(index, v) => ???
-        
-        case T_ArrayElem(v, indicies) =>
-            // this puts pointer to first elem of array elem into ret reg
-            builder += A_MovFromDeref(A_Reg(tySize, A_RegName.R1), A_RegDeref(tySize, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(ZERO_IMM))))
-        case T_PairElem(index, v) => 
-            // this puts pointer to fst p into ret reg
+        // Read fst fst p is not allowed - we can only do read fst p
+        case T_PairElem(index, T_Ident(v)) => 
             val offset = index match
                 case PairIndex.First => ZERO_IMM
                 case PairIndex.Second => opSizeToInt(PTR_SIZE)
+            
+            builder += A_MovFrom( 
+                A_MemOffset(sizeOf(ctx.typeInfo.varTys(v)), A_Reg(PTR_SIZE, A_RegName.BasePtr), A_OffsetImm(stackTable(v) + offset)),
+                A_Reg(sizeOf(ctx.typeInfo.varTys(v)), A_RegName.RetReg)
+            )
+        
+        case T_PairElem(index, T_ArrayElem(v, indices)) => ???
+            // see above, use genArrayElem
 
-            builder += A_MovFromDeref(A_Reg(tySize, A_RegName.R1), A_RegDeref(tySize, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(offset))))
+        case T_PairElem(_, _) => throw new Exception("Can't read from nested pairs. Should be caught in type checker")
 
     builder.toList
 
@@ -687,13 +669,16 @@ private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.M
 
     builder.toList
 
-private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] = List(A_MovTo(A_Reg(PTR_SIZE, A_RegName.R11), A_Imm(ZERO_IMM)))
+private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] = List(A_MovTo(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM)))
 
 private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(v, stackTable)
 
+    builder += A_Cmp(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
+    builder += A_Jmp(A_InstrLabel(ERR_NULL_PAIR_LABEL), A_Cond.Eq)
+    
     ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
 
     val optionalOffset = index match
@@ -713,7 +698,7 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map
             
             val tySize = sizeOf(ty)
 
-            builder += A_MovFromDeref(A_Reg(tySize, A_RegName.RetReg), A_RegDeref(PTR_SIZE, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(optionalOffset))))
+            builder += A_MovFromDeref(A_Reg(tySize, A_RegName.RetReg), A_RegDeref(tySize, A_MemOffset(PTR_SIZE, A_Reg(PTR_SIZE, A_RegName.RetReg), A_OffsetImm(optionalOffset))))
         case T_ArrayElem(v, indicies) =>
             // we assume the value in RetReg is a pointer to fst p
 
