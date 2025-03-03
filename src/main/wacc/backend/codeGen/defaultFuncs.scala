@@ -48,7 +48,7 @@ val PRINTS_LBL_STR_NAME = ".L._prints_str"
 val READI_LBL_STR = "%d"
 val READI_LBL_STR_NAME = ".L._readi_str"
 
-val READC_LBL_STR = "%c"
+val READC_LBL_STR = " %c"
 val READC_LBL_STR_NAME = ".L._readc_str"
 
 val ERR_BAD_CHAR_STR = "fatal error: int %d is not ascii character 0-127"
