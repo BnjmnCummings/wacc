@@ -679,7 +679,7 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map
 private def genFuncCall(v: Name, args: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = {
 
     val builder = new ListBuffer[A_Instr]
-
+    
     val argNames: List[Name] = ctx.typeInfo.funcTys(v)._2
 
     val (newStackTable, frameSize) = createStackTable(argNames.toSet, ctx.typeInfo)
@@ -689,7 +689,7 @@ private def genFuncCall(v: Name, args: List[T_Expr], stackTable: immutable.Map[N
     builder += A_Sub(A_Reg(PTR_SIZE, A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
     argNames.zip(args).foreach((arg, expr) => {
         builder ++= gen(expr, offsetOldStackTable)
-        builder += A_MovFrom(A_MemOffset(sizeOf(ctx.typeInfo.varTys(arg)), A_Reg(PTR_SIZE, A_RegName.StackPtr), A_OffsetImm(-newStackTable(arg))), A_Reg(sizeOf(ctx.typeInfo.varTys(arg)), A_RegName.RetReg))
+        builder += A_MovFrom(A_MemOffset(sizeOf(ctx.typeInfo.varTys(arg)), A_Reg(PTR_SIZE, A_RegName.StackPtr), A_OffsetImm(newStackTable(arg))), A_Reg(sizeOf(ctx.typeInfo.varTys(arg)), A_RegName.RetReg))
     })
 
     builder += A_Call(funcLabelGen(v))
