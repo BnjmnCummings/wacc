@@ -10,7 +10,7 @@ import collection.immutable.Map as Map
 import collection.mutable.Map as MutableMap
 
 object renamer {
-    private var gScope: MutableSet[Name] = MutableSet()
+    private var funcNames: MutableSet[Name] = MutableSet()
     private var name_gen_table: MutableMap[String, Int] = MutableMap[String, Int]()
 
     private var varTypes: MutableMap[Name, SemType] = MutableMap[Name, SemType]()
@@ -18,18 +18,18 @@ object renamer {
 
     def rename(prog: Prog, filename: Option[String] = None): (Q_Prog, TypeInfo) =
         given ctx: RenamerContext = RenamerContext(fnameIn = filename)
-        gScope = MutableSet()
+        funcNames = MutableSet()
         name_gen_table = MutableMap[String, Int]()
         varTypes = MutableMap[Name, SemType]()
         funcTypes = MutableMap[Name, (SemType, List[Name])]()
 
-        // it is important this occurs first as it adds functions to gScope
+        // it is important this occurs first as it adds functions to funcNames
         val _funcs = rename(prog.funcs)
         val (_body, scoped) = rename(prog.body, Set(), Set())
 
         val (_varTypes, _funcTypes) = verifyTyped(varTypes, funcTypes)
 
-        (Q_Prog(_funcs, _body, scoped ++ gScope), TypeInfo(_varTypes, _funcTypes))
+        (Q_Prog(_funcs, _body, scoped), TypeInfo(_varTypes, _funcTypes))
 
     private def rename(funcs: List[Func])(using ctx: RenamerContext): List[Q_Func] = 
 
@@ -40,7 +40,7 @@ object renamer {
         funcs.zip(data).foreach {
             case (func, (v, args)) => {
                 val _func = rename(func, v, args)
-                gScope += _func.v
+                funcNames += _func.v
                 _funcs += _func
             }
         }
@@ -48,7 +48,7 @@ object renamer {
         _funcs.toList
 
     private def initialiseFunc(func: Func)(using ctx: RenamerContext): (Name, List[Q_Param]) =
-        if gScope.exists(_.name == func.v) then
+        if funcNames.exists(_.name == func.v) then
             ctx.setPos(func.pos)
             ctx.errors += ScopeError(s"function ${func.v} already declared in scope")
             throw ScopeException(ctx.errors.toList)
@@ -211,7 +211,7 @@ object renamer {
         varTypes(name) = t
 
     private def newFunc(name: Name, t: Type, args: List[Name]) =
-        gScope += name
+        funcNames += name
         funcTypes(name) = (toSemType(t), args)
 
     private def genName(name: String): Name = 
@@ -226,8 +226,8 @@ object renamer {
             newVar(name, None)
     
     private def updateFuncName(name: String)(using ctx: RenamerContext): Name = 
-        if gScope.exists(_.name == name) then
-            gScope.find(_.name == name).get 
+        if funcNames.exists(_.name == name) then
+            funcNames.find(_.name == name).get 
         else
             ctx.errors += ScopeError(s"function $name not declared in scope")
             throw ScopeException(ctx.errors.toList)
