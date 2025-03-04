@@ -187,6 +187,13 @@ class backend_integration_test extends ConditionalRun {
                 val (expExitCode, expOutput, input) = getExpectedOutput(filePath)
                 val actual = runAssembly(progName, input)
 
+                if (expOutput == List("XZ")) {
+                    println(s"file: $filePath")
+                    println(s"input: ${input.mkString(" ")}")
+                    println(s"expected: $expOutput")
+                    println(s"actual: $actual")
+                }
+
                 if(actual._1 == expExitCode && actual._2.length == expOutput.length && actual._2.zip(expOutput).forall{_ match 
                     case (a, "#runtime_error#") => a.contains("fatal error") || a.contains("Error: ")
                     case (a, "Printing an array variable gives an address, such as #addrs#") => a.contains("Printing an array variable gives an address, such as 0x")
@@ -264,15 +271,22 @@ class backend_integration_test extends ConditionalRun {
         val buildExitStatus = s"./buildAss $fileName" .!
 
         if (buildExitStatus == 0) {
-            val cmd = s"./src/test/wacc/backend/integration/$fileName"
-
             val output: ListBuffer[String] = ListBuffer()
-            val exitStatus = s"$cmd" #< new ByteArrayIn(input.getBytes) ! ProcessLogger(
-                // fout
-                line => output += line,
-                // ferr
-                line => output += line
+            val cmd = s"./src/test/wacc/backend/integration/$fileName" #< new ByteArrayIn(input.getBytes)
+            val process = cmd.run( 
+                ProcessLogger(
+                    // fout
+                    line => output += line,
+                    // ferr
+                    line => output += line
+                )
             )
+            val exitStatus = process.exitValue()
+
+            if (progName == "readAtEof") {
+                println(s"input in ra: $input")
+                println(s"output in ra: ${output.mkString("\n")}")
+            }
             
             /* clean up after ourselves and return */
             s"./wipeObj $fileName" .!

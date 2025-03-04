@@ -147,7 +147,7 @@ class format_function_test extends ConditionalRun {
             val writer = new StringWriter()
             val func = A_Func(
                 A_InstrLabel("main"), 
-                List(A_Add(A_Reg(PTR_SIZE, A_RegName.RetReg), A_Imm(3), PTR_SIZE), A_Ret)
+                List(A_Add(A_Reg(A_RegName.RetReg), A_Imm(3), PTR_SIZE), A_Ret)
             )
             formatFunction(func)(using writer)
             val funcData = writer.toString()
