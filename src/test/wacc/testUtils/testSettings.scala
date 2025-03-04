@@ -44,7 +44,7 @@ val testSettings = scala.collection.immutable.HashSet(
     "integration_exit",
     "integration_skip",
     // "integration_advanced",
-    // "integration_array",
+    "integration_array",
     "integration_expressions",
     // "integration_nested_functions",
     // "integration_simple_functions",
