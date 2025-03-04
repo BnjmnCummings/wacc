@@ -128,8 +128,6 @@ private def gen(t: T_Func)(using ctx: CodeGenCtx): A_Func = {
     builder += A_Push(A_Reg(A_RegName.BasePtr))
     builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     builder ++= t.body.flatMap(gen(_, stackTable.toMap))
-    builder += A_Pop(A_Reg(A_RegName.BasePtr))
-    builder += A_Ret
 
     A_Func(funcLabelGen(t.v), builder.toList)
 }
@@ -277,7 +275,11 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int]
     builder.toList
 
 private def genReturn(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
-    gen(x, stackTable)
+    val builder: ListBuffer[A_Instr] = ListBuffer()
+    builder ++= gen(x, stackTable)
+    builder += A_Pop(A_Reg(A_RegName.BasePtr))
+    builder += A_Ret
+    builder.toList
 
 private def genExit(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
