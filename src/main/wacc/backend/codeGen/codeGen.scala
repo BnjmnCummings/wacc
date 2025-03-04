@@ -347,15 +347,7 @@ private def genIfHelper(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name],
     builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE)
     builder += A_Jmp(bodyLabel, A_Cond.Eq)
 
-    // set up new stack table for else
-
-    val (elseStackTable, elseStackSize) = createStackTable(scopedEl, ctx.typeInfo)
-
-    val offsetOldStackTableEl = stackTable.map((k, v) => (k, v + elseStackSize))
-
-    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(elseStackSize), PTR_SIZE)
-    el.foreach(builder ++= gen(_, offsetOldStackTableEl ++ elseStackTable))
-    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(elseStackSize), PTR_SIZE)
+    builder ++= genCodeBlock(el, scopedEl, stackTable) 
 
     builder += A_Jmp(restLabel, A_Cond.Uncond) 
 
@@ -363,13 +355,7 @@ private def genIfHelper(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name],
 
     // set up new stack table for body
 
-    val (bodyStackTable, bodyStackSize) = createStackTable(scopedBody, ctx.typeInfo)
-
-    val offsetOldStackTableBody = stackTable.map((k, v) => (k, v + bodyStackSize))
-
-    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
-    body.foreach(builder ++= gen(_, offsetOldStackTableBody ++ bodyStackTable))
-    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
+    builder ++= genCodeBlock(body, scopedBody, stackTable)
 
     builder += A_LabelStart(restLabel)
 
@@ -405,16 +391,7 @@ private def genWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[Name], stackT
     builder += A_LabelStart(bodyLabel)
 
     // setup new stack table for body
-
-    val (bodyStackTable, bodyStackSize) = createStackTable(scoped, ctx.typeInfo)
-
-    val offsetOldStackTable = stackTable.map((k, v) => (k, v + bodyStackSize))
-
-    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
-    body.foreach(builder ++= gen(_, offsetOldStackTable ++ bodyStackTable)) 
-
-    // remove body stack table
-    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(bodyStackSize), PTR_SIZE)
+    builder ++= genCodeBlock(body, scoped, stackTable)  
 
     builder += A_LabelStart(condLabel)
     builder ++= gen(cond, stackTable)
@@ -431,8 +408,10 @@ private def genCodeBlock(body: List[T_Stmt], scoped: Set[Name], stackTable: immu
     val builder = new ListBuffer[A_Instr]
 
     builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     body.foreach(builder ++= gen(_, offsetOldStackTable ++ newStackTable))
     builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
 
     builder.toList    
 }
