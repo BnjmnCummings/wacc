@@ -128,8 +128,6 @@ private def gen(t: T_Func)(using ctx: CodeGenCtx): A_Func = {
     builder += A_Push(A_Reg(A_RegName.BasePtr))
     builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     builder ++= t.body.flatMap(gen(_, stackTable.toMap))
-    builder += A_Pop(A_Reg(A_RegName.BasePtr))
-    builder += A_Ret
 
     A_Func(funcLabelGen(t.v), builder.toList)
 }
@@ -145,7 +143,7 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
         case T_Ident(v) =>
             builder += A_MovFrom(A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(stackTable(v))), A_Reg(A_RegName.RetReg), sizeOf(ctx.typeInfo.varTys(v)))
         case T_ArrayElem(v, indices) => {
-            val ty = unwrapArr(ctx.typeInfo.varTys(v))
+            val ty = unwrapArr(ctx.typeInfo.varTys(v), indices.length)
 
             ctx.addDefaultFunc(ERR_OUT_OF_BOUNDS_LABEL)
 
@@ -277,7 +275,11 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int]
     builder.toList
 
 private def genReturn(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
-    gen(x, stackTable)
+    val builder: ListBuffer[A_Instr] = ListBuffer()
+    builder ++= gen(x, stackTable)
+    builder += A_Pop(A_Reg(A_RegName.BasePtr))
+    builder += A_Ret
+    builder.toList
 
 private def genExit(x: T_Expr, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
@@ -596,14 +598,15 @@ private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] =
 private def genIdent(v: Name, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     List(A_MovTo(A_Reg(A_RegName.RetReg), A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(stackTable(v))), sizeOf(ctx.typeInfo.varTys(v))))
 
-private def unwrapArr(ty: KnownType): SemType = ty match
-    case wacc.KnownType.Array(t) => t
-    case _ => throw Exception("Received a type that isn't an array")
+private def unwrapArr(ty: KnownType, length: Int): SemType = (ty, length) match
+    case (_, 0) => ty
+    case (wacc.KnownType.Array(t), _) => unwrapArr(t.asInstanceOf[KnownType], length - 1)
+    case _ => throw Exception(s"Received a type that isn't an array: $ty")
 
 private def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
-    val ty = unwrapArr(ctx.typeInfo.varTys(v))
+    val ty = unwrapArr(ctx.typeInfo.varTys(v), indices.length)
 
     ctx.addDefaultFunc(ERR_OUT_OF_BOUNDS_LABEL)
 
@@ -649,7 +652,7 @@ private def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: im
 private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
-    val ty = unwrapArr(ctx.typeInfo.varTys(v))
+    val ty = unwrapArr(ctx.typeInfo.varTys(v), indices.length)
 
     builder ++= getPointerToArrayElem(v, indices, stackTable)
     builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), sizeOf(ty))
