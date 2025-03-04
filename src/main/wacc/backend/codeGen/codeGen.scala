@@ -663,7 +663,7 @@ private def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: im
     builder += A_IMul(A_Reg(A_RegName.RetReg), A_Imm(opSizeToInt(sizeOf(ty))), PTR_SIZE)
     builder += A_Pop(A_Reg(A_RegName.R1))
     builder += A_Add(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R1), PTR_SIZE)
-    builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(0))), sizeOf(ty))
+    // builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(0))), sizeOf(ty))
 
     builder.toList
 
