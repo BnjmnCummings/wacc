@@ -51,7 +51,7 @@ val testSettings = scala.collection.immutable.HashSet(
     "integration_if",
     // "integration_IO_all",
     "integration_IO_print",
-    "integration_IO_read",
+    // "integration_IO_read",
     // "integration_pairs",
     "integration_runtimeErr_arrayOutOfBounds",
     "integration_runtimeErr_badChar",

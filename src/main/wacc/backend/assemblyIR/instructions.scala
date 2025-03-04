@@ -31,11 +31,11 @@ case class A_LabelStart(label: A_InstrLabel) extends A_Instr
 
 case class A_Push(op: A_Reg) extends A_Instr
 case class A_Pop(op: A_Reg) extends A_Instr
-case class A_MovTo(opD: A_Reg, opS: A_Operand) extends A_Instr
-case class A_MovFrom(opD: A_Operand, opS: A_Reg) extends A_Instr
-case class A_MovDeref(opD: A_RegDeref, opS: A_Operand) extends A_Instr
-case class A_MovFromDeref(opD: A_Operand, opS: A_RegDeref) extends A_Instr
-case class A_Movzx(opD: A_Reg, opS: A_Reg) extends A_Instr
+case class A_MovTo(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_Instr
+case class A_MovFrom(opD: A_Operand, opS: A_Reg, opSize: A_OperandSize) extends A_Instr
+case class A_MovDeref(opD: A_RegDeref, opS: A_Operand, opSize: A_OperandSize) extends A_Instr
+case class A_MovFromDeref(opD: A_Operand, opS: A_RegDeref, opSize: A_OperandSize) extends A_Instr
+case class A_Movzx(opD: A_Reg, opS: A_Reg, opSize1: A_OperandSize, opSize2: A_OperandSize) extends A_Instr
 case class A_Lea(opD: A_Reg, opS: A_MemOffset) extends A_Instr
 
 case class A_Set(op: A_Reg, condition: A_Cond) extends A_Instr

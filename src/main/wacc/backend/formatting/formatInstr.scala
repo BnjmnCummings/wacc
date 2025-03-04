@@ -3,29 +3,29 @@ package wacc.formatting
 import wacc.assemblyIR.*
 
 def formatInstr(instr: A_Instr): String = instr match
-    case A_Add(opD, opS, _) => s"add ${formatReg(opD)}, ${formatOperand(opS)}"
-    case A_Sub(opD, opS, _) => s"sub ${formatReg(opD)}, ${formatOperand(opS)}"
-    case A_Div(opD, opS, _) => s"div ${formatReg(opD)}, ${formatOperand(opS)}"
-    case A_IMul(opD, opS, _) => s"imul ${formatReg(opD)}, ${formatOperand(opS)}"
-    case A_IDiv(opD, _) => s"idiv ${formatReg(opD)}"
+    case A_Add(opD, opS, opSize) => s"add ${formatReg(opD, opSize)}, ${formatOperand(opS, opSize)}"
+    case A_Sub(opD, opS, opSize) => s"sub ${formatReg(opD, opSize)}, ${formatOperand(opS, opSize)}"
+    case A_Div(opD, opS, opSize) => s"div ${formatReg(opD, opSize)}, ${formatOperand(opS, opSize)}"
+    case A_IMul(opD, opS, opSize) => s"imul ${formatReg(opD, opSize)}, ${formatOperand(opS, opSize)}"
+    case A_IDiv(opD, opSize) => s"idiv ${formatReg(opD, opSize)}"
 
-    case A_Cmp(op1, op2, _) => s"cmp ${formatReg(op1)}, ${formatOperand(op2)}"
+    case A_Cmp(op1, op2, opSize) => s"cmp ${formatReg(op1, opSize)}, ${formatOperand(op2, opSize)}"
     case A_Jmp(label, cond) => s"j${formatCond(cond)} ${label.name}"
-    case A_Set(op, cond) => s"set${formatCond(cond)} ${{formatOperand(op)}}"
+    case A_Set(op, cond) => s"set${formatCond(cond)} ${{formatOperand(op, BOOL_SIZE)}}"
     case A_LabelStart(label) => s"${label.name}:"
 
-    case A_And(opD, opS, _) => s"and ${formatReg(opD)}, ${formatOperand(opS)}"
-    case A_Or(opD, opS, _) => s"or ${formatReg(opD)}, ${formatOperand(opS)}"
-    case A_Xor(opD, opS, _) => s"xor ${formatReg(opD)}, ${formatOperand(opS)}"
+    case A_And(opD, opS, opSize) => s"and ${formatReg(opD, opSize)}, ${formatOperand(opS, opSize)}"
+    case A_Or(opD, opS, opSize) => s"or ${formatReg(opD, opSize)}, ${formatOperand(opS, opSize)}"
+    case A_Xor(opD, opS, opSize) => s"xor ${formatReg(opD, opSize)}, ${formatOperand(opS, opSize)}"
 
-    case A_Push(op) => s"push ${formatReg(op)}"
-    case A_Pop(op) => s"pop ${formatReg(op)}"
-    case A_MovTo(opD, opS) => s"mov ${formatReg(opD)}, ${formatOperand(opS)}"
-    case A_MovFrom(opD, opS) => s"mov ${formatOperand(opD)}, ${formatReg(opS)}"
-    case A_Movzx(opD, opS) => s"movzx ${formatReg(opD)}, ${formatReg(opS)}"
-    case A_MovDeref(opD, opS) => s"mov ${{formatRegDeref(opD)}}, ${formatOperand(opS)}"
-    case A_MovFromDeref(opD, opS) => s"mov ${formatOperand(opD)}, ${{formatRegDeref(opS)}}"
-    case A_Lea(opD, opS) => s"lea ${formatReg(opD)}, ${formatMemOffset(opS)}"
+    case A_Push(op) => s"push ${formatReg(op, PTR_SIZE)}"
+    case A_Pop(op) => s"pop ${formatReg(op, PTR_SIZE)}"
+    case A_MovTo(opD, opS, opSize) => s"mov ${formatReg(opD, opSize)}, ${formatOperand(opS, opSize)}"
+    case A_MovFrom(opD, opS, opSize) => s"mov ${formatOperand(opD, opSize)}, ${formatReg(opS, opSize)}"
+    case A_Movzx(opD, opS, opSize1, opSize2) => s"movzx ${formatReg(opD, opSize1)}, ${formatReg(opS, opSize2)}"
+    case A_MovDeref(opD, opS, opSize) => s"mov ${{formatRegDeref(opD, opSize)}}, ${formatOperand(opS, opSize)}"
+    case A_MovFromDeref(opD, opS, opSize) => s"mov ${formatOperand(opD, opSize)}, ${{formatRegDeref(opS, opSize)}}"
+    case A_Lea(opD, opS) => s"lea ${formatReg(opD, PTR_SIZE)}, ${formatMemOffset(opS)}"
     
     case A_Call(label) => label match
         case A_InstrLabel(name) => s"call $name"

@@ -3,9 +3,9 @@ package wacc.assemblyIR
 sealed trait A_Operand
 
 case class A_Imm(n: BigInt) extends A_Operand
-case class A_RegDeref(opSize: A_OperandSize, mem: A_MemOffset) extends A_Operand
-case class A_MemOffset(opSize: A_OperandSize, reg: A_Reg, offset: A_Offset) extends A_Operand
-case class A_Reg(regSize: A_OperandSize, regName: A_RegName) extends A_Operand
+case class A_RegDeref(mem: A_MemOffset) extends A_Operand
+case class A_MemOffset(reg: A_Reg, offset: A_Offset) extends A_Operand
+case class A_Reg(regName: A_RegName) extends A_Operand
 
 sealed trait A_Offset
 case class A_OffsetImm(n: BigInt) extends A_Offset
