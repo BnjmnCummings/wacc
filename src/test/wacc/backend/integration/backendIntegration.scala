@@ -195,24 +195,34 @@ class backend_integration_test extends ConditionalRun {
                     println(s"actual: $actual")
                 }
                 
+                /* add more regex cases if I missed anything */
                 val runtimeMatcher = "#runtime_error#".r
                 val printingMatcher = "Printing an array variable gives an address, such as #addrs#".r
-                val expectedAddrMatcher = """#addrs# = [\{\(]([\w,\s]+)[\}\)]""".r
-                val expectedListMatcher = """list = \{([\d,\s]+)\}""".r
-
-                if(
+                val singleAddrMatcher = "#addrs#".r
+                val addrListMatcher = """#addrs# = \{([\w,\s]+)\}""".r
+                val addrPairMatcher = """#addrs# = \(([\w,\s|\(nil\)]+)\)""".r
+                val listMatcher = """list = \{([\d,\s]+)\}""".r
+                
+                if (
                     actualExitCode == expExitCode 
                     && actualOutput.length == expOutput.length 
-                    && actualOutput.zip(expOutput).forall{ (a, e) => e match 
+                    && actualOutput.zip(expOutput).forall{ (a, e) => 
+                        println(s"actual: $a expected: $e")
+                        e match 
                         case runtimeMatcher() => 
-                            actualOutput.contains("fatal error") || actualOutput.contains("Error: ")
+                            a.contains("fatal error") || a.contains("Error: ")
                         case printingMatcher() =>
-                            actualOutput.contains("Printing an array variable gives an address, such as 0x")
-                        case expectedAddrMatcher(values) =>
-                            actualOutput.contains("0x")
-                            actualOutput.contains(values)
-                        case expectedListMatcher(values) =>
-                            actualOutput.contains(values)
+                            a.contains("Printing an array variable gives an address, such as 0x")
+                        case addrListMatcher(values) =>
+                            a.contains("0x")
+                            a.contains(values)
+                        case addrPairMatcher(values) =>
+                            a.contains("0x")
+                            a.contains(values)
+                        case listMatcher(values) =>
+                            a.contains(values)
+                        case singleAddrMatcher() =>
+                            a.contains("0x")
                         case _  => (a == e)
                     }
                 )
