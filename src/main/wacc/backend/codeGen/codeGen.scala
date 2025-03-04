@@ -197,12 +197,10 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
 
 private def genRead(l: T_LValue, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
-    
-    val tySize = sizeOf(ty)
 
     // load current value of lvalue into register
     builder ++= gen(l, stackTable)
-    builder += A_MovTo(A_Reg(A_RegName.R1), A_Reg(A_RegName.RetReg), tySize)
+    builder += A_MovTo(A_Reg(A_RegName.R1), A_Reg(A_RegName.RetReg), sizeOf(ty))
 
     if ty == KnownType.Int then
         ctx.addDefaultFunc(READI_LABEL)
@@ -242,7 +240,7 @@ private def genRead(l: T_LValue, ty: SemType, stackTable: immutable.Map[Name, In
             builder += A_MovFrom( 
                 A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(stackTable(v) + offset)),
                 A_Reg(A_RegName.RetReg),
-                sizeOf(ctx.typeInfo.varTys(v))
+                sizeOf(ty)
             )
         
         case T_PairElem(index, T_ArrayElem(v, indices)) => ???
