@@ -658,10 +658,8 @@ private def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: im
 private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
-    val ty = unwrapArr(ctx.typeInfo.varTys(v))
-
     builder ++= getPointerToArrayElem(v, indices, stackTable)
-    builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), sizeOf(ty))
+    // builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), sizeOf(ty))
 
     builder.toList
 
