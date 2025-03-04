@@ -206,9 +206,7 @@ class backend_integration_test extends ConditionalRun {
                 if (
                     actualExitCode == expExitCode 
                     && actualOutput.length == expOutput.length 
-                    && actualOutput.zip(expOutput).forall{ (a, e) => 
-                        println(s"actual: $a expected: $e")
-                        e match 
+                    && actualOutput.zip(expOutput).forall{ (a, e) => e match 
                         case runtimeMatcher() => 
                             a.contains("fatal error") || a.contains("Error: ")
                         case printingMatcher() =>
@@ -223,7 +221,9 @@ class backend_integration_test extends ConditionalRun {
                             a.contains(values)
                         case singleAddrMatcher() =>
                             a.contains("0x")
-                        case _  => (a == e)
+                        case _  => 
+                            println(s"actual: $a expected: $e")
+                            (a == e)
                     }
                 )
                     successes += filePath
