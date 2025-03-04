@@ -771,6 +771,7 @@ private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType, stack
     builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.RetReg), sizeOf(ty1))
     builder ++= gen(x2, stackTable)
     builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Reg(A_RegName.RetReg), sizeOf(ty2))
+    builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R11), PTR_SIZE)
 
     builder.toList
 
