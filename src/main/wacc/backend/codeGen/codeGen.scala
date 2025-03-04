@@ -600,7 +600,19 @@ private def genBoolLiteral(v: Boolean)(using ctx: CodeGenCtx): List[A_Instr] = L
 
 private def genCharLiteral(v: Char)(using ctx: CodeGenCtx): List[A_Instr] = List(A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(v.toInt), CHAR_SIZE))
 
-private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] = List(A_Lea(A_Reg(A_RegName.RetReg), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(ctx.genStoredStr(v)))))
+private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] = 
+    v.flatMap( _ match {
+        case '\n' => "\\n"
+        case '\t' => "\\t"
+        case '\b' => "\\b"
+        case '\r' => "\\r"
+        case '\f' => "\\f"
+        case '\\' => "\\\\"
+        case '\"' => "\\\""
+        case '\'' => "\\\'"
+        case c => c.toString
+    })
+    List(A_Lea(A_Reg(A_RegName.RetReg), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(ctx.genStoredStr(v)))))
 
 private def genIdent(v: Name, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = 
     List(A_MovTo(A_Reg(A_RegName.RetReg), A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(stackTable(v))), sizeOf(ctx.typeInfo.varTys(v))))
