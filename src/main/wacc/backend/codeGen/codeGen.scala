@@ -197,17 +197,10 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
 
 private def genRead(l: T_LValue, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
-    
+
     // load current value of lvalue into register
-    l match
-        case T_Ident(v) => 
-            builder += A_MovTo(
-                A_Reg(A_RegName.R1), 
-                A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(stackTable(v))),
-                sizeOf(ctx.typeInfo.varTys(v))
-            )
-        case T_ArrayElem(v, indicies) => ???
-        case T_PairElem(index, v) => ???
+    builder ++= gen(l, stackTable)
+    builder += A_MovTo(A_Reg(A_RegName.R1), A_Reg(A_RegName.RetReg), sizeOf(ty))
 
     if ty == KnownType.Int then
         ctx.addDefaultFunc(READI_LABEL)
@@ -217,18 +210,43 @@ private def genRead(l: T_LValue, ty: SemType, stackTable: immutable.Map[Name, In
         builder += A_Call(A_InstrLabel(READC_LABEL))
     else
         // naughty
-        throw new Exception("Invalid type for read")
+        throw new Exception("Invalid type for read (should be caught in type checker)")
 
     // move eax value back into lvalue
+    // note: we can still assume value is in ret reg
     l match
         case T_Ident(v) =>
             builder += A_MovFrom( 
                 A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(stackTable(v))),
                 A_Reg(A_RegName.RetReg),
-                sizeOf(ctx.typeInfo.varTys(v))
+                sizeOf(ty)
             )
-        case T_ArrayElem(v, indices) => ???
-        case T_PairElem(index, v) => ???
+        case T_ArrayElem(v, indices) => 
+            builder += A_Push(A_Reg(A_RegName.RetReg))
+            builder ++= getPointerToArrayElem(v, indices, stackTable)
+            builder += A_Pop(A_Reg(A_RegName.R1))
+            
+            builder += A_MovDeref(
+                A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), 
+                A_Reg(A_RegName.R1),
+                sizeOf(ty)
+            )
+        // Read fst fst p is not allowed - we can only do read fst p
+        case T_PairElem(index, T_Ident(v)) => 
+            val offset = index match
+                case PairIndex.First => ZERO_IMM
+                case PairIndex.Second => opSizeToInt(PTR_SIZE)
+            
+            builder += A_MovFrom( 
+                A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(stackTable(v) + offset)),
+                A_Reg(A_RegName.RetReg),
+                sizeOf(ty)
+            )
+        
+        case T_PairElem(index, T_ArrayElem(v, indices)) => ???
+            // see above, use genArrayElem
+
+        case T_PairElem(_, _) => throw new Exception("Can't read from nested pairs. Should be caught in type checker")
 
     builder.toList
 
@@ -247,8 +265,11 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int]
 
             builder += A_Call(A_InstrLabel(FREE_LABEL))
         case KnownType.Pair(_, _) =>
+            builder += A_Cmp(A_Reg(A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE)
+            builder += A_Jmp(A_InstrLabel(ERR_NULL_PAIR_LABEL), A_Cond.Eq)
 
             ctx.addDefaultFunc(FREE_PAIR_LABEL)
+            ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
 
             builder += A_Call(A_InstrLabel(FREE_PAIR_LABEL))
         case _ => throw Exception("Invalid type with free. Should be caught in type checker!")
@@ -588,7 +609,7 @@ private def unwrapArr(ty: KnownType): SemType = ty match
     case wacc.KnownType.Array(t) => t
     case _ => throw Exception("Received a type that isn't an array")
 
-private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+private def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
     val ty = unwrapArr(ctx.typeInfo.varTys(v))
@@ -634,26 +655,27 @@ private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.M
 
     builder.toList
 
-private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] =
-    val builder = new ListBuffer[A_Instr]
+private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder: ListBuffer[A_Instr] = ListBuffer()
 
-    builder += A_MovTo(A_Reg(A_RegName.R1), A_Imm(opSizeToInt(PTR_SIZE) * 2), INT_SIZE)
+    val ty = unwrapArr(ctx.typeInfo.varTys(v))
 
-    ctx.addDefaultFunc(MALLOC_LABEL)
-
-    builder += A_Call(A_ExternalLabel(MALLOC_LABEL))
-    builder += A_MovTo(A_Reg(A_RegName.R11), A_Reg(A_RegName.RetReg), PTR_SIZE)
-    builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Imm(ZERO_IMM), PTR_SIZE)
-    builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Imm(ZERO_IMM), PTR_SIZE)
+    builder ++= getPointerToArrayElem(v, indices, stackTable)
+    builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), sizeOf(ty))
 
     builder.toList
+
+private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] = List(A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE))
 
 private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
-    // NOTE: WE NEED TO CHECK IF THE POINTER IS EVER 0 - THIS IS A NULL PAIR LITERAL - call _errNull
-
     builder ++= gen(v, stackTable)
+
+    builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
+    builder += A_Jmp(A_InstrLabel(ERR_NULL_PAIR_LABEL), A_Cond.Eq)
+    
+    ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
 
     val optionalOffset = index match
         case PairIndex.First => 0 // factor out magic number
@@ -692,7 +714,6 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map
     builder.toList
 
 private def genFuncCall(v: Name, args: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = {
-
     val builder = new ListBuffer[A_Instr]
     
     val argNames: List[Name] = ctx.typeInfo.funcTys(v)._2
@@ -763,7 +784,7 @@ inline def sizeOf(ty: SemType): A_OperandSize = ty match
     case wacc.KnownType.Char => CHAR_SIZE
     case wacc.KnownType.String => PTR_SIZE
     case wacc.KnownType.Array(ty) => PTR_SIZE
-    case KnownType.Pair(_, _) => ???
+    case KnownType.Pair(_, _) => PTR_SIZE
     case KnownType.Ident =>
          ???
 
