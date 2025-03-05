@@ -792,7 +792,7 @@ private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType, stack
 private def funcLabelGen(f: Name): A_InstrLabel = A_InstrLabel(s".F.${f.name}")
 
 inline def sizeOf(ty: SemType): A_OperandSize = ty match
-    case ? => throw Exception("Should not have semType ? in codeGen")
+    case ? => PTR_SIZE
     case X => throw Exception("Should not have semType X in codeGen")
     case wacc.KnownType.Int => INT_SIZE
     case wacc.KnownType.Boolean => BOOL_SIZE
