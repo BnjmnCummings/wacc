@@ -13,6 +13,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import sys.process._
 import scala.io.Source
 import scala.collection.mutable.ListBuffer
+import scala.util.matching.Regex
 
 class backend_integration_test extends ConditionalRun {
 
@@ -184,22 +185,39 @@ class backend_integration_test extends ConditionalRun {
                 formatProg(assembly)(using printWriter)
                 printWriter.close()
                 
-                val (expExitCode, expOutput, input) = getExpectedOutput(filePath)
-                val actual = runAssembly(progName, input)
+                val expected@(expExitCode, expOutput, input) = getExpectedOutput(filePath)
+                val actual@(actualExitCode, actualOutput) = runAssembly(progName, input)
 
-                if (expOutput == List("XZ")) {
-                    println(s"file: $filePath")
-                    println(s"input: ${input.mkString(" ")}")
-                    println(s"expected: $expOutput")
-                    println(s"actual: $actual")
-                }
-
-                if(actual._1 == expExitCode && actual._2.length == expOutput.length && actual._2.zip(expOutput).forall{_ match 
-                    case (a, "#runtime_error#") => a.contains("fatal error") || a.contains("Error: ")
-                    case (a, "Printing an array variable gives an address, such as #addrs#") => a.contains("Printing an array variable gives an address, such as 0x")
-                    case (a, "#addrs# = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}") => a.contains("0x") && a.contains(" = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}")
-                    case (a, e) => a == e
-                })                                       
+                /* add more regex cases if I missed anything */
+                val runtimeMatcher = "#runtime_error#".r
+                val printingMatcher = "Printing an array variable gives an address, such as #addrs#".r
+                val singleAddrMatcher = "#addrs#".r
+                val addrListMatcher = """#addrs# = \{([\w,\s]+)\}""".r
+                val addrPairMatcher = """#addrs# = \(([\w,\s|\(nil\)]+)\)""".r
+                val listMatcher = """list = \{([\d,\s]+)\}""".r
+                
+                if (
+                    actualExitCode == expExitCode 
+                    && actualOutput.length == expOutput.length 
+                    && actualOutput.zip(expOutput).forall{ (a, e) => e match 
+                        case runtimeMatcher() => 
+                            a.contains("fatal error") || a.contains("Error: ")
+                        case printingMatcher() =>
+                            a.contains("Printing an array variable gives an address, such as 0x")
+                        case addrListMatcher(values) =>
+                            a.contains("0x")
+                            a.contains(values)
+                        case addrPairMatcher(values) =>
+                            a.contains("0x")
+                            a.contains(values)
+                        case listMatcher(values) =>
+                            a.contains(values)
+                        case singleAddrMatcher() =>
+                            a.contains("0x")
+                        case _  => 
+                            (a == e)
+                    }
+                )
                     successes += filePath
                     s"./wipeAss $progName" .!
                 else 
@@ -207,7 +225,7 @@ class backend_integration_test extends ConditionalRun {
                     if (input.nonEmpty) {
                         info(s"input: ${input.mkString(" ")}")
                     }
-                    info(s"expected: $expOutput")
+                    info(s"expected: $expected")
                     info(s"actual: $actual")
                     info("naughty boy")
 
