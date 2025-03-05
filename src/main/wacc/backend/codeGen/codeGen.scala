@@ -188,7 +188,14 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: immutable
             builder += A_Pop(A_Reg(A_RegName.RetReg))
             builder += A_MovFrom(A_MemOffset(A_Reg(A_RegName.R1), A_OffsetImm(0)), A_Reg(A_RegName.RetReg), sizeOf(ty))
         }
-        case T_PairElem(index, v) => ???
+        case T_PairElem(index, v) =>
+            builder += A_Push(A_Reg(A_RegName.RetReg))
+            builder ++= getPairElemPtr(index, v, stackTable)
+            builder += A_Pop(A_Reg(A_RegName.R1))
+
+            // val sizeTy = ???
+
+            builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.R1), PTR_SIZE)
     
     builder.toList
 }
@@ -661,19 +668,33 @@ private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: immutable.M
 
 private def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] = List(A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE))
 
-private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+private def getArrInnerType(ty: SemType): SemType = ty match
+    case KnownType.Array(t) => getArrInnerType(t)
+    case t => t
+
+private def getPairElemPtr(index: PairIndex, v: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(v, stackTable)
 
     builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
     builder += A_Jmp(A_InstrLabel(ERR_NULL_PAIR_LABEL), A_Cond.Eq)
-    
+
     ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
 
     val optionalOffset = index match
-        case PairIndex.First => 0 // factor out magic number
+        case PairIndex.First => ZERO_IMM
         case PairIndex.Second => opSizeToInt(PTR_SIZE)
+
+    builder += A_Add(A_Reg(A_RegName.RetReg), A_Imm(optionalOffset), PTR_SIZE)
+
+    builder.toList
+
+private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+
+    builder ++= getPairElemPtr(index, v, stackTable)
+    // Now we have the pointer to fst/snd p in RetReg
     
     v match
         case T_Ident(name) =>
@@ -688,22 +709,21 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map
             
             val tySize = sizeOf(ty)
 
-            builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(optionalOffset))), tySize)
-        case T_ArrayElem(v, indicies) => ???
+            builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), tySize)
+        case T_ArrayElem(v, indicies) =>
             // we assume the value in RetReg is a pointer to fst p
 
             // deref this value to get value stored
-            val tySize = ??? // TODO: create a function to unwrap this as many times as required to get the inner type!
+            //val tySize = sizeOf(getArrInnerType(ctx.typeInfo.varTys(v)))
         
-            builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(optionalOffset))), tySize)
-        case T_PairElem(index, v) => ???
+            builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), PTR_SIZE)
+        case T_PairElem(index, v) =>
             // we assume the value in RetReg is a pointer to fst p
 
             // deref this value to get value stored
-            val tySize = ??? // TODO: create a function to unwrap this as many times as required to get the inner types!
+            //val tySize = ??? // TODO: create a function to unwrap this as many times as required to get the inner types!
 
-            builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(optionalOffset))), tySize)
-    
+            builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), PTR_SIZE)
 
     builder.toList
 
