@@ -188,13 +188,6 @@ class backend_integration_test extends ConditionalRun {
                 val expected@(expExitCode, expOutput, input) = getExpectedOutput(filePath)
                 val actual@(actualExitCode, actualOutput) = runAssembly(progName, input)
 
-                if (expOutput == List("XZ")) {
-                    println(s"file: $filePath")
-                    println(s"input: ${input.mkString(" ")}")
-                    println(s"expected: $expOutput")
-                    println(s"actual: $actual")
-                }
-                
                 /* add more regex cases if I missed anything */
                 val runtimeMatcher = "#runtime_error#".r
                 val printingMatcher = "Printing an array variable gives an address, such as #addrs#".r
@@ -222,7 +215,6 @@ class backend_integration_test extends ConditionalRun {
                         case singleAddrMatcher() =>
                             a.contains("0x")
                         case _  => 
-                            println(s"actual: $a expected: $e")
                             (a == e)
                     }
                 )
