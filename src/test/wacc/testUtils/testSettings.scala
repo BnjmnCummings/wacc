@@ -57,7 +57,7 @@ val testSettings = scala.collection.immutable.HashSet(
     "integration_runtimeErr_badChar",
     "integration_runtimeErr_divideByZero",
     "integration_runtimeErr_integerOverflow",
-    // "integration_runtimeErr_nullDereference",
+    "integration_runtimeErr_nullDereference",
     // "integration_scope",
     "integration_sequence",
     "integration_variables",
