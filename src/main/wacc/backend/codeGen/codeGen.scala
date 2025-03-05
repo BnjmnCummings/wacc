@@ -32,6 +32,7 @@ def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     // --- generating main function ---
     // calculate frame size and add variables to stack table
     val (stackTable, frameSize) = createStackTable(t_tree.scoped, typeInfo)
+    println(s"Stack table: $stackTable, frame size: $frameSize")
 
     // building main function body
     val builder: ListBuffer[A_Instr] = ListBuffer()
@@ -119,6 +120,8 @@ private def gen(t: T_RValue, stackTable: immutable.Map[Name, Int])(using ctx: Co
 
 private def gen(t: T_Func)(using ctx: CodeGenCtx): A_Func = {
     // --- generating function ---
+    val (paramStackTable, _) = createStackTable(t.args.map(_.v).toSet, ctx.typeInfo)
+
     // calculate frame size and add variables to stack table
     val (stackTable, frameSize) = createStackTable(t.scoped, ctx.typeInfo)
 
@@ -126,8 +129,13 @@ private def gen(t: T_Func)(using ctx: CodeGenCtx): A_Func = {
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
     builder += A_Push(A_Reg(A_RegName.BasePtr))
+    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
     builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
-    builder ++= t.body.flatMap(gen(_, stackTable.toMap))
+    builder ++= t.body.flatMap(gen(_, stackTable.toMap ++ paramStackTable.map((k, v) => (k, v + frameSize))))
+    builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(EXIT_SUCCESS), PTR_SIZE)
+    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    builder += A_Pop(A_Reg(A_RegName.BasePtr))
+    builder += A_Ret
 
     A_Func(funcLabelGen(t.v), builder.toList)
 }
@@ -713,18 +721,24 @@ private def genFuncCall(v: Name, args: List[T_Expr], stackTable: immutable.Map[N
     val argNames: List[Name] = ctx.typeInfo.funcTys(v)._2
 
     val (newStackTable, frameSize) = createStackTable(argNames.toSet, ctx.typeInfo)
+    println(s">> newStackTable: $newStackTable\n> frameSize: $frameSize\n")
 
     val offsetOldStackTable = stackTable.map((k, v) => (k, v + frameSize))
 
+    println(s"> stackTable: $stackTable\n> newStackTable: $newStackTable\n> frameSize: $frameSize\n> offsetOldStackTable: $offsetOldStackTable\n")
+
     builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     argNames.zip(args).foreach((arg, expr) => {
         builder ++= gen(expr, offsetOldStackTable)
+        println(s"size: ${sizeOf(ctx.typeInfo.varTys(arg))}")
         builder += A_MovFrom(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(newStackTable(arg))), A_Reg(A_RegName.RetReg), sizeOf(ctx.typeInfo.varTys(arg)))
     })
 
     builder += A_Call(funcLabelGen(v))
 
     builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
 
     builder.toList
 }
