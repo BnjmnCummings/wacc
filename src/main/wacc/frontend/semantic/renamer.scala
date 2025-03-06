@@ -63,10 +63,9 @@ object renamer {
 
         (_v, _args.toList)
 
-    private def rename(func: Func, v: Name, args: List[Q_Param])(using ctx: RenamerContext): Q_Func =             
+    private def rename(func: Func, v: Name, args: List[Q_Param])(using ctx: RenamerContext): Q_Func =
         val (body, scoped) = rename(func.body, args.map(_.v).toSet, Set())
-
-        Q_Func(func.t, v, args.toList, body, scoped, func.pos)
+        Q_Func(func.t, v, args, body, scoped, func.pos)
     
     
     private def rename(param: Param, lScope: Set[Name])(using ctx: RenamerContext): Q_Param = 
