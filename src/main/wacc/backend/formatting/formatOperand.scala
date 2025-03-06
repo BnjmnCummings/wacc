@@ -44,6 +44,8 @@ def formatReg(op: A_Reg, opSize: A_OperandSize): String = opSize match
         case A_RegName.R13 => "r15b"
         case A_RegName.StackPtr => "spl"
         case A_RegName.BasePtr => "bpl"
+        case A_RegName.InstrPtr => 
+            throw UnsupportedOperationException("ILL TELL YOU WHAT LAD THERE FOKIN NO SUCH THING AS AN 8 BIT INSTRUCTION BLOODEH POINTEH") 
     
     case A_OperandSize.A_16 => op.regName match
         case A_RegName.RetReg => "ax"
@@ -62,6 +64,7 @@ def formatReg(op: A_Reg, opSize: A_OperandSize): String = opSize match
         case A_RegName.R13 => "r15w"
         case A_RegName.StackPtr => "sp"
         case A_RegName.BasePtr => "bp"
+        case A_RegName.InstrPtr => "ip"
 
     case A_OperandSize.A_32 => op.regName match
         case A_RegName.RetReg => "eax"
@@ -80,6 +83,8 @@ def formatReg(op: A_Reg, opSize: A_OperandSize): String = opSize match
         case A_RegName.R13 => "r15d"
         case A_RegName.StackPtr => "esp"
         case A_RegName.BasePtr => "ebp"
+        case A_RegName.InstrPtr => "eip"
+
 
     case A_OperandSize.A_64 => op.regName match
         case A_RegName.RetReg => "rax"
