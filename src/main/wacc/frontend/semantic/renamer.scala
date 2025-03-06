@@ -2,12 +2,12 @@ package wacc
 
 import wacc.ast.*
 import wacc.q_ast.*
-import scala.collection.mutable.*
 
 import collection.immutable.Set as Set
-import collection.mutable.Set as MutableSet
 import collection.immutable.Map as Map
+import collection.mutable.Set as MutableSet
 import collection.mutable.Map as MutableMap
+import collection.mutable.ListBuffer
 
 object renamer {
     private var funcNames: MutableSet[Name] = MutableSet()

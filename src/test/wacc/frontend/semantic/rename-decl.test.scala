@@ -7,7 +7,6 @@ import wacc.*
 import wacc.ast.*
 import wacc.q_ast.*
 import wacc.renamer.*
-import wacc.ScopeException
 
 class rename_decl_test extends AnyFlatSpec {
     /* control */
