@@ -13,7 +13,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 import sys.process._
 import scala.io.Source
 import scala.collection.mutable.ListBuffer
-import scala.util.matching.Regex
 
 class backend_integration_test extends ConditionalRun {
 
@@ -164,6 +163,10 @@ class backend_integration_test extends ConditionalRun {
         }   
     })
 
+    /**
+     * Runs a selected batch of tests by generating the assembly and comparing output
+     * @param paths the list of file paths to .wacc files we want to test
+     */ 
     def runTests(paths: List[String]) = {
         val successes: ListBuffer[String] = ListBuffer.empty[String]
         val outputFailures: ListBuffer[String] = ListBuffer.empty[String]
@@ -188,36 +191,7 @@ class backend_integration_test extends ConditionalRun {
                 val expected@(expExitCode, expOutput, input) = getExpectedOutput(filePath)
                 val actual@(actualExitCode, actualOutput) = runAssembly(progName, input)
 
-                /* add more regex cases if I missed anything */
-                val runtimeMatcher = "#runtime_error#".r
-                val printingMatcher = "Printing an array variable gives an address, such as #addrs#".r
-                val singleAddrMatcher = "#addrs#".r
-                val addrListMatcher = """#addrs# = \{([\w,\s]+)\}""".r
-                val addrPairMatcher = """#addrs# = \(([\w,\s|\(nil\)]+)\)""".r
-                val listMatcher = """list = \{([\d,\s]+)\}""".r
-                
-                if (
-                    actualExitCode == expExitCode 
-                    && actualOutput.length == expOutput.length 
-                    && actualOutput.zip(expOutput).forall{ (a, e) => e match 
-                        case runtimeMatcher() => 
-                            a.contains("fatal error") || a.contains("Error: ")
-                        case printingMatcher() =>
-                            a.contains("Printing an array variable gives an address, such as 0x")
-                        case addrListMatcher(values) =>
-                            a.contains("0x")
-                            a.contains(values)
-                        case addrPairMatcher(values) =>
-                            a.contains("0x")
-                            a.contains(values)
-                        case listMatcher(values) =>
-                            a.contains(values)
-                        case singleAddrMatcher() =>
-                            a.contains("0x")
-                        case _  => 
-                            (a == e)
-                    }
-                )
+                if ( actualExitCode == expExitCode && actualOutput == expOutput)
                     successes += filePath
                     s"./wipeAss $progName" .!
                 else 
@@ -301,15 +275,20 @@ class backend_integration_test extends ConditionalRun {
             )
             val exitStatus = process.exitValue()
 
-            if (progName == "readAtEof") {
-                println(s"input in ra: $input")
-                println(s"output in ra: ${output.mkString("\n")}")
-            }
-            
             /* clean up after ourselves and return */
             s"./wipeObj $fileName" .!
 
-            return (exitStatus, output.toList.filter(_.nonEmpty))
+            /* filter output */
+            val cleanOutput = output.toList
+                .filter(_.nonEmpty)
+                .map(_.replaceAll("0x[0-9a-fA-F]+", "#addrs#"))
+                .map(line =>  
+                    if line.contains("rror:")then
+                        "#runtime_error#"
+                    else 
+                        line
+                )
+            return (exitStatus, cleanOutput)
 
         } else {
             s"./wipeObj $fileName" .!
@@ -332,13 +311,12 @@ class backend_integration_test extends ConditionalRun {
             val output = lines
                 .dropWhile( _ != "# Output:").tail
                 .takeWhile(s => s != "# Program:" && s != "# Exit:")
-                // filter so it only takes lines of the format "# .*" and removes the "# "
                 .filter(_.startsWith("# "))
                 .map(_.drop(2))
                 .filter(_.nonEmpty)
             
+            /* 'Exit:' comment isn't always present */
             val exitCode: Int = lines.dropWhile( _ != "# Exit:") match
-                /* 'Exit:' comment isn't always present */
                 case Nil => 0
                 case _::tail => 
                     tail.takeWhile(_ != "# Program:")
