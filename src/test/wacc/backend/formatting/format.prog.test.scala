@@ -6,9 +6,7 @@ import org.scalatest.matchers.should.Matchers.*
 import java.io.StringWriter
 
 import wacc.testUtils.*
-
 import wacc.assemblyIR.*
-import wacc.assemblyIR.A_OperandSize
 
 class format_prog_test extends ConditionalRun {
     runIfTrue(testSettings, "format_prog_test", () => {
