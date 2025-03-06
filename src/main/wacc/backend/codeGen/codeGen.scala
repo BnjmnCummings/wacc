@@ -32,13 +32,14 @@ def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     // --- generating main function ---
     // calculate frame size and add variables to stack table
     val (stackTable, frameSize) = createStackTable(t_tree.scoped, typeInfo)
+    // println(s"Stack table: $stackTable, frame size: $frameSize")
 
     // building main function body
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
     builder += A_Push(A_Reg(A_RegName.BasePtr))
-    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
     builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
     builder ++= t_tree.body.flatMap(gen(_, stackTable.toMap))
     builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(EXIT_SUCCESS), PTR_SIZE)
     builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
@@ -57,8 +58,8 @@ def createStackTable(scope: Set[Name], typeInfo: TypeInfo): (mutable.Map[Name, I
 
     var frameSize: Int = 0
     scope.foreach(v =>
-        stackTable(v) = frameSize
         frameSize += intSizeOf(typeInfo.varTys(v))
+        stackTable(v) = -frameSize
     )
 
     (stackTable, frameSize)
@@ -119,15 +120,43 @@ private def gen(t: T_RValue, stackTable: immutable.Map[Name, Int])(using ctx: Co
 
 private def gen(t: T_Func)(using ctx: CodeGenCtx): A_Func = {
     // --- generating function ---
+    //val (paramStackTable, _) = createStackTable(t.args.map(_.v).toSet, ctx.typeInfo)
+
     // calculate frame size and add variables to stack table
-    val (stackTable, frameSize) = createStackTable(t.scoped, ctx.typeInfo)
+
+    val paramStackTable = mutable.Map[Name, Int]()
+
+    val argNames = t.args.map(_._2)
+
+    // Find offset of each parameter
+    var offset = 2 * opSizeToInt(PTR_SIZE); // TODO: MAGIC NUMBER
+
+    argNames.reverse.foreach { argName =>
+        val argType = ctx.typeInfo.varTys(argName)
+        val argSizeBytes = opSizeToInt(sizeOf(argType))
+
+        paramStackTable(argName) = offset
+        offset += argSizeBytes
+    }
+
+    val (varStackTable, frameSize) = createStackTable(t.scoped, ctx.typeInfo)
+
+    val stackTable = paramStackTable ++ varStackTable
+    println(stackTable)
 
     // building function body
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
     builder += A_Push(A_Reg(A_RegName.BasePtr))
+
     builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
-    builder ++= t.body.flatMap(gen(_, stackTable.toMap))
+    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    builder ++= t.body.flatMap(gen(_, stackTable.toMap)) // ++ paramStackTable.map((k, v) => (k, v + frameSize))))
+    builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(EXIT_SUCCESS), PTR_SIZE)
+    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    //builder += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
+    builder += A_Pop(A_Reg(A_RegName.BasePtr))
+    builder += A_Ret
 
     A_Func(funcLabelGen(t.v), builder.toList)
 }
@@ -284,6 +313,7 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int]
 private def genReturn(x: T_Expr, ty: SemType, stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] =
     val builder: ListBuffer[A_Instr] = ListBuffer()
     builder ++= gen(x, stackTable)
+    builder += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     builder += A_Pop(A_Reg(A_RegName.BasePtr))
     builder += A_Ret
     builder.toList
@@ -410,17 +440,17 @@ private def genWhile(cond: T_Expr, body: List[T_Stmt], scoped: Set[Name], stackT
     builder.toList
 
 private def genCodeBlock(body: List[T_Stmt], scoped: Set[Name], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = {
-    val (newStackTable, frameSize) = createStackTable(scoped, ctx.typeInfo)
+    //val (newStackTable, frameSize) = createStackTable(scoped, ctx.typeInfo)
 
-    val offsetOldStackTable = stackTable.map((k, v) => (k, v + frameSize))
+    //val offsetOldStackTable = stackTable.map((k, v) => (k, v + frameSize))
 
     val builder = new ListBuffer[A_Instr]
 
-    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
-    builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
-    body.foreach(builder ++= gen(_, offsetOldStackTable ++ newStackTable))
-    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
-    builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    //builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    //builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    body.foreach(builder ++= gen(_, stackTable)) //offsetOldStackTable ++ newStackTable))
+    //builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    //builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
 
     builder.toList    
 }
@@ -729,22 +759,45 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: immutable.Map
 
 private def genFuncCall(v: Name, args: List[T_Expr], stackTable: immutable.Map[Name, Int])(using ctx: CodeGenCtx): List[A_Instr] = {
     val builder = new ListBuffer[A_Instr]
-    
-    val argNames: List[Name] = ctx.typeInfo.funcTys(v)._2
 
-    val (newStackTable, frameSize) = createStackTable(argNames.toSet, ctx.typeInfo)
+    val (returnType, argNames) = ctx.typeInfo.funcTys(v)
 
-    val offsetOldStackTable = stackTable.map((k, v) => (k, v + frameSize))
+    // Find offset of each parameter
+    var offset = 2 * opSizeToInt(PTR_SIZE)
+    var argSizeBytes = 0;
 
-    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
-    argNames.zip(args).foreach((arg, expr) => {
-        builder ++= gen(expr, offsetOldStackTable)
-        builder += A_MovFrom(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(newStackTable(arg))), A_Reg(A_RegName.RetReg), sizeOf(ctx.typeInfo.varTys(arg)))
-    })
+    argNames.zip(args).foreach { case (argName, expr) =>
+        val argType = ctx.typeInfo.varTys(argName)
+        val argOpSize = sizeOf(argType)
+        argSizeBytes = opSizeToInt(argOpSize)
 
+        offset += argSizeBytes
+
+        builder ++= gen(expr, stackTable)
+
+        builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(argSizeBytes), PTR_SIZE)
+        builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(0))), A_Reg(A_RegName.RetReg), argOpSize)
+    }
+
+    // We subtract 8 bytes from RSP for Ret Address  
+    //builder += A_Push(A_Reg(A_RegName.BasePtr))
+
+    //builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(opSizeToInt(PTR_SIZE)), PTR_SIZE)
+
+    //A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+
+    // Call the function. The result is stored in RetReg
     builder += A_Call(funcLabelGen(v))
 
-    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(frameSize), PTR_SIZE)
+    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(argSizeBytes), PTR_SIZE)
+
+    //A_MovTo(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(offset)), PTR_SIZE)
+
+    //A_MovTo(A_Reg(A_RegName.StackPtr), A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(opSizeToInt(PTR_SIZE))), PTR_SIZE)
+
+    //A_Pop(A_Reg(A_RegName.BasePtr))
+
+    //A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.R1), PTR_SIZE)
 
     builder.toList
 }
