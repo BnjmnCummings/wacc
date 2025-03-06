@@ -43,15 +43,15 @@ val testSettings = scala.collection.immutable.HashSet(
     "format_function_test",
     "integration_exit",
     "integration_skip",
-    // "integration_advanced",
-    // "integration_array",
+    //"integration_advanced",
+    //"integration_array",
     "integration_expressions",
-    // "integration_nested_functions",
-    // "integration_simple_functions",
+    //"integration_nested_functions",
+    //"integration_simple_functions",
     "integration_if",
-    // "integration_IO_all",
+    "integration_IO_all",
     "integration_IO_print",
-    // "integration_IO_read",
+    "integration_IO_read",
     "integration_pairs",
     "integration_runtimeErr_arrayOutOfBounds",
     "integration_runtimeErr_badChar",
@@ -61,5 +61,5 @@ val testSettings = scala.collection.immutable.HashSet(
     // "integration_scope",
     "integration_sequence",
     "integration_variables",
-    // "integration_while"
+    "integration_while"
 )
