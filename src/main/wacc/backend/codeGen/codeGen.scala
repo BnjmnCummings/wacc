@@ -131,7 +131,7 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: StackTabl
         case T_Ident(v) =>
             builder ++= stackTable.set(v)
         case T_ArrayElem(v, indices) => {
-            val ty = unwrapArr(ctx.typeInfo.varTys(v), indices.length)
+            val ty = unwrapArrType(ctx.typeInfo.varTys(v), indices.length)
 
             ctx.addDefaultFunc(ERR_OUT_OF_BOUNDS_LABEL)
 
@@ -333,18 +333,18 @@ private def genIfHelper(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name],
     val bodyLabel = ctx.genNextInstrLabel() // .L0
     val restLabel = ctx.genNextInstrLabel() // .L1
 
+    // check condition
     builder ++= gen(cond, stackTable)
     builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE)
+
     builder += A_Jmp(bodyLabel, A_Cond.Eq)
-
+    
+    // else block
     builder ++= genCodeBlock(el, scopedEl, stackTable) 
-
     builder += A_Jmp(restLabel, A_Cond.Uncond) 
 
+    // body block
     builder += A_LabelStart(bodyLabel)
-
-    // set up new stack table for body
-
     builder ++= genCodeBlock(body, scopedBody, stackTable)
 
     builder += A_LabelStart(restLabel)
@@ -355,18 +355,20 @@ private def genIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name], el: L
     val builder = new ListBuffer[A_Instr]
 
     cond match
-        case T_GreaterThan(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-        case T_GreaterThanEq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-        case T_LessThan(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-        case T_LessThanEq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-        case T_Eq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-        case T_NotEq(x, y, ty) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-        case T_And(x, y) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-        case T_Or(x, y) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-        case T_Not(x) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-        case T_BoolLiteral(v) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-        case T_Ident(v) => builder ++= genIdent(v, stackTable) ++ genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
+        case T_GreaterThan(x, y, ty) => ()
+        case T_GreaterThanEq(x, y, ty) => ()
+        case T_LessThan(x, y, ty) => ()
+        case T_LessThanEq(x, y, ty) => ()
+        case T_Eq(x, y, ty) => ()
+        case T_NotEq(x, y, ty) => ()
+        case T_And(x, y) => ()
+        case T_Or(x, y) => ()
+        case T_Not(x) => ()
+        case T_BoolLiteral(v) => ()
+        case T_Ident(v) => ()
         case _ => throw Exception(s"Should not reach here. Got $cond")
+    
+    builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
 
     builder.toList
 
@@ -572,15 +574,15 @@ private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] =
 private def genIdent(v: Name, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] = 
     stackTable.get(v).toList
 
-private def unwrapArr(ty: KnownType, length: Int): SemType = (ty, length) match
+private def unwrapArrType(ty: KnownType, length: Int): SemType = (ty, length) match
     case (_, 0) => ty
-    case (wacc.KnownType.Array(t), _) => unwrapArr(t.asInstanceOf[KnownType], length - 1)
+    case (wacc.KnownType.Array(t), _) => unwrapArrType(t.asInstanceOf[KnownType], length - 1)
     case _ => throw Exception(s"Received a type that isn't an array: $ty")
 
 private def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
-    val ty = unwrapArr(ctx.typeInfo.varTys(v), indices.length)
+    val ty = unwrapArrType(ctx.typeInfo.varTys(v), indices.length)
 
     ctx.addDefaultFunc(ERR_OUT_OF_BOUNDS_LABEL)
 
@@ -627,7 +629,7 @@ private def indexArray(elemSize: Int) = List(
 private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
-    val ty = unwrapArr(ctx.typeInfo.varTys(v), indices.length)
+    val ty = unwrapArrType(ctx.typeInfo.varTys(v), indices.length)
 
     builder ++= getPointerToArrayElem(v, indices, stackTable)
     builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), sizeOf(ty))
