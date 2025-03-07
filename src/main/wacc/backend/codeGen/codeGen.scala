@@ -365,7 +365,7 @@ private def genIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name], el: L
         case T_Or(x, y) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
         case T_Not(x) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
         case T_BoolLiteral(v) => builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-        case T_Ident(v) => ???
+        case T_Ident(v) => builder ++= genIdent(v, stackTable) ++ genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
         case _ => throw Exception(s"Should not reach here. Got $cond")
 
     builder.toList
