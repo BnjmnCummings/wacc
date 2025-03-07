@@ -186,6 +186,25 @@ inline def defaultOverflow: A_Func = {
     // edi holds the format string
     // esi holds the value to be printed
 
+inline def defPrint(size: A_OperandSize, dataLabel: A_DataLabel, instrLabel: A_InstrLabel): A_Func = {
+    val program: ListBuffer[A_Instr] = ListBuffer()
+
+    program += A_Push(A_Reg(A_RegName.BasePtr))
+    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
+    program += A_MovTo(A_Reg(A_RegName.R2), A_Reg(A_RegName.R1), size)
+    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(dataLabel)))
+    program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
+    program += A_Call(A_ExternalLabel(PRINTF))
+    program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE)
+    program += A_Call(A_ExternalLabel(F_FLUSH))
+    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
+    program += A_Pop(A_Reg(A_RegName.BasePtr))
+    program += A_Ret
+
+    A_Func(instrLabel, program.toList)
+}
+
 inline def defaultPrintln: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
 
@@ -203,62 +222,11 @@ inline def defaultPrintln: A_Func = {
     A_Func(A_InstrLabel(PRINTLN_LABEL), program.toList)
 }
 
-inline def defaultPrinti: A_Func = {
-    val program: ListBuffer[A_Instr] = ListBuffer()
+inline def defaultPrinti: A_Func = defPrint(INT_SIZE, A_DataLabel(PRINTI_LBL_STR_NAME), A_InstrLabel(PRINTI_LABEL))
 
-    program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
-    program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_MovTo(A_Reg(A_RegName.R2), A_Reg(A_RegName.R1), INT_SIZE)
-    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(PRINTI_LBL_STR_NAME))))
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
-    program += A_Call(A_ExternalLabel(PRINTF))
-    program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE)
-    program += A_Call(A_ExternalLabel(F_FLUSH))
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
-    program += A_Pop(A_Reg(A_RegName.BasePtr))
-    program += A_Ret
+inline def defaultPrintc: A_Func = defPrint(CHAR_SIZE, A_DataLabel(PRINTC_LBL_STR_NAME), A_InstrLabel(PRINTC_LABEL))
 
-    A_Func(A_InstrLabel(PRINTI_LABEL), program.toList)
-}
-
-inline def defaultPrintc: A_Func = {
-    val program: ListBuffer[A_Instr] = ListBuffer()
-
-    program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
-    program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_MovTo(A_Reg(A_RegName.R2), A_Reg(A_RegName.R1), CHAR_SIZE)
-    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(PRINTC_LBL_STR_NAME))))
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
-    program += A_Call(A_ExternalLabel(PRINTF))
-    program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE)
-    program += A_Call(A_ExternalLabel(F_FLUSH))
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
-    program += A_Pop(A_Reg(A_RegName.BasePtr))
-    program += A_Ret
-
-    A_Func(A_InstrLabel(PRINTC_LABEL), program.toList)
-}
-
-inline def defaultPrintp: A_Func = {
-    val program: ListBuffer[A_Instr] = ListBuffer()
-
-    program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
-    program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_MovTo(A_Reg(A_RegName.R2), A_Reg(A_RegName.R1), PTR_SIZE)
-    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(PRINTP_LBL_STR_NAME))))
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
-    program += A_Call(A_ExternalLabel(PRINTF))
-    program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE)
-    program += A_Call(A_ExternalLabel(F_FLUSH))
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
-    program += A_Pop(A_Reg(A_RegName.BasePtr))
-    program += A_Ret
-
-    A_Func(A_InstrLabel(PRINTP_LABEL), program.toList)
-}
+inline def defaultPrintp: A_Func = defPrint(PTR_SIZE, A_DataLabel(PRINTP_LBL_STR_NAME), A_InstrLabel(PRINTP_LABEL))
 
 inline def defaultPrintb: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
