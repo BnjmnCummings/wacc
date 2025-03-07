@@ -161,10 +161,10 @@ def defaultFuncsLabelToFunc: Map[A_DefaultLabel, A_Func] = Map(
 inline def defaultExit: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
     program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Call(EXIT)
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
     program += A_Ret
 
@@ -176,7 +176,7 @@ inline def defaultOverflow: A_Func = {
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Lea(A_Reg(A_RegName.Arg1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(OVERFLOW_LBL_STR_NAME)))
     program += A_Call(PRINTS_LABEL)
-    program += A_MovTo(A_Reg(A_RegName.Arg1), A_Imm(ERR_EXIT_CODE), EXIT_CODE_SIZE)
+    program += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(ERR_EXIT_CODE), EXIT_CODE_SIZE)
     program += A_Call(EXIT)
 
     A_Func(ERR_OVERFLOW_LABEL, program.toList)
@@ -190,15 +190,15 @@ inline def defPrint(size: A_OperandSize, dataLabel: A_DataLabel, defLabel: A_Def
     val program: ListBuffer[A_Instr] = ListBuffer()
 
     program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_MovTo(A_Reg(A_RegName.Arg2), A_Reg(A_RegName.Arg1), size)
+    program += A_Mov(A_Reg(A_RegName.Arg2), A_Reg(A_RegName.Arg1), size)
     program += A_Lea(A_Reg(A_RegName.Arg1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(dataLabel)))
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
+    program += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
     program += A_Call(PRINTF)
-    program += A_MovTo(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
     program += A_Call(F_FLUSH)
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
     program += A_Ret
 
@@ -209,13 +209,13 @@ inline def defaultPrintln: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
 
     program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Lea(A_Reg(A_RegName.Arg1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(PRINTLN_LBL_STR_NAME)))
     program += A_Call(PUTS)
-    program += A_MovTo(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
     program += A_Call(F_FLUSH)
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
     program += A_Ret
 
@@ -232,7 +232,7 @@ inline def defaultPrintb: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
 
     program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Cmp(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), BYTE_SIZE)
     program += A_Jmp(PRINTB_FALSE_LABEL, A_Cond.NEq)
@@ -243,13 +243,13 @@ inline def defaultPrintb: A_Func = {
     program += A_Lea(A_Reg(A_RegName.Arg3), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(PRINTB_TRUE_LBL_STR_NAME)))
 
     program += A_LabelStart(PRINTB_TRUE_LABEL)
-    program += A_MovTo(A_Reg(A_RegName.Arg2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.Arg3), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE)
+    program += A_Mov(A_Reg(A_RegName.Arg2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.Arg3), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE)
     program += A_Lea(A_Reg(A_RegName.Arg1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(PRINTB_LBL_STR_NAME)))
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
+    program += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
     program += A_Call(PRINTF)
-    program += A_MovTo(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
     program += A_Call(F_FLUSH)
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
     program += A_Ret
 
@@ -260,16 +260,16 @@ inline def defaultPrints: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
 
     program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_MovTo(A_Reg(A_RegName.Arg3), A_Reg(A_RegName.Arg1), PTR_SIZE)
-    program += A_MovTo(A_Reg(A_RegName.Arg2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.Arg1), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE)
+    program += A_Mov(A_Reg(A_RegName.Arg3), A_Reg(A_RegName.Arg1), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.Arg2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.Arg1), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE)
     program += A_Lea(A_Reg(A_RegName.Arg1), A_MemOffset( A_Reg(A_RegName.InstrPtr), A_OffsetLbl(PRINTS_LBL_STR_NAME)))
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
+    program += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
     program += A_Call(PRINTF)
-    program += A_MovTo(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
     program += A_Call(F_FLUSH)
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
     program += A_Ret
 
@@ -280,17 +280,17 @@ inline def defRead(size: A_OperandSize, dataLabel: A_DataLabel, defLabel: A_Defa
     val program: ListBuffer[A_Instr] = ListBuffer()
 
     program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
-    program += A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.Arg1), size)
+    program += A_Mov(A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.Arg1), size)
     program += A_Lea(A_Reg(A_RegName.Arg2), A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(ZERO_IMM)))
     program += A_Lea(A_Reg(A_RegName.Arg1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(dataLabel)))
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
+    program += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
     program += A_Call(SCANF)
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(ZERO_IMM))), size)
+    program += A_Mov(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(ZERO_IMM))), size)
     program += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
     program += A_Ret
 
@@ -307,12 +307,12 @@ inline def defRuntimeErr(dataLabel: A_DataLabel, defLabel: A_DefaultLabel): A_Fu
     
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Lea(A_Reg(A_RegName.Arg1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(dataLabel)))
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
+    program += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
     program += A_Call(PRINTF)
     // Put 0 into the 64-bit R1 (rdi) to flush all output streams. Note: PTR_SIZE because first argument of fflush is a ptr
-    program += A_MovTo(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
     program += A_Call(F_FLUSH)
-    program += A_MovTo(A_Reg(A_RegName.Arg1), A_Imm(ERR_EXIT_CODE), BYTE_SIZE)
+    program += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(ERR_EXIT_CODE), BYTE_SIZE)
     program += A_Call(EXIT)
 
     A_Func(defLabel, program.toList)
@@ -324,7 +324,7 @@ inline def defRuntimeErr(callLabel: A_DefaultLabel, dataLabel: A_DataLabel, defL
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Lea(A_Reg(A_RegName.Arg1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(dataLabel)))
     program += A_Call(callLabel)
-    program += A_MovTo(A_Reg(A_RegName.Arg1), A_Imm(ERR_EXIT_CODE), BYTE_SIZE)
+    program += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(ERR_EXIT_CODE), BYTE_SIZE)
     program += A_Call(EXIT)
 
     A_Func(defLabel, program.toList)
@@ -344,12 +344,12 @@ inline def defaultMalloc: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
 
     program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Call(MALLOC)
     program += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
     program += A_Jmp(ERR_OUT_OF_MEMORY_LABEL, A_Cond.Eq)
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
     program += A_Ret
 
@@ -360,10 +360,10 @@ inline def defaultFree: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
 
     program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Call(FREE)
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
     program += A_Ret
 
@@ -374,12 +374,12 @@ inline def defaultFreePair: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
 
     program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Cmp(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
     program += A_Jmp(ERR_OUT_OF_MEMORY_LABEL, A_Cond.Eq)
     program += A_Call(FREE)
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
+    program += A_Mov(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
     program += A_Ret
 

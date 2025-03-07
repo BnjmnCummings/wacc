@@ -22,8 +22,8 @@ def formatInstr(instr: A_Instr)(using writer: Writer): Unit = instr match
 
     case A_Push(op) => formatUnaryOp(op, PTR_SIZE, "push")
     case A_Pop(op) => formatUnaryOp(op, PTR_SIZE, "pop")
-    case A_MovTo(opD, opS, opSize) => formatBinaryOp(opD, opS, opSize, opSize, "mov")
-    case A_MovFrom(opD, opS, opSize) => formatBinaryOp(opD, opS, opSize, opSize, "mov")
+    case A_Mov(opD, opS, opSize) => formatBinaryOp(opD, opS, opSize, opSize, "mov")
+    case A_Mov(opD, opS, opSize) => formatBinaryOp(opD, opS, opSize, opSize, "mov")
     case A_Movzx(opD, opS, opSize1, opSize2) => formatBinaryOp(opD, opS, opSize1, opSize2, "movzx")
     case A_Lea(opD, opS) => formatBinaryOp(opD, opS, PTR_SIZE, PTR_SIZE, "lea")
     
