@@ -25,14 +25,13 @@ def formatInstr(instr: A_Instr)(using writer: Writer): Unit = instr match
     case A_MovTo(opD, opS, opSize) => formatBinaryOp(opD, opS, opSize, opSize, "mov")
     case A_MovFrom(opD, opS, opSize) => formatBinaryOp(opD, opS, opSize, opSize, "mov")
     case A_Movzx(opD, opS, opSize1, opSize2) => formatBinaryOp(opD, opS, opSize1, opSize2, "movzx")
-    case A_MovDeref(opD, opS, opSize) => formatBinaryOp(opD, opS, opSize, opSize, "mov")
-    case A_MovFromDeref(opD, opS, opSize) => formatBinaryOp(opD, opS, opSize, opSize, "mov")
     case A_Lea(opD, opS) => formatBinaryOp(opD, opS, PTR_SIZE, PTR_SIZE, "lea")
     
     case A_Call(label) => label match
         case A_InstrLabel(name) => writer.write(s"call $name")
         case A_ExternalLabel(name) => writer.write(s"call $name@plt")
         case A_DataLabel(_) => throw new IllegalArgumentException("Cannot call a data label")
+        case A_DefaultLabel(name) => writer.write(s"call $name")
     case A_Ret => writer.write("ret")
 
     case A_CDQ => writer.write("cdq")

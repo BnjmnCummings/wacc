@@ -4,7 +4,7 @@ case class A_Prog(data: List[A_StoredStr], funcs: List[A_Func])
 
 sealed trait A_Proc
 
-case class A_Func(lbl: A_InstrLabel, instrs: List[A_Instr]) extends A_Proc
+case class A_Func(lbl: A_Label, instrs: List[A_Instr]) extends A_Proc
 
 case class A_DataFunc(lbl: A_InstrLabel, instrs: List[A_Instr], data: A_StoredStr) extends A_Proc
 
@@ -25,15 +25,13 @@ case class A_And(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_Bi
 case class A_Xor(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_BitwiseOp 
 
 case class A_Cmp(op1: A_Reg, op2: A_Operand, opSize: A_OperandSize) extends A_Instr
-case class A_Jmp(label: A_InstrLabel, condition: A_Cond) extends A_Instr
-case class A_LabelStart(label: A_InstrLabel) extends A_Instr
+case class A_Jmp(label: A_Label, condition: A_Cond) extends A_Instr
+case class A_LabelStart(label: A_Label) extends A_Instr
 
 case class A_Push(op: A_Reg) extends A_Instr
 case class A_Pop(op: A_Reg) extends A_Instr
 case class A_MovTo(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_Instr
 case class A_MovFrom(opD: A_Operand, opS: A_Reg, opSize: A_OperandSize) extends A_Instr
-case class A_MovDeref(opD: A_RegDeref, opS: A_Operand, opSize: A_OperandSize) extends A_Instr
-case class A_MovFromDeref(opD: A_Operand, opS: A_RegDeref, opSize: A_OperandSize) extends A_Instr
 case class A_Movzx(opD: A_Reg, opS: A_Reg, opSize1: A_OperandSize, opSize2: A_OperandSize) extends A_Instr
 case class A_Lea(opD: A_Reg, opS: A_MemOffset) extends A_Instr
 
@@ -50,6 +48,7 @@ sealed trait A_Label:
 
 case class A_DataLabel(val name: String) extends A_Label 
 case class A_InstrLabel(val name: String) extends A_Label 
+case class A_DefaultLabel(val name: String) extends A_Label
 
 case class A_ExternalLabel(val name: String) extends A_Label
 
