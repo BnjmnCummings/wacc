@@ -46,7 +46,7 @@ val testSettings = scala.collection.immutable.HashSet(
     // "integration_advanced",
     "integration_array",
     "integration_expressions",
-    // "integration_nested_functions",
+    "integration_nested_functions",
     "integration_simple_functions",
     "integration_if",
     "integration_IO_all",
@@ -58,7 +58,7 @@ val testSettings = scala.collection.immutable.HashSet(
     "integration_runtimeErr_divideByZero",
     "integration_runtimeErr_integerOverflow",
     "integration_runtimeErr_nullDereference",
-    // "integration_scope",
+    "integration_scope",
     "integration_sequence",
     "integration_variables",
     "integration_while"
