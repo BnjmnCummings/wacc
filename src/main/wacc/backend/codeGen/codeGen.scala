@@ -673,17 +673,12 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: StackTables)(
             val ty = index match
                 case PairIndex.First => pairTy.ty1
                 case PairIndex.Second => pairTy.ty2
-            
-            val tySize = sizeOf(ty)
 
-            builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), tySize)
+            builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), sizeOf(ty))
         case _ =>
-            // we assume the value in RetReg is a pointer to the first element and deref this value to get value stored
+            // Either T_ArrayElem or T_PairElem
+            // we assume the value in RetReg is a pointer to the element and deref this value to get value stored
         
-            builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), PTR_SIZE)
-        case T_PairElem(index, v) =>
-            // we assume the value in RetReg is a pointer to fst p and deref this value to get value stored
-
             builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), PTR_SIZE)
 
     builder.toList
