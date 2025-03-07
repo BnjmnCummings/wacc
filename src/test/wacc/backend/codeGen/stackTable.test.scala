@@ -1,12 +1,12 @@
 package wacc.codeGen
 
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.matchers.should.Matchers.*
 import wacc.q_ast.Name
 import wacc.TypeInfo
 import wacc.KnownType
 
-class stack_table_test extends AnyFlatSpec with Matchers {
+class stack_table_test extends AnyFlatSpec {
 
     "StackTable" should "be ablt to add variables to the table via addScope" in {
         val stackTable = StackTable(0)
