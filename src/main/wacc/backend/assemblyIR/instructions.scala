@@ -22,7 +22,6 @@ case class A_IMul(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_A
 case class A_IDiv(op: A_Reg, opSize: A_OperandSize) extends A_ArithmeticOp
 
 case class A_And(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_BitwiseOp 
-case class A_Or(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_BitwiseOp 
 case class A_Xor(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_BitwiseOp 
 
 case class A_Cmp(op1: A_Reg, op2: A_Operand, opSize: A_OperandSize) extends A_Instr
