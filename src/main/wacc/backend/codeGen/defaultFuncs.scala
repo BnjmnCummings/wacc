@@ -288,7 +288,7 @@ inline def defRead(size: A_OperandSize, dataLabel: A_DataLabel, defLabel: A_Defa
     program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(dataLabel)))
     program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
     program += A_Call(SCANF)
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(ZERO_IMM))), CHAR_SIZE)
+    program += A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(ZERO_IMM))), size)
     program += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
     program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
