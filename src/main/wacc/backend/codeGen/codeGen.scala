@@ -677,18 +677,12 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: StackTables)(
             val tySize = sizeOf(ty)
 
             builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), tySize)
-        case T_ArrayElem(v, indicies) =>
-            // we assume the value in RetReg is a pointer to fst p
-
-            // deref this value to get value stored
-            //val tySize = sizeOf(getArrInnerType(ctx.typeInfo.varTys(v)))
+        case _ =>
+            // we assume the value in RetReg is a pointer to the first element and deref this value to get value stored
         
             builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), PTR_SIZE)
         case T_PairElem(index, v) =>
-            // we assume the value in RetReg is a pointer to fst p
-
-            // deref this value to get value stored
-            //val tySize = ??? // TODO: create a function to unwrap this as many times as required to get the inner types!
+            // we assume the value in RetReg is a pointer to fst p and deref this value to get value stored
 
             builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), PTR_SIZE)
 
@@ -699,11 +693,6 @@ private def genFuncCall(v: Name, args: List[T_Expr], stackTable: StackTables)(us
 
     val funcStackTable = ctx.stackTables.funcTables(v)
 
-    // argNames.zip(args).foreach((arg, expr) => {
-    //     gen(expr, stackTable).zip(funcStackTable.putDownInstrs(args))
-    //     builder += A_MovFrom(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(funcStackTable.apply(arg))), A_Reg(A_RegName.RetReg), sizeOf(ctx.typeInfo.varTys(arg)))
-    // })
-    // builder += A_Push(A_Reg(A_RegName.StackPtr))
     builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(funcStackTable.paramsSize), PTR_SIZE)
 
     val names = ctx.typeInfo.funcTys(v)._2
@@ -715,7 +704,6 @@ private def genFuncCall(v: Name, args: List[T_Expr], stackTable: StackTables)(us
         }
     )
 
-    // builder += A_Pop(A_Reg(A_RegName.R1))
     builder += A_Call(funcLabelGen(v))
 
     builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(funcStackTable.paramsSize), PTR_SIZE)
@@ -774,8 +762,7 @@ inline def sizeOf(ty: SemType): A_OperandSize = ty match
     case wacc.KnownType.String => PTR_SIZE
     case wacc.KnownType.Array(ty) => PTR_SIZE
     case KnownType.Pair(_, _) => PTR_SIZE
-    case KnownType.Ident =>
-         ???
+    case KnownType.Ident => ???
 
 inline def typeToLetter(ty: SemType): String = ty match
     case ? => throw Exception("Should not have semType ? in codeGen")
