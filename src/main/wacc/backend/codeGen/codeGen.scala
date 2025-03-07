@@ -30,7 +30,7 @@ inline def NO_OFFSET = A_OffsetImm(ZERO_IMM)
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx(typeInfo, getTables(t_tree, typeInfo))
 
-    val _funcs = t_tree.funcs.map(gen)// ++ ctx.defaultFuncsList
+    val _funcs = t_tree.funcs.map(gen)
 
     // building main function body
     val builder: ListBuffer[A_Instr] = ListBuffer()
@@ -215,7 +215,6 @@ private def genRead(l: T_LValue, ty: SemType, stackTable: StackTables)(using ctx
 
         
         case T_PairElem(index, T_ArrayElem(v, indices)) =>
-            // see above, use genArrayElem
             builder += A_Push(A_Reg(A_RegName.RetReg))
 
             genArrayElem(v, indices, stackTable)
@@ -499,7 +498,6 @@ private def genNeg(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): L
 
     builder ++= gen(x, stackTable)
 
-    // CONSIDER: DO WE NEED TO SAVE R1 BEFORE THIS?
     builder += A_MovTo(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), INT_SIZE)
     builder += A_Sub(A_Reg(A_RegName.Arg1), A_Reg(A_RegName.RetReg), INT_SIZE)
 
@@ -665,7 +663,7 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: StackTables)(
             // We assume pointer to our elem is stored in RetReg
             
             // deref this value to get value stored
-            val pairTy = ctx.typeInfo.varTys(name).asInstanceOf[KnownType.Pair] // TODO: as instance of!!! (crashing out)
+            val pairTy = ctx.typeInfo.varTys(name).asInstanceOf[KnownType.Pair]
 
             val ty = index match
                 case PairIndex.First => pairTy.ty1
@@ -675,7 +673,6 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: StackTables)(
         case _ =>
             // Either T_ArrayElem or T_PairElem
             // we assume the value in RetReg is a pointer to the element and deref this value to get value stored
-        
             builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), NO_OFFSET)), PTR_SIZE)
 
     builder.toList
