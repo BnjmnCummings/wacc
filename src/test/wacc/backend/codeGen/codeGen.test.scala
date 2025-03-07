@@ -13,7 +13,7 @@ import org.scalatest.matchers.should.Matchers.*
 class code_gen_test extends AnyFlatSpec, ConditionalRun {
 
     runIfTrue(testSettings, "code_gen_test", () => {
-         "genIntLiteral" should "generate correct assembly for integer literals" in {
+        "genIntLiteral" should "generate correct assembly for integer literals" in {
             given ctx: CodeGenCtx = CodeGenCtx(
                 TypeInfo(
                     Map(), 
