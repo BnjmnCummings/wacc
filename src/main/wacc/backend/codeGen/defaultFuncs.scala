@@ -276,19 +276,19 @@ inline def defaultPrints: A_Func = {
     A_Func(A_InstrLabel(PRINTS_LABEL), program.toList)
 }
 
-inline def defaultReadc: A_Func = {
+inline def defRead(size: A_OperandSize, dataLabel: A_DataLabel, instrLabel: A_InstrLabel): A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
 
     program += A_Push(A_Reg(A_RegName.BasePtr))
     program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
     program += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
-    program += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.R1), CHAR_SIZE)
+    program += A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.R1), CHAR_SIZE)
     program += A_Lea(A_Reg(A_RegName.R2), A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(0)))
     program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(READC_LBL_STR_NAME))))
     program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
     program += A_Call(A_ExternalLabel(SCANF))
-    program += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(0))), CHAR_SIZE)
+    program += A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(0))), CHAR_SIZE)
     program += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
     program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
     program += A_Pop(A_Reg(A_RegName.BasePtr))
@@ -297,26 +297,9 @@ inline def defaultReadc: A_Func = {
     A_Func(A_InstrLabel(READC_LABEL), program.toList)
 }
 
-inline def defaultReadi: A_Func = {
-    val program: ListBuffer[A_Instr] = ListBuffer()
+inline def defaultReadc: A_Func = defRead(CHAR_SIZE, A_DataLabel(READC_LBL_STR_NAME), A_InstrLabel(READC_LABEL))
 
-    program += A_Push(A_Reg(A_RegName.BasePtr))
-    program += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
-    program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
-    program += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.R1), INT_SIZE)
-    program += A_Lea(A_Reg(A_RegName.R2), A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(0)))
-    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(READI_LBL_STR_NAME))))
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
-    program += A_Call(A_ExternalLabel(SCANF))
-    program += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(0))), INT_SIZE)
-    program += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(16), PTR_SIZE)
-    program += A_MovTo(A_Reg(A_RegName.StackPtr), A_Reg(A_RegName.BasePtr), PTR_SIZE)
-    program += A_Pop(A_Reg(A_RegName.BasePtr))
-    program += A_Ret
-
-    A_Func(A_InstrLabel(READI_LABEL), program.toList)
-}
+inline def defaultReadi: A_Func = defRead(INT_SIZE, A_DataLabel(READI_LBL_STR_NAME), A_InstrLabel(READI_LABEL))
 
 inline def defaultBadChar: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
