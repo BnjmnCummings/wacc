@@ -222,14 +222,27 @@ private def genRead(l: T_LValue, ty: SemType, stackTable: StackTables)(using ctx
             )
         // Read fst fst p is not allowed - we can only do read fst p
         case T_PairElem(index, T_Ident(v)) => 
+            builder += A_Push(A_Reg(A_RegName.RetReg))
+
             val offset = index match
                 case PairIndex.First => ZERO_IMM
                 case PairIndex.Second => opSizeToInt(PTR_SIZE)
             
-            builder ++= stackTable.set(v)
+            builder ++= stackTable.get(v)
+
+            builder += A_Pop(A_Reg(A_RegName.R1))
+            builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(offset))), A_Reg(A_RegName.R1), sizeOf(ty))
+
         
-        case T_PairElem(index, T_ArrayElem(v, indices)) => ???
+        case T_PairElem(index, T_ArrayElem(v, indices)) =>
             // see above, use genArrayElem
+            builder += A_Push(A_Reg(A_RegName.RetReg))
+
+            genArrayElem(v, indices, stackTable)
+
+            builder += A_Pop(A_Reg(A_RegName.R1))
+
+            A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm((0)))), A_Reg(A_RegName.R1), sizeOf(ty))
 
         case T_PairElem(_, _) => throw new Exception("Can't read from nested pairs. Should be caught in type checker")
 
@@ -247,15 +260,14 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: StackTables)(using ctx: 
             builder += A_Sub(A_Reg(A_RegName.R1), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
 
             ctx.addDefaultFunc(FREE_LABEL)
-
             builder += A_Call(A_InstrLabel(FREE_LABEL))
         case KnownType.Pair(_, _) =>
             builder += A_Cmp(A_Reg(A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE)
+
+            ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
             builder += A_Jmp(A_InstrLabel(ERR_NULL_PAIR_LABEL), A_Cond.Eq)
 
             ctx.addDefaultFunc(FREE_PAIR_LABEL)
-            ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
-
             builder += A_Call(A_InstrLabel(FREE_PAIR_LABEL))
         case _ => throw Exception("Invalid type with free. Should be caught in type checker!")
     
