@@ -24,7 +24,7 @@ class code_gen_test extends AnyFlatSpec, ConditionalRun {
                 )
             )
             val result = genIntLiteral(42)
-            result shouldBe List(A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(42), INT_SIZE))
+            result shouldBe List(A_Mov(A_Reg(A_RegName.RetReg), A_Imm(42), INT_SIZE))
         }
 
         "genBoolLiteral" should "generate correct assembly for boolean literals" in {
@@ -39,8 +39,8 @@ class code_gen_test extends AnyFlatSpec, ConditionalRun {
             )
             val resultTrue = genBoolLiteral(true)
             val resultFalse = genBoolLiteral(false)
-            resultTrue shouldBe List(A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE))
-            resultFalse shouldBe List(A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(FALSE), BOOL_SIZE))
+            resultTrue shouldBe List(A_Mov(A_Reg(A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE))
+            resultFalse shouldBe List(A_Mov(A_Reg(A_RegName.RetReg), A_Imm(FALSE), BOOL_SIZE))
         }
 
         "genCharLiteral" should "generate correct assembly for char literals" in {
@@ -54,7 +54,7 @@ class code_gen_test extends AnyFlatSpec, ConditionalRun {
                 )
             )
             val result = genCharLiteral('a')
-            result shouldBe List(A_MovTo(A_Reg(A_RegName.RetReg), A_Imm('a'.toInt), CHAR_SIZE))
+            result shouldBe List(A_Mov(A_Reg(A_RegName.RetReg), A_Imm('a'.toInt), CHAR_SIZE))
         }
 
         "genStringLiteral" should "generate correct assembly for string literals" in {
@@ -90,7 +90,7 @@ class code_gen_test extends AnyFlatSpec, ConditionalRun {
             val stackTables = StackTables(Some(stackTable))
             val result = genIdent(Name("x", 0), stackTables)
             result shouldBe List(
-                A_MovTo(
+                A_Mov(
                     A_Reg(A_RegName.RetReg), 
                     A_RegDeref(A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(16))), 
                     INT_SIZE
