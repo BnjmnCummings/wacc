@@ -143,8 +143,8 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: StackTabl
                 builder ++= gen(indices(i), stackTable)
                 
                 builder ++= indexArray(opSizeToInt(PTR_SIZE))
-
-                builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(0))), PTR_SIZE)
+            
+                builder += A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(0))), PTR_SIZE)
             
             builder += A_Push(A_Reg(A_RegName.RetReg))
             builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(0), PTR_SIZE)
@@ -160,7 +160,7 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: StackTabl
             builder ++= getPairElemPtr(index, v, stackTable)
             builder += A_Pop(A_Reg(A_RegName.R1))
 
-            builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.R1), PTR_SIZE)
+            builder += A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.R1), PTR_SIZE)
     
     builder.toList
 }
@@ -192,7 +192,7 @@ private def genRead(l: T_LValue, ty: SemType, stackTable: StackTables)(using ctx
             builder ++= getPointerToArrayElem(v, indices, stackTable)
             builder += A_Pop(A_Reg(A_RegName.R1))
             
-            builder += A_MovDeref(
+            builder += A_MovFrom(
                 A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), 
                 A_Reg(A_RegName.R1),
                 sizeOf(ty)
@@ -208,7 +208,7 @@ private def genRead(l: T_LValue, ty: SemType, stackTable: StackTables)(using ctx
             builder ++= stackTable.get(v)
 
             builder += A_Pop(A_Reg(A_RegName.R1))
-            builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(offset))), A_Reg(A_RegName.R1), sizeOf(ty))
+            builder += A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(offset))), A_Reg(A_RegName.R1), sizeOf(ty))
 
         
         case T_PairElem(index, T_ArrayElem(v, indices)) =>
@@ -219,7 +219,7 @@ private def genRead(l: T_LValue, ty: SemType, stackTable: StackTables)(using ctx
 
             builder += A_Pop(A_Reg(A_RegName.R1))
 
-            A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm((0)))), A_Reg(A_RegName.R1), sizeOf(ty))
+            A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm((0)))), A_Reg(A_RegName.R1), sizeOf(ty))
 
         case T_PairElem(_, _) => throw new Exception("Can't read from nested pairs. Should be caught in type checker")
 
@@ -515,7 +515,7 @@ private def genLen(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): L
     builder ++= gen(x, stackTable)
     // We now have the pointer to the first element stored in RAX (64-bit RetReg)
     // We know the size is stored 4 bytes before the first element hence we can do a reg deref of retreg -4 to find the size
-    builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE)
+    builder += A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE)
 
     builder.toList
 
@@ -582,7 +582,7 @@ private def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: St
         builder ++= gen(indices(i), stackTable)
         
         builder ++= indexArray(opSizeToInt(PTR_SIZE))
-        builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(0))), PTR_SIZE)
+        builder += A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(0))), PTR_SIZE)
     
     builder += A_Push(A_Reg(A_RegName.RetReg))
     builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(0), PTR_SIZE)
@@ -623,7 +623,7 @@ private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: StackTables
     val ty = unwrapArrType(ctx.typeInfo.varTys(v), indices.length)
 
     builder ++= getPointerToArrayElem(v, indices, stackTable)
-    builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), sizeOf(ty))
+    builder += A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), sizeOf(ty))
 
     builder.toList
 
@@ -668,12 +668,12 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: StackTables)(
                 case PairIndex.First => pairTy.ty1
                 case PairIndex.Second => pairTy.ty2
 
-            builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), sizeOf(ty))
+            builder += A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), sizeOf(ty))
         case _ =>
             // Either T_ArrayElem or T_PairElem
             // we assume the value in RetReg is a pointer to the element and deref this value to get value stored
         
-            builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), PTR_SIZE)
+            builder += A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), PTR_SIZE)
 
     builder.toList
 
@@ -711,11 +711,12 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTab
     builder += A_Call(A_InstrLabel(MALLOC_LABEL))
     builder += A_MovTo(A_Reg(A_RegName.R11), A_Reg(A_RegName.RetReg), PTR_SIZE)
     builder += A_Add(A_Reg(A_RegName.R11), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
-    builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length), INT_SIZE)
+    builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(length), INT_SIZE)
+    builder += A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Reg(A_RegName.RetReg), INT_SIZE)
 
     for (i <- 0 to length - 1) { 
         builder ++= gen(xs(i), stackTable)
-        builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(i * intSizeOf(ty)))), A_Reg(A_RegName.RetReg), sizeOf(ty))
+        builder += A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(i * intSizeOf(ty)))), A_Reg(A_RegName.RetReg), sizeOf(ty))
     }
 
     builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R11), PTR_SIZE)
@@ -733,9 +734,9 @@ private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType, stack
 
     builder += A_MovTo(A_Reg(A_RegName.R11), A_Reg(A_RegName.RetReg), PTR_SIZE)
     builder ++= gen(x1, stackTable)
-    builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.RetReg), sizeOf(ty1))
+    builder += A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.RetReg), sizeOf(ty1))
     builder ++= gen(x2, stackTable)
-    builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Reg(A_RegName.RetReg), sizeOf(ty2))
+    builder += A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Reg(A_RegName.RetReg), sizeOf(ty2))
     builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R11), PTR_SIZE)
 
     builder.toList
