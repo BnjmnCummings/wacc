@@ -36,7 +36,10 @@ def formatFunction(procedure: A_Proc)(using writer: Writer) = procedure match
 def formatBodyInstr(instrs: List[A_Instr])(using writer: Writer) =
     instrs.foreach(instr => instr match 
         case A_LabelStart(label) => writer.write(s"${label.name}:\n")
-        case _ => writer.write("\t" + formatInstr(instr) + "\n")
+        case _ => 
+            writer.write("\t")
+            formatInstr(instr)
+            writer.write("\n")
     )
     
 

@@ -41,7 +41,6 @@ class CodeGenCtx(val typeInfo: TypeInfo, val stackTables: TableCtx) {
     }
 
     def storedStringsList: List[A_StoredStr] = storedStrings.toList
-    // TODO @Jack : Create a function that maps a KnownType to a size - this is useful for things like read (char/int)
 
     private var instrLabelCount: Int = 0
 

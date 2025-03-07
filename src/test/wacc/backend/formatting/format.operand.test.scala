@@ -80,7 +80,7 @@ class format_mem_offset_test extends AnyFlatSpec {
     it should "be able to format a register offset" in {
         formatMemOffset(A_MemOffset(
             A_Reg(A_RegName.RetReg), 
-            A_OffsetReg(A_Reg(A_RegName.R1)))
+            A_OffsetReg(A_Reg(A_RegName.Arg1)))
             ) should be ("[rax + rdi]")
     }
 }
@@ -95,19 +95,19 @@ class format_offset_test extends AnyFlatSpec {
     }
 
     it should "be able to format a register offset" in {
-        formatOffset(A_OffsetReg(A_Reg(A_RegName.R1))) should be ("+ rdi")
+        formatOffset(A_OffsetReg(A_Reg(A_RegName.Arg1))) should be ("+ rdi")
     }
 }
 
 class format_reg_test extends AnyFlatSpec {
     "formatReg" should "be able to format 64 bit registers" in {
         formatReg(A_Reg(A_RegName.RetReg), A_OperandSize.A_64) should be ("rax")
-        formatReg(A_Reg(A_RegName.R1), A_OperandSize.A_64) should be ("rdi")
-        formatReg(A_Reg(A_RegName.R2), A_OperandSize.A_64) should be ("rsi")
-        formatReg(A_Reg(A_RegName.R3), A_OperandSize.A_64) should be ("rdx")
-        formatReg(A_Reg(A_RegName.R4), A_OperandSize.A_64) should be ("rcx")
-        formatReg(A_Reg(A_RegName.R5), A_OperandSize.A_64) should be ("r8")
-        formatReg(A_Reg(A_RegName.R6), A_OperandSize.A_64) should be ("r9")
+        formatReg(A_Reg(A_RegName.Arg1), A_OperandSize.A_64) should be ("rdi")
+        formatReg(A_Reg(A_RegName.Arg2), A_OperandSize.A_64) should be ("rsi")
+        formatReg(A_Reg(A_RegName.Arg3), A_OperandSize.A_64) should be ("rdx")
+        formatReg(A_Reg(A_RegName.Arg4), A_OperandSize.A_64) should be ("rcx")
+        formatReg(A_Reg(A_RegName.Arg5), A_OperandSize.A_64) should be ("r8")
+        formatReg(A_Reg(A_RegName.Arg6), A_OperandSize.A_64) should be ("r9")
         formatReg(A_Reg(A_RegName.R7), A_OperandSize.A_64) should be ("r10")
         formatReg(A_Reg(A_RegName.R8), A_OperandSize.A_64) should be ("r11")
         formatReg(A_Reg(A_RegName.R9), A_OperandSize.A_64) should be ("rbx")
@@ -121,12 +121,12 @@ class format_reg_test extends AnyFlatSpec {
 
     it should "be able to format 32 bit registers" in {
         formatReg(A_Reg(A_RegName.RetReg), A_OperandSize.A_32) should be ("eax")
-        formatReg(A_Reg(A_RegName.R1), A_OperandSize.A_32) should be ("edi")
-        formatReg(A_Reg(A_RegName.R2), A_OperandSize.A_32) should be ("esi")
-        formatReg(A_Reg(A_RegName.R3), A_OperandSize.A_32) should be ("edx")
-        formatReg(A_Reg(A_RegName.R4), A_OperandSize.A_32) should be ("ecx")
-        formatReg(A_Reg(A_RegName.R5), A_OperandSize.A_32) should be ("r8d")
-        formatReg(A_Reg(A_RegName.R6), A_OperandSize.A_32) should be ("r9d")
+        formatReg(A_Reg(A_RegName.Arg1), A_OperandSize.A_32) should be ("edi")
+        formatReg(A_Reg(A_RegName.Arg2), A_OperandSize.A_32) should be ("esi")
+        formatReg(A_Reg(A_RegName.Arg3), A_OperandSize.A_32) should be ("edx")
+        formatReg(A_Reg(A_RegName.Arg4), A_OperandSize.A_32) should be ("ecx")
+        formatReg(A_Reg(A_RegName.Arg5), A_OperandSize.A_32) should be ("r8d")
+        formatReg(A_Reg(A_RegName.Arg6), A_OperandSize.A_32) should be ("r9d")
         formatReg(A_Reg(A_RegName.R7), A_OperandSize.A_32) should be ("r10d")
         formatReg(A_Reg(A_RegName.R8), A_OperandSize.A_32) should be ("r11d")
         formatReg(A_Reg(A_RegName.R9), A_OperandSize.A_32) should be ("ebx")
@@ -140,12 +140,12 @@ class format_reg_test extends AnyFlatSpec {
 
     it should "be able to format 16 bit registers" in {
         formatReg(A_Reg(A_RegName.RetReg), A_OperandSize.A_16) should be ("ax")
-        formatReg(A_Reg(A_RegName.R1), A_OperandSize.A_16) should be ("di")
-        formatReg(A_Reg(A_RegName.R2), A_OperandSize.A_16) should be ("si")
-        formatReg(A_Reg(A_RegName.R3), A_OperandSize.A_16) should be ("dx")
-        formatReg(A_Reg(A_RegName.R4), A_OperandSize.A_16) should be ("cx")
-        formatReg(A_Reg(A_RegName.R5), A_OperandSize.A_16) should be ("r8w")
-        formatReg(A_Reg(A_RegName.R6), A_OperandSize.A_16) should be ("r9w")
+        formatReg(A_Reg(A_RegName.Arg1), A_OperandSize.A_16) should be ("di")
+        formatReg(A_Reg(A_RegName.Arg2), A_OperandSize.A_16) should be ("si")
+        formatReg(A_Reg(A_RegName.Arg3), A_OperandSize.A_16) should be ("dx")
+        formatReg(A_Reg(A_RegName.Arg4), A_OperandSize.A_16) should be ("cx")
+        formatReg(A_Reg(A_RegName.Arg5), A_OperandSize.A_16) should be ("r8w")
+        formatReg(A_Reg(A_RegName.Arg6), A_OperandSize.A_16) should be ("r9w")
         formatReg(A_Reg(A_RegName.R7), A_OperandSize.A_16) should be ("r10w")
         formatReg(A_Reg(A_RegName.R8), A_OperandSize.A_16) should be ("r11w")
         formatReg(A_Reg(A_RegName.R9), A_OperandSize.A_16) should be ("bx")
@@ -159,12 +159,12 @@ class format_reg_test extends AnyFlatSpec {
 
     it should "be able to format 8 bit registers" in {
         formatReg(A_Reg(A_RegName.RetReg), A_OperandSize.A_8) should be ("al")
-        formatReg(A_Reg(A_RegName.R1), A_OperandSize.A_8) should be ("dil")
-        formatReg(A_Reg(A_RegName.R2), A_OperandSize.A_8) should be ("sil")
-        formatReg(A_Reg(A_RegName.R3), A_OperandSize.A_8) should be ("dl")
-        formatReg(A_Reg(A_RegName.R4), A_OperandSize.A_8) should be ("cl")
-        formatReg(A_Reg(A_RegName.R5), A_OperandSize.A_8) should be ("r8b")
-        formatReg(A_Reg(A_RegName.R6), A_OperandSize.A_8) should be ("r9b")
+        formatReg(A_Reg(A_RegName.Arg1), A_OperandSize.A_8) should be ("dil")
+        formatReg(A_Reg(A_RegName.Arg2), A_OperandSize.A_8) should be ("sil")
+        formatReg(A_Reg(A_RegName.Arg3), A_OperandSize.A_8) should be ("dl")
+        formatReg(A_Reg(A_RegName.Arg4), A_OperandSize.A_8) should be ("cl")
+        formatReg(A_Reg(A_RegName.Arg5), A_OperandSize.A_8) should be ("r8b")
+        formatReg(A_Reg(A_RegName.Arg6), A_OperandSize.A_8) should be ("r9b")
         formatReg(A_Reg(A_RegName.R7), A_OperandSize.A_8) should be ("r10b")
         formatReg(A_Reg(A_RegName.R8), A_OperandSize.A_8) should be ("r11b")
         formatReg(A_Reg(A_RegName.R9), A_OperandSize.A_8) should be ("bl")

@@ -29,12 +29,12 @@ callee save - if you need to use this within a function call, that function must
 
 enum A_RegName {
     case RetReg   // rax - caller
-    case R1       // rdi - caller, 1st arg
-    case R2       // rsi - caller, 2nd arg
-    case R3       // rdx - caller, 3rd arg
-    case R4       // rcx - caller, 4th arg
-    case R5       // r8 - caller, 5th arg
-    case R6       // r9 - caller, 6th arg
+    case Arg1       // rdi - caller, 1st arg
+    case Arg2       // rsi - caller, 2nd arg
+    case Arg3       // rdx - caller, 3rd arg
+    case Arg4       // rcx - caller, 4th arg
+    case Arg5       // r8 - caller, 5th arg
+    case Arg6       // r9 - caller, 6th arg
     case R7       // r10 - caller
     case R8       // r11 - caller
     case R9       // rbx - callee
