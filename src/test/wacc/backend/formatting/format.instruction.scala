@@ -71,7 +71,7 @@ class format_memory_ops_test extends AnyFlatSpec {
 
     it should "be able to format a mov instruction" in {
         val writer = new StringWriter()
-        formatInstr(A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(5), INT_SIZE))(using writer)
+        formatInstr(A_Mov(A_Reg(A_RegName.RetReg), A_Imm(5), INT_SIZE))(using writer)
         writer.toString should be ("mov eax, 5")
     }
 

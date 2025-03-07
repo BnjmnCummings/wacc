@@ -30,8 +30,7 @@ case class A_LabelStart(label: A_Label) extends A_Instr
 
 case class A_Push(op: A_Reg) extends A_Instr
 case class A_Pop(op: A_Reg) extends A_Instr
-case class A_MovTo(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize) extends A_Instr
-case class A_MovFrom(opD: A_Operand, opS: A_Reg, opSize: A_OperandSize) extends A_Instr
+case class A_Mov private(opD: A_Operand, opS: A_Operand, opSize: A_OperandSize) extends A_Instr
 case class A_Movzx(opD: A_Reg, opS: A_Reg, opSize1: A_OperandSize, opSize2: A_OperandSize) extends A_Instr
 case class A_Lea(opD: A_Reg, opS: A_MemOffset) extends A_Instr
 
@@ -41,7 +40,7 @@ case class A_Set(op: A_Reg, condition: A_Cond) extends A_Instr
 case class A_Call(label: A_Label) extends A_Instr
 
 // Sign extend EAX into EAX:EDX
-case object A_CDQ extends A_Instr // TODO @Ben @Zakk Implement string version of this
+case object A_CDQ extends A_Instr
 
 sealed trait A_Label:
     val name: String
@@ -54,6 +53,12 @@ case class A_ExternalLabel(val name: String) extends A_Label
 
 case object A_Ret extends A_Instr
 
+object A_Mov {
+    def apply(opD: A_Reg, opS: A_Operand, opSize: A_OperandSize): A_Mov = new A_Mov(opD, opS, opSize)
+    def apply(opD: A_Operand, opS: A_Reg, opSize: A_OperandSize): A_Mov = new A_Mov(opD, opS, opSize) 
+    def apply(opD: A_Reg, opS: A_Reg, opSize: A_OperandSize): A_Mov = new A_Mov(opD, opS, opSize)
+}
+
 enum A_Cond {
     case Eq
     case NEq
@@ -65,5 +70,4 @@ enum A_Cond {
     case NOverflow
     case Uncond
 }
-
 

@@ -258,7 +258,6 @@ class backend_integration_test extends ConditionalRun {
     * @return a pair: (exit code, output)
     */
     def runAssembly(progName: String, input: String): (Int, List[String]) = {
-        /* TODO: refactor with regex*/
         val fileName = "assembly/" + progName
         val buildExitStatus = s"./buildAss $fileName" .!
 
