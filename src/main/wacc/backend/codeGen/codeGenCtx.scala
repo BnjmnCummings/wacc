@@ -10,10 +10,10 @@ class CodeGenCtx(val typeInfo: TypeInfo, val stackTables: TableCtx) {
 
     private val defaultFuncs: mutable.Set[A_Func] = mutable.Set()
 
-    def addDefaultFunc(lbl: String): Unit = {
+    def addDefaultFunc(lbl: A_DefaultLabel): Unit = {
         defaultFuncs.add(defaultFuncsLabelToFunc(lbl))
         defaultFuncsFuncDependency(lbl).foreach(addDefaultFunc)
-        defaultFuncsStrDependency(lbl).foreach((name, str) => addStoredStr(A_DataLabel(name), str))
+        defaultFuncsStrDependency(lbl).foreach((dataLabel, errMsg) => addStoredStr(dataLabel, errMsg))
     }
 
     def defaultFuncsList: List[A_Func] = defaultFuncs.toList
@@ -41,7 +41,6 @@ class CodeGenCtx(val typeInfo: TypeInfo, val stackTables: TableCtx) {
     }
 
     def storedStringsList: List[A_StoredStr] = storedStrings.toList
-    // TODO @Jack : Create a function that maps a KnownType to a size - this is useful for things like read (char/int)
 
     private var instrLabelCount: Int = 0
 
