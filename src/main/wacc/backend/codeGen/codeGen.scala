@@ -34,10 +34,10 @@ def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
 
     builder += A_Push(A_Reg(A_RegName.BasePtr))
     builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
-    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(ctx.stackTables.mainTable.size), PTR_SIZE)
+    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(ctx.stackTables.mainTable.scopeSize), PTR_SIZE)
     builder ++= t_tree.body.flatMap(gen(_, ctx.stackTables.mainTable))
     builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(EXIT_SUCCESS), PTR_SIZE)
-    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(ctx.stackTables.mainTable.size), PTR_SIZE)
+    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(ctx.stackTables.mainTable.scopeSize), PTR_SIZE)
     builder += A_Pop(A_Reg(A_RegName.BasePtr))
     builder += A_Ret
 
@@ -110,10 +110,10 @@ private def gen(t: T_Func)(using ctx: CodeGenCtx): A_Func = {
 
     builder += A_Push(A_Reg(A_RegName.BasePtr))
     builder += A_MovTo(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
-    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(stackTable.size), PTR_SIZE)
+    builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(stackTable.scopeSize), PTR_SIZE)
     builder ++= t.body.flatMap(gen(_, stackTable))
     builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(EXIT_SUCCESS), PTR_SIZE)
-    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(stackTable.size), PTR_SIZE)
+    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(stackTable.scopeSize), PTR_SIZE)
     builder += A_Pop(A_Reg(A_RegName.BasePtr))
     builder += A_Ret
 
@@ -253,7 +253,7 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: StackTables)(using ctx: 
 private def genReturn(x: T_Expr, ty: SemType, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder: ListBuffer[A_Instr] = ListBuffer()
     builder ++= gen(x, stackTable)
-    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(stackTable.size), PTR_SIZE)
+    builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(stackTable.scopeSize), PTR_SIZE)
     builder += A_Pop(A_Reg(A_RegName.BasePtr))
     builder += A_Ret
     builder.toList
@@ -686,7 +686,7 @@ private def genFuncCall(v: Name, args: List[T_Expr], stackTable: StackTables)(us
 
     val names = ctx.typeInfo.funcTys(v)._2
     
-    (names.zip(args)).zip(funcStackTable.putDownInstrs(names)).foreach(
+    (names.zip(args)).zip(funcStackTable.argStoreInstrs(names)).foreach(
         (namesExprs, instr) => {
             builder ++= gen(namesExprs._2, stackTable)
             builder += instr

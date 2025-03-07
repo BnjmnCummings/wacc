@@ -6,27 +6,29 @@ import wacc.assemblyIR.*
 import scala.collection.mutable
 import wacc.TypeInfo
 
+// Offset produced by the function call
+def NEW_FUNCTION_OFFSET = 16
+
 class StackTables(paramTable: Option[StackTable], startOffset: Int = 0) {
     val scopedTables = ListBuffer[StackTable]()
 
-    def addScope(newScope: Set[Name], typeInfo: TypeInfo): Unit = {
-        val newTable = StackTable(currEndOffset)
-        addScoping(newScope, newTable, typeInfo)
-        scopedTables += newTable
+    var endOffset = startOffset
 
-        currEndOffset += newTable.size
+    def addScope(newScope: Set[Name], typeInfo: TypeInfo): Unit = {
+        val newTable = StackTable(endOffset)
+
+        newTable.addScope(newScope, typeInfo)
+
+        scopedTables += newTable
+        endOffset += newTable.size
     }
 
-    def getParams = paramTable.getOrElse(throw new RuntimeException("No param table")).table
+    def scopeSize = scopedTables.foldLeft(0)(_ + _.size)
 
-    def size = scopedTables.foldLeft(0)(_ + _.size)
-
-    val paramsSize = paramTable match {
+    def paramsSize = paramTable match {
         case Some(t) => t.size
         case None => 0
     }
-
-    var currEndOffset = startOffset
 
     def get(v: Name)(using codeGenCtx: CodeGenCtx): List[A_Instr] = {
         scopedTables.find(_.contains(v)) match {
@@ -36,9 +38,9 @@ class StackTables(paramTable: Option[StackTable], startOffset: Int = 0) {
                 case Some(t) =>
                      if(t.contains(v)) {
                         return List(
-                        A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(16 + t.size -t(v)))), sizeOf(codeGenCtx.typeInfo.varTys(v)))
-                        
-                ) } else { throw new RuntimeException("Variable " + v + " not found in stack tables") }
+                        A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(NEW_FUNCTION_OFFSET + t.size -t(v)))), sizeOf(codeGenCtx.typeInfo.varTys(v)))
+                        ) 
+                    } else { throw new RuntimeException("Variable " + v + " not found in stack tables") }
                 case None => throw new RuntimeException("Variable " + v + " not found in stack table")
         }
     }
@@ -47,23 +49,23 @@ class StackTables(paramTable: Option[StackTable], startOffset: Int = 0) {
         scopedTables.find(_.contains(v)) match {
             case Some(t) => 
                 return List(A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(-t(v)))), A_Reg(A_RegName.RetReg), sizeOf(codeGenCtx.typeInfo.varTys(v))))
-            case None => paramTable match {
+            case None => paramTable match
                 case Some(t) => 
-                    if(t.contains(v)) { return List(
-                        // A_MovTo(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(-opSizeToInt(PTR_SIZE)))), PTR_SIZE),
-                        A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(16 + t.size -t(v)))), A_Reg(A_RegName.RetReg), sizeOf(codeGenCtx.typeInfo.varTys(v)))
-                ) } else { throw new RuntimeException("Variable " + v + " not found in stack tables") }
+                    if(t.contains(v)) { 
+                        return List(
+                        A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.BasePtr), A_OffsetImm(NEW_FUNCTION_OFFSET + t.size -t(v)))), A_Reg(A_RegName.RetReg), sizeOf(codeGenCtx.typeInfo.varTys(v)))
+                        ) 
+                    } else { throw new RuntimeException("Variable " + v + " not found in stack tables") }
                 case None => throw new RuntimeException("Variable " + v + " not found in stack table")
-            }
         }
     }
 
-    def putDownInstrs(args: List[Name])(using codeGenCtx: CodeGenCtx): List[A_Instr] = {
-        paramTable match {
+    def argStoreInstrs(args: List[Name])(using codeGenCtx: CodeGenCtx): List[A_Instr] = {
+        paramTable match
             case Some(t) => args.map( {v =>
                 A_MovFrom(A_RegDeref(A_MemOffset(A_Reg(A_RegName.StackPtr), A_OffsetImm(paramsSize - t.table(v)))), A_Reg(A_RegName.RetReg), sizeOf(codeGenCtx.typeInfo.varTys(v)))
                 } )
-        }
+            case None => throw new RuntimeException("No parameter table found when calling on a function's stack table")
     }
 }
 
@@ -82,14 +84,10 @@ class StackTable(val basePtrOffset: Int) {
 
     def contains(v: Name) = table.contains(v)
 
-    def add(v: Name, size: Int): Unit = {
-        this.size += size
-        table += (v -> this.size)
-    }
-}
-
-def addScoping(scoped: Set[Name], stackTable: StackTable, typeInfo: TypeInfo): Unit = {
-    for (v <- scoped) {
-        stackTable.add(v, intSizeOf(typeInfo.varTys(v)))
+    def addScope(scoped: Set[Name], typeInfo: TypeInfo): Unit = {
+        scoped.foreach(v => {
+            size += intSizeOf(typeInfo.varTys(v))
+            table += (v -> size)
+        })
     }
 }
