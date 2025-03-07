@@ -40,7 +40,7 @@ case class A_Set(op: A_Reg, condition: A_Cond) extends A_Instr
 case class A_Call(label: A_Label) extends A_Instr
 
 // Sign extend EAX into EAX:EDX
-case object A_CDQ extends A_Instr // TODO @Ben @Zakk Implement string version of this
+case object A_CDQ extends A_Instr
 
 sealed trait A_Label:
     val name: String

@@ -301,7 +301,6 @@ inline def defaultReadc: A_Func = defRead(CHAR_SIZE, READC_LBL_STR_NAME, READC_L
 
 inline def defaultReadi: A_Func = defRead(INT_SIZE, READI_LBL_STR_NAME, READI_LABEL)
 
-// TODO: BETTER NAMES FOR THESE
 inline def defRuntimeErr(dataLabel: A_DataLabel, defLabel: A_DefaultLabel): A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
     
