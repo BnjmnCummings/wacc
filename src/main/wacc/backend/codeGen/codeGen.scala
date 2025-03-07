@@ -133,8 +133,6 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: StackTabl
         case T_ArrayElem(v, indices) => {
             val ty = unwrapArrType(ctx.typeInfo.varTys(v), indices.length)
 
-            ctx.addDefaultFunc(ERR_OUT_OF_BOUNDS_LABEL)
-
             builder += A_Push(A_Reg(A_RegName.RetReg))
 
             builder ++= genIdent(v, stackTable)
@@ -143,45 +141,24 @@ private def genAsgn(l: T_LValue, r: T_RValue, ty: SemType, stackTable: StackTabl
                 builder += A_Push(A_Reg(A_RegName.RetReg))
                 builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(0), PTR_SIZE)
                 builder ++= gen(indices(i), stackTable)
-                // check in range
-                builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(0), INT_SIZE)
-                builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
-                builder += A_Pop(A_Reg(A_RegName.R1))
-                builder += A_MovTo(A_Reg(A_RegName.R2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE)
-                builder += A_Push(A_Reg(A_RegName.R1))
-                builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R2), INT_SIZE)
-                builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
+                
+                builder ++= indexArray(opSizeToInt(PTR_SIZE))
 
-                builder += A_IMul(A_Reg(A_RegName.RetReg), A_Imm(opSizeToInt(PTR_SIZE)), PTR_SIZE)
-                builder += A_Pop(A_Reg(A_RegName.R1))
-                builder += A_Add(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R1), PTR_SIZE)
                 builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(0))), PTR_SIZE)
             
             builder += A_Push(A_Reg(A_RegName.RetReg))
             builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(0), PTR_SIZE)
             builder ++= gen(indices(indices.length - 1), stackTable)
-            // check in range
-            builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(0), INT_SIZE)
-            builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
-            builder += A_Pop(A_Reg(A_RegName.R1))
-            builder += A_MovTo(A_Reg(A_RegName.R2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE)
-            builder += A_Push(A_Reg(A_RegName.R1))
-            builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R2), INT_SIZE)
-            builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
+            
+            builder ++= indexArray(opSizeToInt(sizeOf(ty)))
 
-            builder += A_IMul(A_Reg(A_RegName.RetReg), A_Imm(opSizeToInt(sizeOf(ty))), PTR_SIZE)
             builder += A_Pop(A_Reg(A_RegName.R1))
-            builder += A_Add(A_Reg(A_RegName.R1), A_Reg(A_RegName.RetReg), PTR_SIZE)
-
-            builder += A_Pop(A_Reg(A_RegName.RetReg))
-            builder += A_MovFrom(A_MemOffset(A_Reg(A_RegName.R1), A_OffsetImm(0)), A_Reg(A_RegName.RetReg), sizeOf(ty))
+            builder += A_MovFrom(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(0)), A_Reg(A_RegName.R1), sizeOf(ty))
         }
         case T_PairElem(index, v) =>
             builder += A_Push(A_Reg(A_RegName.RetReg))
             builder ++= getPairElemPtr(index, v, stackTable)
             builder += A_Pop(A_Reg(A_RegName.R1))
-
-            // val sizeTy = ???
 
             builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.R1), PTR_SIZE)
     
@@ -596,8 +573,6 @@ private def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: St
 
     val ty = unwrapArrType(ctx.typeInfo.varTys(v), indices.length)
 
-    ctx.addDefaultFunc(ERR_OUT_OF_BOUNDS_LABEL)
-
     builder ++= genIdent(v, stackTable)
 
     for i <- 0 to indices.length - 2 do
@@ -618,7 +593,11 @@ private def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: St
 
     builder.toList
 
-private def indexArray(elemSize: Int) = List(
+private def indexArray(elemSize: Int)(using ctx: CodeGenCtx) =
+
+    ctx.addDefaultFunc(ERR_OUT_OF_BOUNDS_LABEL)
+    
+    List(
     // assumes index is stored in RetReg and that the pointer to the array is pushed onto the stack
     // stores the address of the indexed element in RetReg
 
