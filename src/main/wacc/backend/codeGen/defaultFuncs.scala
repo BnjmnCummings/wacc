@@ -301,62 +301,44 @@ inline def defaultReadc: A_Func = defRead(CHAR_SIZE, A_DataLabel(READC_LBL_STR_N
 
 inline def defaultReadi: A_Func = defRead(INT_SIZE, A_DataLabel(READI_LBL_STR_NAME), A_InstrLabel(READI_LABEL))
 
-inline def defaultBadChar: A_Func = {
+// TODO: BETTER NAMES FOR THESE
+inline def defErr(dataLabel: A_DataLabel, instrLabel: A_InstrLabel): A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
     
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(ERR_BAD_CHAR_STR_NAME))))
+    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(dataLabel)))
     program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
     program += A_Call(A_ExternalLabel(PRINTF))
+    // Put 0 into the 64-bit R1 (rdi) to flush all output streams. Note: PTR_SIZE because first argument of fflush is a ptr
     program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE)
     program += A_Call(A_ExternalLabel(F_FLUSH))
     program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ERR_EXIT_CODE), BYTE_SIZE)
     program += A_Call(A_ExternalLabel(EXIT))
 
-    A_Func(A_InstrLabel(ERR_BAD_CHAR_LABEL), program.toList)
+    A_Func(instrLabel, program.toList)
 }
 
-inline def defaultDivZero: A_Func = {
+inline def defErr2(callLabel: A_InstrLabel, dataLabel: A_DataLabel, instrLabel: A_InstrLabel) = {
     val program: ListBuffer[A_Instr] = ListBuffer()
 
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(DIV_ZERO_LBL_STR_NAME))))
-    program += A_Call(A_InstrLabel(PRINTS_LABEL))
+    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(dataLabel)))
+    program += A_Call(callLabel)
     program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ERR_EXIT_CODE), BYTE_SIZE)
     program += A_Call(A_ExternalLabel(EXIT))
 
-    A_Func(A_InstrLabel(ERR_DIV_ZERO_LABEL), program.toList)
+    A_Func(instrLabel, program.toList)
 }
 
-inline def defaultOutOfBounds: A_Func = {
-    val program: ListBuffer[A_Instr] = ListBuffer()
+inline def defaultBadChar: A_Func = defErr(A_DataLabel(ERR_BAD_CHAR_STR_NAME), A_InstrLabel(ERR_BAD_CHAR_LABEL))
 
-    program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(OUT_OF_BOUNDS_LBL_STR_NAME))))
-    program += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BOOL_SIZE)
-    program += A_Call(A_ExternalLabel(PRINTF))
+inline def defaultOutOfBounds: A_Func = defErr(A_DataLabel(OUT_OF_BOUNDS_LBL_STR_NAME), A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL))
 
-    // Put 0 into the 64-bit R1 (rdi) to flush all output streams. Note: PTR_SIZE because first argument of fflush is a ptr
-    program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE) 
-    program += A_Call(A_ExternalLabel(F_FLUSH))
+inline def defaultDivZero: A_Func = defErr2(A_InstrLabel(PRINTS_LABEL), A_DataLabel(DIV_ZERO_LBL_STR_NAME), A_InstrLabel(ERR_DIV_ZERO_LABEL))
 
-    program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ERR_EXIT_CODE), BOOL_SIZE) 
-    program += A_Call(A_ExternalLabel(EXIT))
+inline def defaultOutOfMemory: A_Func = defErr2(A_InstrLabel(PRINTS_LABEL), A_DataLabel(OUT_OF_MEMORY_LBL_STR_NAME), A_InstrLabel(ERR_OUT_OF_MEMORY_LABEL))
 
-    A_Func(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), program.toList)
-}
-
-inline def defaultOutOfMemory: A_Func = {
-    val program: ListBuffer[A_Instr] = ListBuffer()
-    
-    program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(OUT_OF_MEMORY_LBL_STR_NAME))))
-    program += A_Call(A_InstrLabel(PRINTS_LABEL))
-    program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ERR_EXIT_CODE), BOOL_SIZE)
-    program += A_Call(A_ExternalLabel(EXIT))
-
-    A_Func(A_InstrLabel(ERR_OUT_OF_MEMORY_LABEL), program.toList)
-}
+inline def defaultErrNull: A_Func = defErr2(A_InstrLabel(PRINTS_LABEL), A_DataLabel(ERR_NULL_PAIR_STR_NAME), A_InstrLabel(ERR_NULL_PAIR_LABEL))
 
 inline def defaultMalloc: A_Func = {
     val program: ListBuffer[A_Instr] = ListBuffer()
@@ -404,14 +386,3 @@ inline def defaultFreePair: A_Func = {
     A_Func(A_InstrLabel(FREE_PAIR_LABEL), program.toList)
 }
 
-inline def defaultErrNull: A_Func = {
-    val program: ListBuffer[A_Instr] = ListBuffer()
-
-    program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
-    program += A_Lea(A_Reg(A_RegName.R1), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(A_DataLabel(ERR_NULL_PAIR_STR_NAME))))
-    program += A_Call(A_InstrLabel(PRINTS_LABEL))
-    program += A_MovTo(A_Reg(A_RegName.R1), A_Imm(ERR_EXIT_CODE), BYTE_SIZE)
-    program += A_Call(A_ExternalLabel(EXIT))
-
-    A_Func(A_InstrLabel(ERR_NULL_PAIR_LABEL), program.toList)
-}
