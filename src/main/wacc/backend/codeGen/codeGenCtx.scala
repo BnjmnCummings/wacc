@@ -5,7 +5,7 @@ import wacc.TypeInfo
 
 import scala.collection.mutable
 
-class CodeGenCtx(val typeInfo: TypeInfo) {
+class CodeGenCtx(val typeInfo: TypeInfo, val stackTables: TableCtx) {
     private val storedStrings: mutable.Set[A_StoredStr] = mutable.Set()
 
     private val defaultFuncs: mutable.Set[A_Func] = mutable.Set()
