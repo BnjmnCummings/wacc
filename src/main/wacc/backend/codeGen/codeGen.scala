@@ -589,38 +589,40 @@ private def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: St
     for i <- 0 to indices.length - 2 do
         builder += A_Push(A_Reg(A_RegName.RetReg))
         builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(0), PTR_SIZE)
-        builder ++= gen(indices(i), stackTable)
-        // check in range
-        builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(0), INT_SIZE)
-        builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
-        builder += A_Pop(A_Reg(A_RegName.R1))
-        builder += A_MovTo(A_Reg(A_RegName.R2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE)
-        builder += A_Push(A_Reg(A_RegName.R1))
-        builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R2), INT_SIZE)
-        builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
 
-        builder += A_IMul(A_Reg(A_RegName.RetReg), A_Imm(opSizeToInt(PTR_SIZE)), PTR_SIZE)
-        builder += A_Pop(A_Reg(A_RegName.R1))
-        builder += A_Add(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R1), PTR_SIZE)
+        builder ++= gen(indices(i), stackTable)
+        
+        builder ++= indexArray(opSizeToInt(PTR_SIZE))
         builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(0))), PTR_SIZE)
     
     builder += A_Push(A_Reg(A_RegName.RetReg))
     builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(0), PTR_SIZE)
-    builder ++= gen(indices(indices.length - 1), stackTable)
-    // check in range
-    builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(0), INT_SIZE)
-    builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt)
-    builder += A_Pop(A_Reg(A_RegName.R1))
-    builder += A_MovTo(A_Reg(A_RegName.R2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE)
-    builder += A_Push(A_Reg(A_RegName.R1))
-    builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R2), INT_SIZE)
-    builder += A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq)
 
-    builder += A_IMul(A_Reg(A_RegName.RetReg), A_Imm(opSizeToInt(sizeOf(ty))), PTR_SIZE)
-    builder += A_Pop(A_Reg(A_RegName.R1))
-    builder += A_Add(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R1), PTR_SIZE)
+    builder ++= gen(indices(indices.length - 1), stackTable)
+
+    builder ++= indexArray(opSizeToInt(sizeOf(ty)))
 
     builder.toList
+
+private def indexArray(elemSize: Int) = List(
+    // assumes index is stored in RetReg and that the pointer to the array is pushed onto the stack
+    // stores the address of the indexed element in RetReg
+
+    // check i > 0
+    A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(0), INT_SIZE),
+    A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt),
+    // retrieve array size
+    A_Pop(A_Reg(A_RegName.R1)),
+    A_MovTo(A_Reg(A_RegName.R2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE),
+    A_Push(A_Reg(A_RegName.R1)),
+    // check i < size
+    A_Cmp(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R2), INT_SIZE),
+    A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq),
+    // calculate offset
+    A_IMul(A_Reg(A_RegName.RetReg), A_Imm(elemSize), PTR_SIZE),
+    A_Pop(A_Reg(A_RegName.R1)),
+    A_Add(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R1), PTR_SIZE)
+)
 
 private def genArrayElem(v: Name, indices: List[T_Expr], stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder: ListBuffer[A_Instr] = ListBuffer()
