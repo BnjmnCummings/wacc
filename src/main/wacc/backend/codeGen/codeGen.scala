@@ -619,7 +619,6 @@ private def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: St
     builder += A_IMul(A_Reg(A_RegName.RetReg), A_Imm(opSizeToInt(sizeOf(ty))), PTR_SIZE)
     builder += A_Pop(A_Reg(A_RegName.R1))
     builder += A_Add(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R1), PTR_SIZE)
-    // builder += A_MovFromDeref(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(0))), sizeOf(ty))
 
     builder.toList
 
@@ -642,18 +641,18 @@ private def getArrInnerType(ty: SemType): SemType = ty match
 private def getPairElemPtr(index: PairIndex, v: T_LValue, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
-    builder ++= gen(v, stackTable)
-
-    builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
-    builder += A_Jmp(A_InstrLabel(ERR_NULL_PAIR_LABEL), A_Cond.Eq)
-
-    ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
-
-    val optionalOffset = index match
+    val offset = index match
         case PairIndex.First => ZERO_IMM
         case PairIndex.Second => opSizeToInt(PTR_SIZE)
 
-    builder += A_Add(A_Reg(A_RegName.RetReg), A_Imm(optionalOffset), PTR_SIZE)
+    builder ++= gen(v, stackTable)
+
+    builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
+
+    ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
+
+    builder += A_Jmp(A_InstrLabel(ERR_NULL_PAIR_LABEL), A_Cond.Eq)
+    builder += A_Add(A_Reg(A_RegName.RetReg), A_Imm(offset), PTR_SIZE)
 
     builder.toList
 
@@ -665,7 +664,7 @@ private def genPairElem(index: PairIndex, v: T_LValue, stackTable: StackTables)(
     
     v match
         case T_Ident(name) =>
-            // We assume pointer to fst p is stored in RetReg
+            // We assume pointer to our elem is stored in RetReg
             
             // deref this value to get value stored
             val pairTy = ctx.typeInfo.varTys(name).asInstanceOf[KnownType.Pair] // TODO: as instance of!!! (crashing out)
