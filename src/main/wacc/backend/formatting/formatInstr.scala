@@ -29,6 +29,7 @@ def formatInstr(instr: A_Instr): String = instr match
         case A_InstrLabel(name) => s"call $name"
         case A_ExternalLabel(name) => s"call $name@plt"
         case A_DataLabel(_) => throw new IllegalArgumentException("Cannot call a data label")
+        case A_DefaultLabel(name) => s"call $name"
     case A_Ret => "ret"
 
     case A_CDQ => "cdq"

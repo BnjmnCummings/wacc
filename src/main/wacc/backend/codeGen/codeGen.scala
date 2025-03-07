@@ -41,7 +41,7 @@ def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     builder += A_Pop(A_Reg(A_RegName.BasePtr))
     builder += A_Ret
 
-    val main = A_Func(A_InstrLabel(MAIN_FUNC_NAME), builder.toList)
+    val main = A_Func(A_DefaultLabel(MAIN_FUNC_NAME), builder.toList)
 
     val _funcsWithDefaults = _funcs ++ ctx.defaultFuncsList
 
@@ -174,10 +174,10 @@ private def genRead(l: T_LValue, ty: SemType, stackTable: StackTables)(using ctx
 
     if ty == KnownType.Int then
         ctx.addDefaultFunc(READI_LABEL)
-        builder += A_Call(A_InstrLabel(READI_LABEL))
+        builder += A_Call(READI_LABEL)
     else if ty == KnownType.Char then
         ctx.addDefaultFunc(READC_LABEL)
-        builder += A_Call(A_InstrLabel(READC_LABEL))
+        builder += A_Call(READC_LABEL)
     else
         // naughty
         throw new Exception("Invalid type for read (should be caught in type checker)")
@@ -237,15 +237,15 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: StackTables)(using ctx: 
             builder += A_Sub(A_Reg(A_RegName.R1), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
 
             ctx.addDefaultFunc(FREE_LABEL)
-            builder += A_Call(A_InstrLabel(FREE_LABEL))
+            builder += A_Call(FREE_LABEL)
         case KnownType.Pair(_, _) =>
             builder += A_Cmp(A_Reg(A_RegName.R1), A_Imm(ZERO_IMM), PTR_SIZE)
 
             ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
-            builder += A_Jmp(A_InstrLabel(ERR_NULL_PAIR_LABEL), A_Cond.Eq)
+            builder += A_Jmp(ERR_NULL_PAIR_LABEL, A_Cond.Eq)
 
             ctx.addDefaultFunc(FREE_PAIR_LABEL)
-            builder += A_Call(A_InstrLabel(FREE_PAIR_LABEL))
+            builder += A_Call(FREE_PAIR_LABEL)
         case _ => throw Exception("Invalid type with free. Should be caught in type checker!")
     
     builder.toList
@@ -267,7 +267,7 @@ private def genExit(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): 
     // x will be an integer - we can only perform exit on integers
     builder += A_MovTo(A_Reg(A_RegName.R1), A_Reg(A_RegName.RetReg), INT_SIZE)
     // We need to move the exit code into edi (32-bit R1) for the exit code to be successfully passed to plt@exit
-    builder += A_Call(A_InstrLabel(EXIT_LABEL))
+    builder += A_Call(EXIT_LABEL)
 
     builder.toList
 
@@ -312,7 +312,7 @@ private def genPrintln(x: T_Expr, ty: SemType, stackTable: StackTables)(using ct
     builder ++= genPrint(x, ty, stackTable)
     
     ctx.addDefaultFunc(PRINTLN_LABEL)
-    builder += A_Call(A_InstrLabel(PRINTLN_LABEL))
+    builder += A_Call(PRINTLN_LABEL)
 
     builder.toList
 
@@ -402,7 +402,7 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
 
     ctx.addDefaultFunc(ERR_DIV_ZERO_LABEL)
 
-    builder += A_Jmp(A_InstrLabel(ERR_DIV_ZERO_LABEL), A_Cond.Eq)
+    builder += A_Jmp(ERR_DIV_ZERO_LABEL, A_Cond.Eq)
     // Above is a comparison of y (denominator) with 0 - error if it succeeds
 
     builder += A_Pop(A_Reg(A_RegName.RetReg))
@@ -411,7 +411,7 @@ private def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable:
 
     ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
 
-    builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
+    builder += A_Jmp(ERR_OVERFLOW_LABEL, A_Cond.Overflow)
     // ^ This is the case of dividing -2^31 by -1 and getting 2^31 > 1 + 2^31 --> overflow
 
     builder += A_MovTo(A_Reg(A_RegName.RetReg), (A_Reg(divResultReg)), INT_SIZE)
@@ -431,7 +431,7 @@ private def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_Op
 
     ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
 
-    builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
+    builder += A_Jmp(ERR_OVERFLOW_LABEL, A_Cond.Overflow)
 
     builder.toList
 
@@ -447,7 +447,7 @@ private def genMul(x: T_Expr, y: T_Expr, stackTable: StackTables)(using ctx: Cod
 
     ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
 
-    builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
+    builder += A_Jmp(ERR_OVERFLOW_LABEL, A_Cond.Overflow)
 
     builder.toList
 
@@ -502,7 +502,7 @@ private def genNeg(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): L
 
     ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
 
-    builder += A_Jmp(A_InstrLabel(ERR_OVERFLOW_LABEL), A_Cond.Overflow)
+    builder += A_Jmp(ERR_OVERFLOW_LABEL, A_Cond.Overflow)
     builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R1), INT_SIZE)
     // ^ overflow -2^32 case!
 
@@ -536,7 +536,7 @@ private def genChr(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): L
     builder += A_And(A_Reg(A_RegName.R1), A_Imm(-128), INT_SIZE)
 
     ctx.addDefaultFunc(ERR_BAD_CHAR_LABEL)
-    builder += A_Jmp(A_InstrLabel(ERR_BAD_CHAR_LABEL), A_Cond.NEq)
+    builder += A_Jmp(ERR_BAD_CHAR_LABEL, A_Cond.NEq)
 
     builder.toList
 
@@ -603,14 +603,14 @@ private def indexArray(elemSize: Int)(using ctx: CodeGenCtx) =
 
     // check i > 0
     A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(0), INT_SIZE),
-    A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.Lt),
+    A_Jmp(ERR_OUT_OF_BOUNDS_LABEL, A_Cond.Lt),
     // retrieve array size
     A_Pop(A_Reg(A_RegName.R1)),
     A_MovTo(A_Reg(A_RegName.R2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.R1), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE),
     A_Push(A_Reg(A_RegName.R1)),
     // check i < size
     A_Cmp(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R2), INT_SIZE),
-    A_Jmp(A_InstrLabel(ERR_OUT_OF_BOUNDS_LABEL), A_Cond.GEq),
+    A_Jmp(ERR_OUT_OF_BOUNDS_LABEL, A_Cond.GEq),
     // calculate offset
     A_IMul(A_Reg(A_RegName.RetReg), A_Imm(elemSize), PTR_SIZE),
     A_Pop(A_Reg(A_RegName.R1)),
@@ -646,7 +646,7 @@ private def getPairElemPtr(index: PairIndex, v: T_LValue, stackTable: StackTable
 
     ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
 
-    builder += A_Jmp(A_InstrLabel(ERR_NULL_PAIR_LABEL), A_Cond.Eq)
+    builder += A_Jmp(ERR_NULL_PAIR_LABEL, A_Cond.Eq)
     builder += A_Add(A_Reg(A_RegName.RetReg), A_Imm(offset), PTR_SIZE)
 
     builder.toList
@@ -708,7 +708,7 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTab
     
     ctx.addDefaultFunc(MALLOC_LABEL)
 
-    builder += A_Call(A_InstrLabel(MALLOC_LABEL))
+    builder += A_Call(MALLOC_LABEL)
     builder += A_MovTo(A_Reg(A_RegName.R11), A_Reg(A_RegName.RetReg), PTR_SIZE)
     builder += A_Add(A_Reg(A_RegName.R11), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
     builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Imm(length), INT_SIZE)
@@ -730,7 +730,7 @@ private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType, stack
     
     ctx.addDefaultFunc(MALLOC_LABEL)
 
-    builder += A_Call(A_InstrLabel(MALLOC_LABEL))
+    builder += A_Call(MALLOC_LABEL)
 
     builder += A_MovTo(A_Reg(A_RegName.R11), A_Reg(A_RegName.RetReg), PTR_SIZE)
     builder ++= gen(x1, stackTable)
