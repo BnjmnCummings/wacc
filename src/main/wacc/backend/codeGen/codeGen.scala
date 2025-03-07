@@ -24,6 +24,8 @@ val PAIR_OFFSET_SIZE = 8
 
 val MAIN_FUNC_NAME = "main"
 
+inline def tempReg = A_Reg(A_RegName.R11)
+
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx(typeInfo, getTables(t_tree, typeInfo))
 
@@ -230,7 +232,7 @@ private def genFree(x: T_Expr, ty: SemType, stackTable: StackTables)(using ctx: 
 
     builder ++= gen(x, stackTable)
 
-    builder += A_MovTo(A_Reg(A_RegName.Arg1), A_Reg(A_RegName.R11), PTR_SIZE)
+    builder += A_MovTo(A_Reg(A_RegName.Arg1), tempReg, PTR_SIZE)
     
     ty match
         case KnownType.Array(_) =>
@@ -709,16 +711,16 @@ private def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTab
     ctx.addDefaultFunc(MALLOC_LABEL)
 
     builder += A_Call(A_InstrLabel(MALLOC_LABEL))
-    builder += A_MovTo(A_Reg(A_RegName.R11), A_Reg(A_RegName.RetReg), PTR_SIZE)
-    builder += A_Add(A_Reg(A_RegName.R11), A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
-    builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length), INT_SIZE)
+    builder += A_MovTo(tempReg, A_Reg(A_RegName.RetReg), PTR_SIZE)
+    builder += A_Add(tempReg, A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
+    builder += A_MovDeref(A_RegDeref(A_MemOffset(tempReg, A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Imm(length), INT_SIZE)
 
     for (i <- 0 to length - 1) { 
         builder ++= gen(xs(i), stackTable)
-        builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(i * intSizeOf(ty)))), A_Reg(A_RegName.RetReg), sizeOf(ty))
+        builder += A_MovDeref(A_RegDeref(A_MemOffset(tempReg, A_OffsetImm(i * intSizeOf(ty)))), A_Reg(A_RegName.RetReg), sizeOf(ty))
     }
 
-    builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R11), PTR_SIZE)
+    builder += A_MovTo(A_Reg(A_RegName.RetReg), tempReg, PTR_SIZE)
 
     builder.toList
 
@@ -731,12 +733,12 @@ private def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType, stack
 
     builder += A_Call(A_InstrLabel(MALLOC_LABEL))
 
-    builder += A_MovTo(A_Reg(A_RegName.R11), A_Reg(A_RegName.RetReg), PTR_SIZE)
+    builder += A_MovTo(tempReg, A_Reg(A_RegName.RetReg), PTR_SIZE)
     builder ++= gen(x1, stackTable)
-    builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.RetReg), sizeOf(ty1))
+    builder += A_MovDeref(A_RegDeref(A_MemOffset(tempReg, A_OffsetImm(ZERO_IMM))), A_Reg(A_RegName.RetReg), sizeOf(ty1))
     builder ++= gen(x2, stackTable)
-    builder += A_MovDeref(A_RegDeref(A_MemOffset(A_Reg(A_RegName.R11), A_OffsetImm(PAIR_OFFSET_SIZE))), A_Reg(A_RegName.RetReg), sizeOf(ty2))
-    builder += A_MovTo(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.R11), PTR_SIZE)
+    builder += A_MovDeref(A_RegDeref(A_MemOffset(tempReg, A_OffsetImm(PAIR_OFFSET_SIZE))), A_Reg(A_RegName.RetReg), sizeOf(ty2))
+    builder += A_MovTo(A_Reg(A_RegName.RetReg), tempReg, PTR_SIZE)
 
     builder.toList
 
