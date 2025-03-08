@@ -23,7 +23,6 @@ def formatOffset(op: A_Offset): String = op match
         else
             s"- ${-n}"
     }
-    case A_OffsetReg(reg) => s"+ ${formatReg(reg, PTR_SIZE)}"
     case A_OffsetLbl(lbl) => s"+ ${lbl.name}"
 
 def formatReg(op: A_Reg, opSize: A_OperandSize): String = opSize match

@@ -15,18 +15,6 @@ import wacc.X
 import wacc.KnownType
 import wacc.EXIT_SUCCESS
 
-inline def TRUE = 1
-inline def FALSE = 0
-inline def ZERO_IMM = 0
-inline def CHR_MASK = -128
-inline def PAIR_SIZE_BYTES = 16
-inline def PAIR_OFFSET_SIZE = 8
-
-inline def MAIN_FUNC_NAME = "main"
-
-inline def TEMP_REG = A_Reg(A_RegName.R11)
-inline def NO_OFFSET = A_OffsetImm(ZERO_IMM)
-
 def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = {
     given ctx: CodeGenCtx = CodeGenCtx(typeInfo, getTables(t_tree, typeInfo))
 

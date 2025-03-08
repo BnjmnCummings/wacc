@@ -76,13 +76,6 @@ class format_mem_offset_test extends AnyFlatSpec {
             A_OffsetImm(-5))
             ) should be ("[rax - 5]")
     }
-
-    it should "be able to format a register offset" in {
-        formatMemOffset(A_MemOffset(
-            A_Reg(A_RegName.RetReg), 
-            A_OffsetReg(A_Reg(A_RegName.Arg1)))
-            ) should be ("[rax + rdi]")
-    }
 }
 
 class format_offset_test extends AnyFlatSpec {
@@ -92,10 +85,6 @@ class format_offset_test extends AnyFlatSpec {
 
     it should "be able to format a negative immediate offset" in {
         formatOffset(A_OffsetImm(-5)) should be ("- 5")
-    }
-
-    it should "be able to format a register offset" in {
-        formatOffset(A_OffsetReg(A_Reg(A_RegName.Arg1))) should be ("+ rdi")
     }
 }
 
