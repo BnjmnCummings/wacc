@@ -11,7 +11,6 @@ sealed trait A_Offset
 case class A_OffsetImm(n: BigInt) extends A_Offset
 case class A_OffsetReg(reg: A_Reg) extends A_Offset
 case class A_OffsetLbl(lbl: A_DataLabel) extends A_Offset
-// case class A_OffsetScaledReg(reg: A_Reg, scale: Int) extends A_Offset
 
 /* cheeky macro for 0 offset */
 inline def noOffset: A_Offset = A_OffsetImm(0)
@@ -22,11 +21,10 @@ inline def BOOL_SIZE: A_OperandSize = A_OperandSize.A_8
 inline def PTR_SIZE: A_OperandSize = A_OperandSize.A_64
 inline def EXIT_CODE_SIZE = A_OperandSize.A_8
 
-/* 
-caller save - if you need to preserve the values of these before a function call, push and pop them on the stack
-callee save - if you need to use this within a function call, that function must push and pop them on the stack
-*/
-
+/**
+  * caller save - if you need to preserve the values of these before a function call, push and pop them on the stack
+  * callee save - if you need to use this within a function call, that function must push and pop them on the stack
+  */
 enum A_RegName {
     case RetReg   // rax - caller
     case Arg1       // rdi - caller, 1st arg

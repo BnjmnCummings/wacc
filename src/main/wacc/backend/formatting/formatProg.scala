@@ -19,7 +19,7 @@ def formatData(storedStr: A_StoredStr)(using writer: Writer) =
     writer.write(s"${storedStr.lbl.name}:\n")
     writer.write(s"\t.asciz \"${storedStr.str}\"\n")
 
-def formatFunction(procedure: A_Proc)(using writer: Writer) = procedure match
+def formatFunction(procedure: A_SubRoutine)(using writer: Writer) = procedure match
     case A_Func(fLabel, instrs) => 
         writer.write(s"${fLabel.name}:\n")
         formatBodyInstr(instrs)

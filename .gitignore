@@ -2,5 +2,9 @@
 .bsp/
 .scala-build/
 .vscode/
+<<<<<<< HEAD
 src/test/wacc/backend/integration/assembly/*.s
 src/test/wacc/backend/integration/output/*
+=======
+*testSettings*
+>>>>>>> 2fc73e9 (refactor - added javadocs to instructions.scala)
