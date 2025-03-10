@@ -15,26 +15,31 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable
 import scala.collection.immutable
 
-def gen(t_tree: T_Prog, typeInfo: TypeInfo): A_Prog = 
-    given ctx: CodeGenCtx = CodeGenCtx(typeInfo, getTables(t_tree, typeInfo))
+/**
+  * Generates the assembly representation of a typed program.
+  * @param prog the typed program to be converted.
+  * @param typeInfo the type information of the program.
+  * @return the assembly representation of the program.
+  */
+def gen(prog: T_Prog, typeInfo: TypeInfo): A_Prog = 
+    given ctx: CodeGenCtx = CodeGenCtx(typeInfo, getTables(prog, typeInfo))
 
-    val funcs = t_tree.funcs.map(gen)
+    val funcs = prog.funcs.map(gen)
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
     builder += A_Push(A_Reg(A_RegName.BasePtr))
     builder += A_Mov(A_Reg(A_RegName.BasePtr), A_Reg(A_RegName.StackPtr), PTR_SIZE)
     builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(ctx.stackTables.mainTable.scopeSize), PTR_SIZE)
-    builder ++= t_tree.body.flatMap(gen(_, ctx.stackTables.mainTable))
+    builder ++= prog.body.flatMap(gen(_, ctx.stackTables.mainTable))
     builder += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(EXIT_SUCCESS), PTR_SIZE)
     builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(ctx.stackTables.mainTable.scopeSize), PTR_SIZE)
     builder += A_Pop(A_Reg(A_RegName.BasePtr))
     builder += A_Ret
 
     val main = A_Func(A_DefaultLabel(MAIN_FUNC_NAME), builder.toList)
-    val _funcsWithDefaults = funcs ++ ctx.defaultFuncsList
+    val _funcsWithDefaults = funcs ++ ctx.getDefaultFuncs
 
-    A_Prog(ctx.storedStringsList, main :: _funcsWithDefaults)
-
+    A_Prog(ctx.getStoredStrings, main :: _funcsWithDefaults)
 
 private def gen(t: T_Stmt, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] = t match
     case T_Decl(v, r, ty)                           => genDecl(v, r, ty, stackTable)
@@ -489,7 +494,7 @@ private def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] =
         case c => c.toString
     })
     
-    List(A_Lea(A_Reg(A_RegName.RetReg), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(ctx.genStoredStr(str)))))
+    List(A_Lea(A_Reg(A_RegName.RetReg), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(ctx.storeString(str)))))
 
 private def genIdent(v: Name, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] = 
     stackTable.get(v).toList
