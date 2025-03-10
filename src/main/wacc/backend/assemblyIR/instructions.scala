@@ -80,23 +80,6 @@ case object A_CDQ extends A_Instr
 case object A_Ret extends A_Instr
 
 /**
- * A_StoredStr represents a string stored in the assembly IR with its associated label
- * @param lbl the label to be generated to identify the string
- * @param str the string to be stored
- */
-case class A_StoredStr(lbl: A_DataLabel, str: String)
-
-/**
-  * A_Label represents a label in the assembly IR
-  * @param name the name of the label
-  */
-sealed trait A_Label { val name: String }
-case class A_DataLabel(val name: String) extends A_Label 
-case class A_InstrLabel(val name: String) extends A_Label 
-case class A_DefaultLabel(val name: String) extends A_Label
-case class A_ExternalLabel(val name: String) extends A_Label
-
-/**
   * A_Cond, an enum representing all the conditions for a jump instruction
   */
 enum A_Cond {
@@ -110,4 +93,3 @@ enum A_Cond {
     case NOverflow
     case Uncond
 }
-
