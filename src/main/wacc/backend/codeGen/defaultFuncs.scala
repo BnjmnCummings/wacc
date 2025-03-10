@@ -256,7 +256,8 @@ inline def defRuntimeErr(dataLabel: A_DataLabel, defLabel: A_DefaultLabel): A_Fu
     program += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), BYTE_SIZE)
     program += A_Call(PRINTF)
 
-    /* Put 0 into the 64-bit R1 (rdi) to flush all output streams. Note: PTR_SIZE because first argument of fflush is a ptr */
+    /* Put 0 into the 64-bit R1 (rdi) to flush all output streams. 
+    NOTE: PTR_SIZE because first argument of fflush is a ptr */
     program += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(ZERO_IMM), PTR_SIZE)
     program += A_Call(F_FLUSH)
     program += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(ERR_EXIT_CODE), BYTE_SIZE)
