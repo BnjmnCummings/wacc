@@ -29,13 +29,13 @@ def getTables(prog: T_Prog, typeInfo: TypeInfo): TableCtx =
 
     prog.funcs.foreach { f => 
         val funcParamTable = StackTable(0)
-        funcParamTable.addScope(f.args.map(_.v).toSet, typeInfo)
+        funcParamTable.addScope(f.args.map(_.name).toSet, typeInfo)
 
         val tables = StackTables(Some(funcParamTable), 0)
         tables.addScope(f.scoped, typeInfo)
 
         getTables(f.body, typeInfo, tables)
-        ctx.funcTables += (f.v -> tables)
+        ctx.funcTables += (f.name -> tables)
     }
 
     ctx
