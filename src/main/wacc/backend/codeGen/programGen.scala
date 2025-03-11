@@ -142,14 +142,20 @@ private def gen(func: T_Func)(using ctx: CodeGenCtx): A_Func =
 /**
   * A helper function that returns a unique subroutine lable.
   * It is assumed at this stage that all function names are unique.
-  * @param f
-  * @return
+  * @param funcName the name of the function.
+  * @return a unique instruction label for the function.
   */
 inline def funcLabelGen(funcName: Name): A_InstrLabel = 
     A_InstrLabel(s".F.${funcName.value}")
 
+
+/**
+  * A helper function that returns the 'size' of a type.
+  * @param ty the type.
+  * @return it's size as an [A_OperandSize].
+  */
 inline def sizeOf(ty: SemType): A_OperandSize = ty match
-    case ?                    => PTR_SIZE
+    case ?                    => PTR_SIZE // 
     case KnownType.Int        => INT_SIZE
     case KnownType.Boolean    => BOOL_SIZE
     case KnownType.Char       => CHAR_SIZE
@@ -159,23 +165,23 @@ inline def sizeOf(ty: SemType): A_OperandSize = ty match
     case X                    => throw Exception("Should not have semType X in codeGen")
     case KnownType.Ident      => throw Exception("Should get type info from context")
 
-inline def typeToLetter(ty: SemType): String = ty match
-    case KnownType.Int                   => "i"
-    case KnownType.Boolean               => "b"
-    case KnownType.Char                  => "c"
-    case KnownType.String                => "s"
-    case KnownType.Array(KnownType.Char) => "s"
-    case KnownType.Array(ty)             => "p"
-    case KnownType.Pair(ty1, ty2)        => "p"
-    case KnownType.Ident                 => throw Exception("Should get type info from context")
-    case ?                               => throw Exception("Should not have semType ? in codeGen")
-    case X                               => throw Exception("Should not have semType ? in codeGen")
 
-inline def opSizeToInt(opSize: A_OperandSize): Int = opSize match
+
+/**
+  * A helper function that maps an [A_OperandSize] to its size in bytes.
+  * @param opSize the size of the operand as an [A_OperandSize] enum.
+  * @return the number of bytes it represents.
+  */
+inline def numOfBytes(opSize: A_OperandSize): Int = opSize match
     case A_OperandSize.A_8  => 1
     case A_OperandSize.A_16 => 2
     case A_OperandSize.A_32 => 4
     case A_OperandSize.A_64 => 8
 
-inline def intSizeOf(ty: SemType): Int = 
-    opSizeToInt(sizeOf(ty))
+/**
+  * An overload of numOfBytes that takes in a [SemType].
+  * @param ty the type as a [SemType].
+  * @return the number of bytes it represents
+  */
+inline def numOfBytes(ty: SemType): Int = 
+    numOfBytes(sizeOf(ty))

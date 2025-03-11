@@ -128,7 +128,7 @@ def genLen(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_In
     // We know the size is stored 4 bytes before the first element hence we can do a reg deref of retreg -4 to find the size
     builder += A_Mov(
         A_Reg(A_RegName.RetReg), 
-        A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(-opSizeToInt(INT_SIZE)))), 
+        A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(-numOfBytes(INT_SIZE)))), 
         INT_SIZE)
 
     builder.toList
@@ -195,13 +195,13 @@ def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: StackTable
         builder += A_Push(A_Reg(A_RegName.RetReg))
         builder += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
         builder ++= gen(indices(i), stackTable)
-        builder ++= indexArray(opSizeToInt(PTR_SIZE))
+        builder ++= indexArray(numOfBytes(PTR_SIZE))
         builder += A_Mov(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(0))), PTR_SIZE)
     
     builder += A_Push(A_Reg(A_RegName.RetReg))
     builder += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
     builder ++= gen(indices(indices.length - 1), stackTable)
-    builder ++= indexArray(opSizeToInt(sizeOf(ty)))
+    builder ++= indexArray(numOfBytes(sizeOf(ty)))
 
     builder.toList
 
@@ -215,7 +215,7 @@ def indexArray(elemSize: Int)(using ctx: CodeGenCtx) =
     builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), INT_SIZE) // check i > 0
     builder += A_Jmp(ERR_OUT_OF_BOUNDS_LABEL, A_Cond.Lt)
     builder += A_Pop(A_Reg(A_RegName.Arg1)) // retrieve array size
-    builder += A_Mov(A_Reg(A_RegName.Arg2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.Arg1), A_OffsetImm(-opSizeToInt(INT_SIZE)))), INT_SIZE)
+    builder += A_Mov(A_Reg(A_RegName.Arg2), A_RegDeref(A_MemOffset(A_Reg(A_RegName.Arg1), A_OffsetImm(-numOfBytes(INT_SIZE)))), INT_SIZE)
     builder += A_Push(A_Reg(A_RegName.Arg1))
     builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Reg(A_RegName.Arg2), INT_SIZE)  // check i < size
     builder += A_Jmp(ERR_OUT_OF_BOUNDS_LABEL, A_Cond.GEq)
@@ -245,7 +245,7 @@ def getPairElemPtr(index: PairIndex, v: T_LValue, stackTable: StackTables)(using
     val builder = new ListBuffer[A_Instr]
     val offset = index match
         case PairIndex.First => ZERO_IMM
-        case PairIndex.Second => opSizeToInt(PTR_SIZE)
+        case PairIndex.Second => numOfBytes(PTR_SIZE)
 
     ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
 
@@ -282,20 +282,20 @@ def genPairElem(index: PairIndex, v: T_LValue, stackTable: StackTables)(using ct
 
 def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
-    val sizeBytes = opSizeToInt(INT_SIZE) + (intSizeOf(ty) * length)
+    val sizeBytes = numOfBytes(INT_SIZE) + (numOfBytes(ty) * length)
 
     ctx.addDefaultFunc(MALLOC_LABEL)
 
     builder += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(sizeBytes), INT_SIZE)
     builder += A_Call(MALLOC_LABEL)
     builder += A_Mov(TEMP_REG, A_Reg(A_RegName.RetReg), PTR_SIZE)
-    builder += A_Add(TEMP_REG, A_Imm(opSizeToInt(INT_SIZE)), PTR_SIZE)
+    builder += A_Add(TEMP_REG, A_Imm(numOfBytes(INT_SIZE)), PTR_SIZE)
     builder += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(length), INT_SIZE)
-    builder += A_Mov(A_RegDeref(A_MemOffset(TEMP_REG, A_OffsetImm(-opSizeToInt(INT_SIZE)))), A_Reg(A_RegName.RetReg), INT_SIZE)
+    builder += A_Mov(A_RegDeref(A_MemOffset(TEMP_REG, A_OffsetImm(-numOfBytes(INT_SIZE)))), A_Reg(A_RegName.RetReg), INT_SIZE)
 
     for i <- 0 to length - 1 do
         builder ++= gen(xs(i), stackTable)
-        builder += A_Mov(A_RegDeref(A_MemOffset(TEMP_REG, A_OffsetImm(i * intSizeOf(ty)))), A_Reg(A_RegName.RetReg), sizeOf(ty))
+        builder += A_Mov(A_RegDeref(A_MemOffset(TEMP_REG, A_OffsetImm(i * numOfBytes(ty)))), A_Reg(A_RegName.RetReg), sizeOf(ty))
 
     builder += A_Mov(A_Reg(A_RegName.RetReg), TEMP_REG, PTR_SIZE)
 
@@ -306,7 +306,7 @@ def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType, stackTable: S
 
     ctx.addDefaultFunc(MALLOC_LABEL)
 
-    builder += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(opSizeToInt(PTR_SIZE) * 2), INT_SIZE)
+    builder += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(numOfBytes(PTR_SIZE) * 2), INT_SIZE)
     builder += A_Call(MALLOC_LABEL)
     builder += A_Mov(TEMP_REG, A_Reg(A_RegName.RetReg), PTR_SIZE)
     builder ++= gen(x1, stackTable)

@@ -139,7 +139,7 @@ class StackTable(val basePtrOffset: Int) {
      */
     def addScope(scoped: Set[Name], typeInfo: TypeInfo): Unit  =
         scoped.foreach { v => 
-            size += intSizeOf(typeInfo.varTys(v))
+            size += numOfBytes(typeInfo.varTys(v))
             table += (v -> size)
         }
 
