@@ -22,6 +22,7 @@ import scala.collection.immutable
   * @return the assembly representation of the program.
   */
 def gen(prog: T_Prog, typeInfo: TypeInfo): A_Prog = 
+    /* first pass of the program to pre-generate every scope/stacktable*/
     given ctx: CodeGenCtx = CodeGenCtx(typeInfo, getTables(prog, typeInfo))
 
     val funcs = prog.funcs.map(gen)
