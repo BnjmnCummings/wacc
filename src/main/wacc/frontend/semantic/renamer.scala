@@ -48,7 +48,7 @@ object renamer {
         _funcs.toList
 
     private def initialiseFunc(func: Func)(using ctx: RenamerContext): (Name, List[Q_Param]) =
-        if funcNames.exists(_.name == func.v) then
+        if funcNames.exists(_.value == func.v) then
             ctx.setPos(func.pos)
             ctx.errors += ScopeError(s"function ${func.v} already declared in scope")
             throw ScopeException(ctx.errors.toList)
@@ -69,7 +69,7 @@ object renamer {
     
     
     private def rename(param: Param, lScope: Set[Name])(using ctx: RenamerContext): Q_Param = 
-        if lScope.exists(_.name == param.v) then
+        if lScope.exists(_.value == param.v) then
             ctx.setPos(param.pos)
             ctx.errors += ScopeError(s"variable ${param.v} already declared in scope")
             throw ScopeException(ctx.errors.toList)
@@ -99,8 +99,8 @@ object renamer {
             /* need to evaluate r-value first so that we can't declare an ident as itself */
             val rvalue = rename(r, merge(lScope, pScope))
             
-            if lScope.exists(_.name == v) then
-                val var_name = lScope.find(_.name == v).get
+            if lScope.exists(_.value == v) then
+                val var_name = lScope.find(_.value == v).get
                 if varTypes(var_name) == ? then
                     updateType(var_name, toSemType(t))
                 else
@@ -135,7 +135,7 @@ object renamer {
             scope += name
         }
         for (name <- scope2) {
-            if !scope.exists(_.name == name.name) then
+            if !scope.exists(_.value == name.value) then
                 scope += name
         }
         scope.toSet
@@ -144,7 +144,7 @@ object renamer {
         /* if the identity for an l-value doesn't yet exist, complain. */
         case id@Ident(v) => rename(v, scope, id.pos)
         case arr@ArrayElem(v, indicies) => {
-            if (!scope.exists(_.name == v)) then {
+            if (!scope.exists(_.value == v)) then {
                 ctx.setPos(arr.pos)
                 ctx.errors += ScopeError(s"variable $v not declared in scope")
                 throw ScopeException(ctx.errors.toList)
@@ -192,7 +192,7 @@ object renamer {
 
 
     private def rename(ident: String, scope: Set[Name], pos: (Int, Int))(using ctx: RenamerContext): Q_Ident = 
-        if (!scope.exists(_.name == ident)) then
+        if (!scope.exists(_.value == ident)) then
             ctx.setPos(pos)
             ctx.errors += ScopeError(s"variable ${ident} not declared in scope") 
             throw ScopeException(ctx.errors.toList)
@@ -219,14 +219,14 @@ object renamer {
         Name(name, count)
 
     private def updateName(name: String, lScope: Set[Name]): Name = 
-        if lScope.exists(_.name == name) then
-            lScope.find(_.name == name).get
+        if lScope.exists(_.value == name) then
+            lScope.find(_.value == name).get
         else
             newVar(name, None)
     
     private def updateFuncName(name: String)(using ctx: RenamerContext): Name = 
-        if funcNames.exists(_.name == name) then
-            funcNames.find(_.name == name).get 
+        if funcNames.exists(_.value == name) then
+            funcNames.find(_.value == name).get 
         else
             ctx.errors += ScopeError(s"function $name not declared in scope")
             throw ScopeException(ctx.errors.toList)

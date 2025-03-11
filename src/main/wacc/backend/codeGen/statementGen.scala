@@ -13,10 +13,10 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable
 import scala.collection.immutable
 
-def genFuncCall(v: Name, args: List[T_Expr], stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] = {
+def genFuncCall(name: Name, args: List[T_Expr], stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] = {
     val builder = new ListBuffer[A_Instr]
-    val funcStackTable = ctx.stackTables.funcTables(v)
-    val names = ctx.typeInfo.funcTys(v)._2
+    val funcStackTable = ctx.stackTables.funcTables(name)
+    val names = ctx.typeInfo.funcTys(name)._2
 
     builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(funcStackTable.paramsSize), PTR_SIZE)
 
@@ -27,7 +27,7 @@ def genFuncCall(v: Name, args: List[T_Expr], stackTable: StackTables)(using ctx:
         }
     }
 
-    builder += A_Call(funcLabelGen(v))
+    builder += A_Call(funcLabelGen(name))
     builder += A_Add(A_Reg(A_RegName.StackPtr), A_Imm(funcStackTable.paramsSize), PTR_SIZE)
 
     builder.toList

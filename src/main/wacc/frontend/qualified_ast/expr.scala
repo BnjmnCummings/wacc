@@ -6,7 +6,7 @@ sealed trait Q_Expr extends Q_RValue
 sealed trait Q_LValue
 sealed trait Q_RValue
 
-case class Name(name: String, num: Int)
+case class Name(value: String, num: Int)
 
 // Binary operators
 sealed trait Q_BinaryOper extends Q_Expr

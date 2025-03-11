@@ -139,9 +139,14 @@ private def gen(func: T_Func)(using ctx: CodeGenCtx): A_Func =
 
     A_Func(funcLabelGen(func.name), builder.toList)
 
-
-inline def funcLabelGen(f: Name): A_InstrLabel = 
-    A_InstrLabel(s".F.${f.name}")
+/**
+  * A helper function that returns a unique subroutine lable.
+  * It is assumed at this stage that all function names are unique.
+  * @param f
+  * @return
+  */
+inline def funcLabelGen(funcName: Name): A_InstrLabel = 
+    A_InstrLabel(s".F.${funcName.value}")
 
 inline def sizeOf(ty: SemType): A_OperandSize = ty match
     case ?                    => PTR_SIZE
