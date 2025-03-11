@@ -3,8 +3,13 @@
 .scala-build/
 .vscode/
 <<<<<<< HEAD
+<<<<<<< HEAD
 src/test/wacc/backend/integration/assembly/*.s
 src/test/wacc/backend/integration/output/*
 =======
 *testSettings*
 >>>>>>> 2fc73e9 (refactor - added javadocs to instructions.scala)
+=======
+*testSettings*
+.DS_Store
+>>>>>>> 0890fd1 (fix: added .DS_Store to gitignore)
