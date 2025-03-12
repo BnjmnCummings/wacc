@@ -165,8 +165,6 @@ inline def sizeOf(ty: SemType): A_OperandSize = ty match
     case X                    => throw Exception("Should not have semType X in codeGen")
     case KnownType.Ident      => throw Exception("Should get type info from context")
 
-
-
 /**
   * A helper function that maps an [A_OperandSize] to its size in bytes.
   * @param opSize the size of the operand as an [A_OperandSize] enum.

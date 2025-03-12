@@ -45,7 +45,6 @@ def getTables(prog: T_Prog, typeInfo: TypeInfo): TableCtx =
   * @param instrs list of instructions to get the stack tables of.
   * @param typeInfo type information about functions and variables.
   * @param target the stack tables to add the scope to.
-  * @param ctx the table context.
   */
 private def getTables(instrs: List[T_Stmt], typeInfo: TypeInfo, target: StackTables)(using ctx: TableCtx): Unit = 
     instrs.foreach { 
@@ -58,7 +57,6 @@ private def getTables(instrs: List[T_Stmt], typeInfo: TypeInfo, target: StackTab
  * @param instr instruction to get the stack tables of.
  * @param typeInfo type information about functions and variables.
  * @param target the stack tables to add the scope to.
- * @param ctx the table context.
  */
 private def getTables(instr: T_Stmt, typeInfo: TypeInfo, target: StackTables)(using ctx: TableCtx): Unit = 
     instr match 
