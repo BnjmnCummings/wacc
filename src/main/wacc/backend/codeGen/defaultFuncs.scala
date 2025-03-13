@@ -8,10 +8,35 @@ inline def STACK_ALIGN_VAL = -16 /* stack alignment for 16 bytes */
 inline def ERR_EXIT_CODE = -1
 
 /**
+  * A map of default function labels to their functions.
+  * @return a map of default function labels to their function
+  */
+def deFuncMap: Map[A_DefaultLabel, A_Func] = Map(
+    ERR_OVERFLOW_LABEL -> defaultOverflow,
+    ERR_OUT_OF_BOUNDS_LABEL -> defaultOutOfBounds,
+    ERR_OUT_OF_MEMORY_LABEL -> defaultOutOfMemory,
+    ERR_DIV_ZERO_LABEL -> defaultDivZero,
+    ERR_BAD_CHAR_LABEL -> defaultBadChar,
+    ERR_NULL_PAIR_LABEL -> defaultErrNull,
+    PRINTLN_LABEL -> defaultPrintln,
+    PRINTI_LABEL -> defaultPrinti,
+    PRINTC_LABEL -> defaultPrintc,
+    PRINTP_LABEL -> defaultPrintp,
+    PRINTB_LABEL -> defaultPrintb,
+    PRINTS_LABEL -> defaultPrints,
+    READI_LABEL -> defaultReadi,
+    READC_LABEL -> defaultReadc,
+    EXIT_LABEL -> defaultExit,
+    MALLOC_LABEL -> defaultMalloc,
+    FREE_LABEL -> defaultFree,
+    FREE_PAIR_LABEL -> defaultFreePair
+)
+
+/**
   * A map of default function labels to their dependencies.
   * @return a map of default function labels to their dependencies
   */
-def defaultFuncsFuncDependency: Map[A_DefaultLabel, Set[A_DefaultLabel]] = Map(
+def deFuncDependancyMap: Map[A_DefaultLabel, Set[A_DefaultLabel]] = Map(
     ERR_OVERFLOW_LABEL -> Set(PRINTS_LABEL),
     ERR_OUT_OF_BOUNDS_LABEL -> Set(PRINTS_LABEL),
     ERR_OUT_OF_MEMORY_LABEL -> Set(PRINTS_LABEL),
@@ -39,7 +64,7 @@ def defaultFuncsFuncDependency: Map[A_DefaultLabel, Set[A_DefaultLabel]] = Map(
   * A map of function labels to their requred string labels.
   * @return a map of default function labels to their dependencies
   */
-def defaultFuncsStrDependency: Map[A_DefaultLabel, Set[(A_DataLabel, String)]] = Map(
+def deFuncStringDependancyMap: Map[A_DefaultLabel, Set[(A_DataLabel, String)]] = Map(
     ERR_OVERFLOW_LABEL -> Set((OVERFLOW_LBL_STR_NAME, OVERFLOW_LBL_STR)),
     ERR_OUT_OF_BOUNDS_LABEL -> Set((OUT_OF_BOUNDS_LBL_STR_NAME, OUT_OF_BOUNDS_LBL_STR)),
     ERR_OUT_OF_MEMORY_LABEL -> Set((OUT_OF_MEMORY_LBL_STR_NAME, OUT_OF_MEMORY_LBL_STR)),
@@ -68,29 +93,10 @@ def defaultFuncsStrDependency: Map[A_DefaultLabel, Set[(A_DataLabel, String)]] =
 )  
 
 /**
- * 
- */
-def defaultFuncsLabelToFunc: Map[A_DefaultLabel, A_Func] = Map(
-    ERR_OVERFLOW_LABEL -> defaultOverflow,
-    ERR_OUT_OF_BOUNDS_LABEL -> defaultOutOfBounds,
-    ERR_OUT_OF_MEMORY_LABEL -> defaultOutOfMemory,
-    ERR_DIV_ZERO_LABEL -> defaultDivZero,
-    ERR_BAD_CHAR_LABEL -> defaultBadChar,
-    ERR_NULL_PAIR_LABEL -> defaultErrNull,
-    PRINTLN_LABEL -> defaultPrintln,
-    PRINTI_LABEL -> defaultPrinti,
-    PRINTC_LABEL -> defaultPrintc,
-    PRINTP_LABEL -> defaultPrintp,
-    PRINTB_LABEL -> defaultPrintb,
-    PRINTS_LABEL -> defaultPrints,
-    READI_LABEL -> defaultReadi,
-    READC_LABEL -> defaultReadc,
-    EXIT_LABEL -> defaultExit,
-    MALLOC_LABEL -> defaultMalloc,
-    FREE_LABEL -> defaultFree,
-    FREE_PAIR_LABEL -> defaultFreePair
-)
-
+  * A default fucntion for Exit().
+  * Calls the cLib Exit function.
+  * @return a list of instructions to generate a safe call to exit.
+  */
 inline def defaultExit: A_Func = 
     val program: ListBuffer[A_Instr] = ListBuffer()
     program += A_Push(A_Reg(A_RegName.BasePtr))
@@ -104,6 +110,11 @@ inline def defaultExit: A_Func =
     A_Func(EXIT_LABEL, program.toList)
 
 
+/**
+  * A default function for handling overflow errors.
+  * Outputs an error message for integer overflow/underflow errors.
+  * @return a list of instructions to generate an OverflowError function.
+  */
 inline def defaultOverflow: A_Func = 
     val program: ListBuffer[A_Instr] = ListBuffer()
     program += A_And(A_Reg(A_RegName.StackPtr), A_Imm(STACK_ALIGN_VAL), PTR_SIZE)
@@ -114,10 +125,16 @@ inline def defaultOverflow: A_Func =
 
     A_Func(ERR_OVERFLOW_LABEL, program.toList)
 
-// When calling print:
-    // edi holds the format string
-    // esi holds the value to be printed
-
+/**
+  * A default function for calling the printf cLib function.
+  * Before this subroutine is called it is assumed that: 
+     edi holds the format string,
+     esi holds the value to be printed
+  * @param size the size, in bytes, of the operand passed in.
+  * @param dataLabel the label pointing to the data to be printed.
+  * @param defLabel the label of the specific print function to be used.
+  * @return
+  */
 inline def defPrint(size: A_OperandSize, dataLabel: A_DataLabel, defLabel: A_DefaultLabel): A_Func = 
     val program: ListBuffer[A_Instr] = ListBuffer()
 
@@ -137,15 +154,31 @@ inline def defPrint(size: A_OperandSize, dataLabel: A_DataLabel, defLabel: A_Def
     A_Func(defLabel, program.toList)
 
 
+/**
+  * A default function for calling printf on an integer.
+  * @return the printf subroutine for printing an integer.
+  */
 inline def defaultPrinti: A_Func = 
     defPrint(INT_SIZE, PRINTI_LBL_STR_NAME, PRINTI_LABEL)
 
+/**
+  * A default function for calling printf on a character.
+  * @return the printf subroutine for printing a character.
+  */
 inline def defaultPrintc: A_Func =
     defPrint(CHAR_SIZE, PRINTC_LBL_STR_NAME, PRINTC_LABEL)
 
+/**
+  * A default function for calling printf on a pointer.
+  * @return the printf subroutine for printing a pointer.
+  */
 inline def defaultPrintp: A_Func = 
     defPrint(PTR_SIZE, PRINTP_LBL_STR_NAME, PRINTP_LABEL)
 
+/**
+  * A default function for calling printf on a boolean.
+  * @return the printf subroutine for printing a boolean.
+  */
 inline def defaultPrintb: A_Func =
     val program: ListBuffer[A_Instr] = ListBuffer()
 
@@ -171,6 +204,10 @@ inline def defaultPrintb: A_Func =
 
     A_Func(PRINTB_LABEL, program.toList)
 
+/**
+  * A default function for calling printf on a string.
+  * @return the printf subroutine for printing a string.
+  */
 inline def defaultPrints: A_Func = 
     val program: ListBuffer[A_Instr] = ListBuffer()
 
@@ -190,6 +227,10 @@ inline def defaultPrints: A_Func =
 
     A_Func(PRINTS_LABEL, program.toList)
 
+/**
+  * A default function for calling println.
+  * @return the subroutine for printing a line.
+  */
 inline def defaultPrintln: A_Func = 
     val program: ListBuffer[A_Instr] = ListBuffer()
 
@@ -206,13 +247,13 @@ inline def defaultPrintln: A_Func =
 
     A_Func(PRINTLN_LABEL, program.toList)
 
-
-inline def defaultReadc: A_Func = 
-    defRead(CHAR_SIZE, READC_LBL_STR_NAME, READC_LABEL)
-
-inline def defaultReadi: A_Func = 
-    defRead(INT_SIZE, READI_LBL_STR_NAME, READI_LABEL)
-
+/**
+  * A default function for reading a value.
+  * @param size the size of the value to be read.
+  * @param dataLabel the label pointing to the data to be read.
+  * @param defLabel the label of the specific read function to be used.
+  * @return the subroutine for reading a value.
+  */
 inline def defRead(size: A_OperandSize, dataLabel: A_DataLabel, defLabel: A_DefaultLabel): A_Func = 
     val program: ListBuffer[A_Instr] = ListBuffer()
 
@@ -233,21 +274,27 @@ inline def defRead(size: A_OperandSize, dataLabel: A_DataLabel, defLabel: A_Defa
 
     A_Func(defLabel, program.toList)
 
-inline def defaultBadChar: A_Func = 
-    defRuntimeErr(ERR_BAD_CHAR_STR_NAME, ERR_BAD_CHAR_LABEL)
+/**
+  * A default function for reading a character.
+  * @return the subroutine for reading a character.
+  */
+inline def defaultReadc: A_Func = 
+    defRead(CHAR_SIZE, READC_LBL_STR_NAME, READC_LABEL)
 
-inline def defaultOutOfBounds: A_Func = 
-    defRuntimeErr(OUT_OF_BOUNDS_LBL_STR_NAME, ERR_OUT_OF_BOUNDS_LABEL)
+/**
+  * A default function for reading an integer.
+  * @return the subroutine for reading an integer.
+  */
+inline def defaultReadi: A_Func = 
+    defRead(INT_SIZE, READI_LBL_STR_NAME, READI_LABEL)
 
-inline def defaultDivZero: A_Func = 
-    defRuntimeErr(PRINTS_LABEL, DIV_ZERO_LBL_STR_NAME, ERR_DIV_ZERO_LABEL)
-
-inline def defaultOutOfMemory: A_Func = 
-    defRuntimeErr(PRINTS_LABEL, OUT_OF_MEMORY_LBL_STR_NAME, ERR_OUT_OF_MEMORY_LABEL)
-
-inline def defaultErrNull: A_Func =
-    defRuntimeErr(PRINTS_LABEL, ERR_NULL_PAIR_STR_NAME, ERR_NULL_PAIR_LABEL)
-
+/**
+  * A default function for handling runtime errors.
+  * Prints the value of the data label and calls the cLib exit function.
+  * @param dataLabel the label pointing to the data to be printed.
+  * @param defLabel the label of the specific error function to be used.
+  * @return the subroutine for handling runtime errors.
+  */
 inline def defRuntimeErr(dataLabel: A_DataLabel, defLabel: A_DefaultLabel): A_Func = 
     val program: ListBuffer[A_Instr] = ListBuffer()
     
@@ -265,6 +312,14 @@ inline def defRuntimeErr(dataLabel: A_DataLabel, defLabel: A_DefaultLabel): A_Fu
 
     A_Func(defLabel, program.toList)
 
+/**
+  * A default function for handling runtime errors.
+  * Calls an auxillary function identified by callLabel
+  * @param callLabel the label of the function to be called.
+  * @param dataLabel the label pointing to the data to be printed.
+  * @param defLabel the label of the specific error function to be used.
+  * @return the subroutine for handling runtime errors.
+  */
 inline def defRuntimeErr(callLabel: A_DefaultLabel, dataLabel: A_DataLabel, defLabel: A_DefaultLabel) =
     val program: ListBuffer[A_Instr] = ListBuffer()
 
@@ -276,6 +331,45 @@ inline def defRuntimeErr(callLabel: A_DefaultLabel, dataLabel: A_DataLabel, defL
 
     A_Func(defLabel, program.toList)
 
+/**
+  * A default function for generating 'Bad Char' runtime errors
+  * @return the subroutine for handling 'Bad Char' runtime errors.
+  */
+inline def defaultBadChar: A_Func = 
+    defRuntimeErr(ERR_BAD_CHAR_STR_NAME, ERR_BAD_CHAR_LABEL)
+
+/**
+  * A default function for generating 'Out of Bounds' runtime errors
+  * @return the subroutine for handling 'Out of Bounds' runtime errors.
+  */
+inline def defaultOutOfBounds: A_Func = 
+    defRuntimeErr(OUT_OF_BOUNDS_LBL_STR_NAME, ERR_OUT_OF_BOUNDS_LABEL)
+
+/**
+  * A default function for generating 'Dividing by Zero' runtime errors
+  * @return the subroutine for handling 'Dividing by Zero' runtime errors.
+  */
+inline def defaultDivZero: A_Func = 
+    defRuntimeErr(PRINTS_LABEL, DIV_ZERO_LBL_STR_NAME, ERR_DIV_ZERO_LABEL)
+
+/**
+  * A default function for generating 'Out of Memory' runtime errors
+  * @return the subroutine for handling 'Out of Memory' runtime errors.
+  */
+inline def defaultOutOfMemory: A_Func = 
+    defRuntimeErr(PRINTS_LABEL, OUT_OF_MEMORY_LBL_STR_NAME, ERR_OUT_OF_MEMORY_LABEL)
+
+/**
+  * A default function for generating 'Null pointer dereferencing' runtime errors
+  * @return the subroutine for handling 'Null pointer dereferencing' runtime errors.
+  */
+inline def defaultErrNull: A_Func =
+    defRuntimeErr(PRINTS_LABEL, ERR_NULL_PAIR_STR_NAME, ERR_NULL_PAIR_LABEL)
+
+/**
+  * A default function for generating Malloc calls.
+  * @return the subroutine for handling Malloc calls.
+  */
 inline def defaultMalloc: A_Func = 
     val program: ListBuffer[A_Instr] = ListBuffer()
 
@@ -291,6 +385,10 @@ inline def defaultMalloc: A_Func =
 
     A_Func(MALLOC_LABEL, program.toList)
 
+/**
+  * A default function for generating Free calls.
+  * @return the subroutine for handling Free calls.
+  */
 inline def defaultFree: A_Func = 
     val program: ListBuffer[A_Instr] = ListBuffer()
 
@@ -304,6 +402,10 @@ inline def defaultFree: A_Func =
 
     A_Func(FREE_LABEL, program.toList)
 
+/**
+  * A default function for generating Free calls for pairs.
+  * @return the subroutine for handling Free calls for pairs.
+  */
 inline def defaultFreePair: A_Func = 
     val program: ListBuffer[A_Instr] = ListBuffer()
 

@@ -44,9 +44,9 @@ class CodeGenCtx(val typeInfo: TypeInfo, val stackTables: TableCtx) {
       * @param label the label of the default function to add.
       */
     def addDefaultFunc(label: A_DefaultLabel): Unit = 
-        defaultFuncs.add(defaultFuncsLabelToFunc(label))
-        defaultFuncsFuncDependency(label).foreach { addDefaultFunc }
-        defaultFuncsStrDependency(label).foreach { addStoredStr }
+        defaultFuncs.add(deFuncMap(label))
+        deFuncDependancyMap(label).foreach { addDefaultFunc }
+        deFuncStringDependancyMap(label).foreach { addStoredStr }
 
     /**
       * Generates a new unique instruction label.
