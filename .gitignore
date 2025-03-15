@@ -8,8 +8,13 @@ src/test/wacc/backend/integration/assembly/*.s
 src/test/wacc/backend/integration/output/*
 =======
 *testSettings*
+<<<<<<< HEAD
 >>>>>>> 2fc73e9 (refactor - added javadocs to instructions.scala)
 =======
 *testSettings*
 .DS_Store
 >>>>>>> 0890fd1 (fix: added .DS_Store to gitignore)
+=======
+.DS_Store
+assembly/
+>>>>>>> e48d5ce (chore: added assembly folder to gitignore)
