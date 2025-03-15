@@ -4,6 +4,7 @@
 .vscode/
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 src/test/wacc/backend/integration/assembly/*.s
 src/test/wacc/backend/integration/output/*
 =======
@@ -12,9 +13,15 @@ src/test/wacc/backend/integration/output/*
 >>>>>>> 2fc73e9 (refactor - added javadocs to instructions.scala)
 =======
 *testSettings*
+=======
+>>>>>>> 02be73d (refactor: fixed import formatting in frontend)
 .DS_Store
 >>>>>>> 0890fd1 (fix: added .DS_Store to gitignore)
 =======
 .DS_Store
 assembly/
+<<<<<<< HEAD
 >>>>>>> e48d5ce (chore: added assembly folder to gitignore)
+=======
+testSettings.scala
+>>>>>>> 02be73d (refactor: fixed import formatting in frontend)

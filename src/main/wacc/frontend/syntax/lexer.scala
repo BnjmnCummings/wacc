@@ -2,14 +2,12 @@ package wacc
 
 import parsley.Parsley
 import parsley.Parsley.atomic
+import parsley.character.{string}
 import parsley.token.{Lexer, Basic}
 import parsley.token.descriptions.*
 import parsley.token.errors.*
-
 import parsley.errors.combinator.ErrorMethods
 import parsley.errors.tokenextractors.LexToken
-
-import parsley.character.{string}
 
 object lexer {
     private val desc = LexicalDesc.plain.copy(

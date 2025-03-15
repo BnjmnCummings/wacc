@@ -1,7 +1,6 @@
 package wacc
 
 import parsley.errors.ErrorBuilder
-// import parsley.errors.Token
 
 abstract class MyErrorBuilder extends ErrorBuilder[Err] {
     override def build(

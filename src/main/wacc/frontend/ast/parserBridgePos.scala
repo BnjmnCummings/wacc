@@ -27,7 +27,6 @@ trait ParserBridgePos1[-A, +B] extends ParserSingletonBridgePos[A => B] {
 }
 
 trait ParserBridgePos2[-A, -B, +C] extends ParserSingletonBridgePos[(A, B) => C] {
-    //def apply(a: A, b: B): C = apply(a, b)((0,0))
     def apply(a: A, b: B)(pos: (Int, Int)): C
     def apply(a: Parsley[A], b: =>Parsley[B]): Parsley[C] = error(ap2(pos.map(con), a, b))
 
@@ -35,7 +34,6 @@ trait ParserBridgePos2[-A, -B, +C] extends ParserSingletonBridgePos[(A, B) => C]
 }
 
 trait ParserBridgePos3[-A, -B, -C, +D] extends ParserSingletonBridgePos[(A, B, C) => D] {
-    // def apply(a: A, b: B, c: C): D = apply(a, b, c)((0,0))
     def apply(a: A, b: B, c: C)(pos: (Int, Int)): D
     def apply(a: Parsley[A], b: =>Parsley[B], c: =>Parsley[C]): Parsley[D] = error(ap3(pos.map(con), a, b, c))
 
@@ -43,7 +41,6 @@ trait ParserBridgePos3[-A, -B, -C, +D] extends ParserSingletonBridgePos[(A, B, C
 }
 
 trait ParserBridgePos4[-A, -B, -C, -D, +E] extends ParserSingletonBridgePos[(A, B, C, D) => E] {
-    // def apply(a: A, b: B, c: C, d:D): E = apply(a, b, c, d)((0,0))
     def apply(a: A, b: B, c: C, d:D)(pos: (Int, Int)): E
 
     def apply(

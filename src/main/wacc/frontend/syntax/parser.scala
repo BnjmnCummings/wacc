@@ -12,10 +12,11 @@ import lexer.{BeginProg, ThenIf, FiIf, WhileDo, WhileDone}
 import lexer.implicits.implicitSymbol
 import lexer.LexErrorBuilder
 
-import java.io.File
 import scala.util.Success
 import scala.util.Failure
+import java.io.File
 import java.io.FileNotFoundException
+
 
 object parser {
     def parseF(input: File): Result[Err, Prog] = parser.parseFile(input) match
