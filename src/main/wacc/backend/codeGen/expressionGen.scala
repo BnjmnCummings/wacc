@@ -16,8 +16,8 @@ import scala.collection.immutable
 /**
  * Generates the assembly instructions for a Div/Mod operation.
  * Handles the edge cases of division by zero and integer overflow.
- *  With IDiv, we need the numerator to be stored in eax and then we can divide by a given register.
- *  IDiv stores remainder in edx(32bit) ie R3. So we use this function for both div and mod.
+ * With IDiv, we need the numerator to be stored in eax and then we can divide by a given register.
+ * IDiv stores remainder in edx(32bit) ie R3. So we use this function for both div and mod.
  * 
  * @param x The numerator expression.
  * @param y The denominator expression.
@@ -28,7 +28,6 @@ import scala.collection.immutable
 def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
-    // NOTE: 
     ctx.addDefaultFunc(ERR_DIV_ZERO_LABEL)
     ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
 
@@ -182,8 +181,8 @@ def genLen(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_In
     val builder = new ListBuffer[A_Instr]
 
     builder ++= gen(x, stackTable)
-    // We now have the pointer to the first element stored in RAX (64-bit RetReg)
-    // We know the size is stored 4 bytes before the first element hence we can do a reg deref of retreg -4 to find the size
+    /* We now have the pointer to the first element stored in RAX (64-bit RetReg)
+    We know the size is stored 4 bytes before the first element hence we can do a reg deref of retreg -4 to find the size */
     builder += A_Mov(
         A_Reg(A_RegName.RetReg), 
         A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), A_OffsetImm(-numOfBytes(INT_SIZE)))), 
@@ -385,11 +384,6 @@ def unwrapArrType(ty: KnownType, length: Int): SemType = (ty, length) match
     case (KnownType.Array(t), _) => unwrapArrType(t.asInstanceOf[KnownType], length - 1)
     case _ => throw Exception(s"Received a type that isn't an array: $ty")
 
-//TODO: is tis a better way?
-def getArrInnerType(ty: SemType): SemType = ty match
-    case KnownType.Array(t) => getArrInnerType(t)
-    case t => t
-
 /**
   * Generates the assembly instructions for a nullpair literal.
   * @return The list of assembly instructions.
@@ -411,8 +405,8 @@ def genPairElem(index: PairIndex, v: T_LValue, stackTable: StackTables)(using ct
 
     v match
         case T_Ident(name) =>
-            // We assume pointer to our elem is stored in RetReg
-            // deref this value to get value stored
+            /* We assume pointer to our elem is stored in RetReg
+            deref this value to get value stored */
             val pairTy = ctx.typeInfo.varTys(name).asInstanceOf[KnownType.Pair]
             val ty = index match
                 case PairIndex.First => pairTy.ty1
@@ -420,8 +414,8 @@ def genPairElem(index: PairIndex, v: T_LValue, stackTable: StackTables)(using ct
 
             builder += A_Mov(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), NO_OFFSET)), sizeOf(ty))
         case _ =>
-            // Either T_ArrayElem or T_PairElem
-            // we assume the value in RetReg is a pointer to the element and deref this value to get value stored
+            /* Either T_ArrayElem or T_PairElem
+            we assume the value in RetReg is a pointer to the element and deref this value to get value stored */
             builder += A_Mov(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), NO_OFFSET)), PTR_SIZE)
 
     builder.toList
