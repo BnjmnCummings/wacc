@@ -288,6 +288,8 @@ def genPrintln(expr: T_Expr, ty: SemType, stackTable: StackTables)(using ctx: Co
   */
 def genIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name], el: List[T_Stmt], scopedEl: Set[Name], stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
+    val bodyLabel = ctx.genNextInstrLabel() // .L0
+    val restLabel = ctx.genNextInstrLabel() // .L1
 
     cond match 
         case _: T_GreaterThan | 
@@ -303,16 +305,6 @@ def genIf(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name], el: List[T_St
              _: T_Ident => ()
         case _ => throw new Exception(s"Should not reach here. Got $cond")
     
-    builder ++= genIfHelper(cond, body, scopedBody, el, scopedEl, stackTable)
-
-    builder.toList
-
-// TODO: get rid of this
-def genIfHelper(cond: T_Expr, body: List[T_Stmt], scopedBody: Set[Name], el: List[T_Stmt], scopedEl: Set[Name], stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
-    val builder = new ListBuffer[A_Instr]
-    val bodyLabel = ctx.genNextInstrLabel() // .L0
-    val restLabel = ctx.genNextInstrLabel() // .L1
-
     builder ++= gen(cond, stackTable) // condition 
     builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(TRUE), BOOL_SIZE)
     builder += A_Jmp(bodyLabel, A_Cond.Eq)
