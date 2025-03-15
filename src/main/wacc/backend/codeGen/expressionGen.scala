@@ -14,13 +14,21 @@ import scala.collection.mutable
 import scala.collection.immutable
 
 /**
- * mention edge cases: integer overflow, division by zero
+ * Generates the assembly instructions for a Div/Mod operation.
+ * Handles the edge cases of division by zero and integer overflow.
+ *  With IDiv, we need the numerator to be stored in eax and then we can divide by a given register.
+ *  IDiv stores remainder in edx(32bit) ie R3. So we use this function for both div and mod.
+ * 
+ * @param x The numerator expression.
+ * @param y The denominator expression.
+ * @param divResultReg The register to store the result of the division.
+ * @param stackTable The stack table.
+ * @return The list of assembly instructions.
  */ 
 def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
-    // NOTE: With IDiv, we need the numerator to be stored in eax and then we can divide by a given register
-    // NOTE: IDiv stores remainder in edx(32bit) - R3
+    // NOTE: 
     ctx.addDefaultFunc(ERR_DIV_ZERO_LABEL)
     ctx.addDefaultFunc(ERR_OVERFLOW_LABEL)
 
@@ -38,6 +46,14 @@ def genDivMod(x: T_Expr, y: T_Expr, divResultReg: A_RegName, stackTable: StackTa
 
     builder.toList
 
+/**
+  * Generates the assembly instructions for an Add/Sub operation.
+  * @param x The first expression.
+  * @param y The second expression.
+  * @param instrApply The instruction to apply (Add or Sub).
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSize) => A_Instr), stackTable: StackTables)(using ctx: CodeGenCtx) =
     val builder = new ListBuffer[A_Instr]
     
@@ -53,6 +69,13 @@ def genAddSub(x: T_Expr, y: T_Expr, instrApply: ((A_Reg, A_Operand, A_OperandSiz
 
     builder.toList
 
+/**
+  * Generates the assembly instructions for a Mul operation.
+  * @param x The first expression.
+  * @param y The second expression.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def genMul(x: T_Expr, y: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] = 
     
     val builder = new ListBuffer[A_Instr]
@@ -69,6 +92,15 @@ def genMul(x: T_Expr, y: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx)
 
     builder.toList
 
+/**
+  * Generates the assembly instructions for a comparison.
+  * @param x The first expression.
+  * @param y The second expression.
+  * @param ty The type of the expressions.
+  * @param cond The condition to check.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def genComparison(x: T_Expr, y: T_Expr, ty: SemType, cond: A_Cond, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
@@ -84,6 +116,14 @@ def genComparison(x: T_Expr, y: T_Expr, ty: SemType, cond: A_Cond, stackTable: S
 
     builder.toList
 
+/**
+  * Generates the assembly instructions for a bitwise operation.
+  * @param x The first expression.
+  * @param y The second expression.
+  * @param stackTable The stack table.
+  * @param cond The condition to check.
+  * @return The list of assembly instructions.
+  */
 def genBitwiseOp(x: T_Expr, y: T_Expr, stackTable: StackTables, cond: A_Cond)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
     val label = ctx.genNextInstrLabel()
@@ -98,6 +138,12 @@ def genBitwiseOp(x: T_Expr, y: T_Expr, stackTable: StackTables, cond: A_Cond)(us
 
     builder.toList
 
+/**
+  * Generates the assembly instructions for a Not operation.
+  * @param x The expression to generate code for.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def genNot(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
 
@@ -106,6 +152,12 @@ def genNot(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_In
 
     builder.toList
 
+/**
+  * Generates the assembly instructions for a Negation operation.
+  * @param x The expression to generate code for.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def genNeg(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =    
     val builder = new ListBuffer[A_Instr]
 
@@ -119,6 +171,12 @@ def genNeg(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_In
    
     builder.toList
 
+/**
+  * Generates the assembly instructions for a Len operation.
+  * @param x The expression to generate code for.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def genLen(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     // PRE: WE KNOW x IS A LIST BECAUSE OF TYPE CHECKING
     val builder = new ListBuffer[A_Instr]
@@ -133,6 +191,12 @@ def genLen(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_In
 
     builder.toList
 
+/**
+  * Generates the assembly instructions for a Ord operation (char -> int).
+  * @param x The expression to generate code for.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def genOrd(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
 
@@ -141,6 +205,12 @@ def genOrd(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_In
 
     builder.toList
 
+/**
+  * Generates the assembly instructions for a Ord operation (int -> char).
+  * @param x The expression to generate code for.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def genChr(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] = 
     val builder = new ListBuffer[A_Instr]
 
@@ -153,15 +223,35 @@ def genChr(x: T_Expr, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_In
 
     builder.toList
 
+/**
+  * Generates an Int literal.
+  * @param v the value of the literal.
+  * @return The list of assembly instructions.
+  */
 def genIntLiteral(v: BigInt)(using ctx: CodeGenCtx): List[A_Instr] = 
     List(A_Mov(A_Reg(A_RegName.RetReg), A_Imm(v), INT_SIZE))
 
+/**
+  * Generates a Boolean literal.
+  * @param v the value of the literal.
+  * @return The list of assembly instructions.
+  */
 def genBoolLiteral(v: Boolean)(using ctx: CodeGenCtx): List[A_Instr] = 
     List(A_Mov(A_Reg(A_RegName.RetReg), A_Imm(if v then TRUE else FALSE), BOOL_SIZE))
 
+/**
+  * Generates a Char literal.
+  * @param v the value of the literal.
+  * @return The list of assembly instructions.
+  */
 def genCharLiteral(v: Char)(using ctx: CodeGenCtx): List[A_Instr] = 
     List(A_Mov(A_Reg(A_RegName.RetReg), A_Imm(v.toInt), CHAR_SIZE))
 
+/**
+  * Generates a String literal.
+  * @param v the value of the literal.
+  * @return The list of assembly instructions.
+  */
 def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] = 
     val str = v.flatMap( _ match {
         case '\n' => "\\n"
@@ -177,14 +267,38 @@ def genStringLiteral(v: String)(using ctx: CodeGenCtx): List[A_Instr] =
     
     List(A_Lea(A_Reg(A_RegName.RetReg), A_MemOffset(A_Reg(A_RegName.InstrPtr), A_OffsetLbl(ctx.storeString(str)))))
 
+/**
+  * Generates the assembly instructions for an identifier.
+  * @param v the name of the identifier.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def genIdent(v: Name, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] = 
     stackTable.get(v).toList
 
-def unwrapArrType(ty: KnownType, length: Int): SemType = (ty, length) match
-    case (_, 0) => ty
-    case (wacc.KnownType.Array(t), _) => unwrapArrType(t.asInstanceOf[KnownType], length - 1)
-    case _ => throw Exception(s"Received a type that isn't an array: $ty")
+/**
+  * Generates the assembly instructions for extracting an array element.
+  * @param v the name of the array.
+  * @param indices the indices of the array element.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
+def genArrayElem(v: Name, indices: List[T_Expr], stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder: ListBuffer[A_Instr] = ListBuffer()
+    val ty = unwrapArrType(ctx.typeInfo.varTys(v), indices.length)
 
+    builder ++= getPointerToArrayElem(v, indices, stackTable)
+    builder += A_Mov(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), NO_OFFSET)), sizeOf(ty))
+
+    builder.toList
+
+/**
+  * Generates the assembly instructions for extracting a pointer to an array element.
+  * @param v the name of the array.
+  * @param indices the nested indices of the array element.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder: ListBuffer[A_Instr] = ListBuffer()
     val ty = unwrapArrType(ctx.typeInfo.varTys(v), indices.length)
@@ -205,8 +319,13 @@ def getPointerToArrayElem(v: Name, indices: List[T_Expr], stackTable: StackTable
 
     builder.toList
 
-// assumes index is stored in RetReg and that the pointer to the array is pushed onto the stack
-// stores the address of the indexed element in RetReg
+/**
+  * Generates the assembly instructions for indexing an array.
+  * Assumes index is stored in RetReg and that the pointer to the array is pushed onto the stack.
+  * Stores the address of the indexed element in RetReg.
+  * @param elemSize The size of the array element.
+  * @return The list of assembly instructions.
+  */
 def indexArray(elemSize: Int)(using ctx: CodeGenCtx) =
     val builder: ListBuffer[A_Instr] = ListBuffer()
 
@@ -225,37 +344,66 @@ def indexArray(elemSize: Int)(using ctx: CodeGenCtx) =
 
     builder.toList
 
-def genArrayElem(v: Name, indices: List[T_Expr], stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
-    val builder: ListBuffer[A_Instr] = ListBuffer()
-    val ty = unwrapArrType(ctx.typeInfo.varTys(v), indices.length)
+/**
+  * Generates the assembly instructions for an array literal.
+  * Stores all the given expressions in a 'malloced' array.
+  * @param xs the list of expressions to store in the array.
+  * @param ty the type of the array.
+  * @param length the length of the array.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
+def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
+    val builder = new ListBuffer[A_Instr]
+    val sizeBytes = numOfBytes(INT_SIZE) + (numOfBytes(ty) * length)
 
-    builder ++= getPointerToArrayElem(v, indices, stackTable)
-    builder += A_Mov(A_Reg(A_RegName.RetReg), A_RegDeref(A_MemOffset(A_Reg(A_RegName.RetReg), NO_OFFSET)), sizeOf(ty))
+    ctx.addDefaultFunc(MALLOC_LABEL)
+
+    builder += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(sizeBytes), INT_SIZE)
+    builder += A_Call(MALLOC_LABEL)
+    builder += A_Mov(TEMP_REG, A_Reg(A_RegName.RetReg), PTR_SIZE)
+    builder += A_Add(TEMP_REG, A_Imm(numOfBytes(INT_SIZE)), PTR_SIZE)
+    builder += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(length), INT_SIZE)
+    builder += A_Mov(A_RegDeref(A_MemOffset(TEMP_REG, A_OffsetImm(-numOfBytes(INT_SIZE)))), A_Reg(A_RegName.RetReg), INT_SIZE)
+
+    for i <- 0 to length - 1 do
+        builder ++= gen(xs(i), stackTable)
+        builder += A_Mov(A_RegDeref(A_MemOffset(TEMP_REG, A_OffsetImm(i * numOfBytes(ty)))), A_Reg(A_RegName.RetReg), sizeOf(ty))
+
+    builder += A_Mov(A_Reg(A_RegName.RetReg), TEMP_REG, PTR_SIZE)
 
     builder.toList
 
-def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] = 
-    List(A_Mov(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE))
+/**
+  * Helper function to extract the inner type of a nested array.
+  * @param ty The outside type of the array.
+  * @param length The length of the 'indicies' vector (how many layers of nested arrays we have left).
+  * @return The list of assembly instructions.
+  */
+def unwrapArrType(ty: KnownType, length: Int): SemType = (ty, length) match
+    case (_, 0) => ty
+    case (KnownType.Array(t), _) => unwrapArrType(t.asInstanceOf[KnownType], length - 1)
+    case _ => throw Exception(s"Received a type that isn't an array: $ty")
 
+//TODO: is tis a better way?
 def getArrInnerType(ty: SemType): SemType = ty match
     case KnownType.Array(t) => getArrInnerType(t)
     case t => t
 
-def getPairElemPtr(index: PairIndex, v: T_LValue, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
-    val builder = new ListBuffer[A_Instr]
-    val offset = index match
-        case PairIndex.First => ZERO_IMM
-        case PairIndex.Second => numOfBytes(PTR_SIZE)
+/**
+  * Generates the assembly instructions for a nullpair literal.
+  * @return The list of assembly instructions.
+  */
+def genPairNullLiteral()(using ctx: CodeGenCtx): List[A_Instr] = 
+    List(A_Mov(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE))
 
-    ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
-
-    builder ++= gen(v, stackTable)
-    builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
-    builder += A_Jmp(ERR_NULL_PAIR_LABEL, A_Cond.Eq)
-    builder += A_Add(A_Reg(A_RegName.RetReg), A_Imm(offset), PTR_SIZE)
-
-    builder.toList
-
+/**
+  * Generates the assembly instructions for extracting a pair element.
+  * @param index The index of the element (fst/snd).
+  * @param v the pair, a [T_LValue] the evaluates to a pair.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def genPairElem(index: PairIndex, v: T_LValue, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
@@ -278,29 +426,37 @@ def genPairElem(index: PairIndex, v: T_LValue, stackTable: StackTables)(using ct
 
     builder.toList
 
-
-
-def genArrayLiteral(xs: List[T_Expr], ty: SemType, length: Int, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
+/**
+  * helper function to get the pointer to a pair elem.
+  * @param index The index of the element (fst/snd).
+  * @param v the pair, a [T_LValue] the evaluates to a pair.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
+def getPairElemPtr(index: PairIndex, v: T_LValue, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
-    val sizeBytes = numOfBytes(INT_SIZE) + (numOfBytes(ty) * length)
+    val offset = index match
+        case PairIndex.First => ZERO_IMM
+        case PairIndex.Second => numOfBytes(PTR_SIZE)
 
-    ctx.addDefaultFunc(MALLOC_LABEL)
+    ctx.addDefaultFunc(ERR_NULL_PAIR_LABEL)
 
-    builder += A_Mov(A_Reg(A_RegName.Arg1), A_Imm(sizeBytes), INT_SIZE)
-    builder += A_Call(MALLOC_LABEL)
-    builder += A_Mov(TEMP_REG, A_Reg(A_RegName.RetReg), PTR_SIZE)
-    builder += A_Add(TEMP_REG, A_Imm(numOfBytes(INT_SIZE)), PTR_SIZE)
-    builder += A_Mov(A_Reg(A_RegName.RetReg), A_Imm(length), INT_SIZE)
-    builder += A_Mov(A_RegDeref(A_MemOffset(TEMP_REG, A_OffsetImm(-numOfBytes(INT_SIZE)))), A_Reg(A_RegName.RetReg), INT_SIZE)
-
-    for i <- 0 to length - 1 do
-        builder ++= gen(xs(i), stackTable)
-        builder += A_Mov(A_RegDeref(A_MemOffset(TEMP_REG, A_OffsetImm(i * numOfBytes(ty)))), A_Reg(A_RegName.RetReg), sizeOf(ty))
-
-    builder += A_Mov(A_Reg(A_RegName.RetReg), TEMP_REG, PTR_SIZE)
+    builder ++= gen(v, stackTable)
+    builder += A_Cmp(A_Reg(A_RegName.RetReg), A_Imm(ZERO_IMM), PTR_SIZE)
+    builder += A_Jmp(ERR_NULL_PAIR_LABEL, A_Cond.Eq)
+    builder += A_Add(A_Reg(A_RegName.RetReg), A_Imm(offset), PTR_SIZE)
 
     builder.toList
 
+/**
+  * Generates the assembly instructions for a newpair operation.
+  * @param x1 The first expression.
+  * @param x2 The second expression.
+  * @param ty1 The type of the first expression.
+  * @param ty2 The type of the second expression.
+  * @param stackTable The stack table.
+  * @return The list of assembly instructions.
+  */
 def genNewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType, stackTable: StackTables)(using ctx: CodeGenCtx): List[A_Instr] =
     val builder = new ListBuffer[A_Instr]
 
