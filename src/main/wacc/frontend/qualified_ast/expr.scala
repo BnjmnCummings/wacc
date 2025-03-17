@@ -6,11 +6,8 @@ sealed trait Q_LValue
 sealed trait Q_RValue
 sealed trait Q_Expr extends Q_RValue
 
-case class Name(value: String, num: Int)
-
 /**
   * A qualified function call.
-  * The type can be evaluated by dereferencing the name v.
   * @param v the name of the function.
   * @param args the arguments to pass in.
   * @param pos position information (line, char) used for locating errors.
@@ -18,7 +15,7 @@ case class Name(value: String, num: Int)
 case class Q_FuncCall(v: Name, args: List[Q_Expr], pos: (Int, Int) = (0, 0)) extends Q_RValue
 
 /**
-  * A typed array literal.
+  * A qualified array literal.
   * @param xs the list of values stored in the array.
   * @param pos position information (line, char) used for locating errors.
   */
@@ -87,3 +84,9 @@ case class Q_Ident(v: Name, pos: (Int, Int) = (0, 0)) extends Q_Expr, Q_LValue
 case class Q_ArrayElem(v: Name, indicies: List[Q_Expr], pos: (Int, Int) = (0, 0)) extends Q_Expr, Q_LValue
 object Q_PairNullLiteral extends Q_Expr
 
+/**
+  * Case class to represent unique identity names.
+  * @param value the 'name' of the variable/function
+  * @param num the unique 'id number' for variable shadowing.
+  */
+case class Name(value: String, num: Int)

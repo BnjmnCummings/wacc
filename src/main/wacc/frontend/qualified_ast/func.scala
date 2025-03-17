@@ -12,7 +12,7 @@ import wacc.ast.*
 case class Q_Prog(funcs: List[Q_Func], body: List[Q_Stmt], scoped: Set[Name], pos: (Int, Int) = (0, 0))
 
 /**
-  * A typed function.
+  * A qualified function.
   * @param t the return type of the function.
   * @param name the unique name of the function.
   * @param args the list of parameters passed into the function
@@ -23,7 +23,7 @@ case class Q_Prog(funcs: List[Q_Func], body: List[Q_Stmt], scoped: Set[Name], po
 case class Q_Func(t: Type, name: Name, args: List[Q_Param], body: List[Q_Stmt], scoped: Set[Name], pos: (Int, Int) = (0, 0))
 
 /**
-  * A typed Parameter.
+  * A qualified Parameter.
   * @param t the type of the parameter.
   * @param name parameter's name as [[Name]] object.
   * @param pos position information (line, char) used for locating errors.
