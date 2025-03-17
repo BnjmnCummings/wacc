@@ -150,7 +150,7 @@ object parser {
         Func(_type, 
             _ident,
             "(" ~> params <~ ")", 
-            "is" ~> stmts.map(Some(_)).mapFilter(returningBody) <~ "end"
+            "is" ~> stmts.filter(returningBody) <~ "end"
         )
     )
 
@@ -190,32 +190,19 @@ object parser {
         ";"
     )
 
-    /* 
-    This function checks a list of statements wrapped in an Option to see if they are a returning body
-    It returns the result as an Some if they are and a None if not
-    */
-    def returningBody(st_opt: Option[List[Stmt]]): Option[List[Stmt]] = st_opt match
-        case None => None
-        case Some(sts) => {
+    /** 
+     * This function checks a list of statements to see if they are a returning body.
+     * A 'returning body' must ultimately end in a [[wacc.ast.Return]] or a [[wacc.ast.Exit]] statement.
+     * @param statements a  list of function body statements to recurse through.
+     */
+    def returningBody(statements: List[Stmt]): Boolean = statements match
+        case Nil => false
+        case sts => {
             sts.last match 
-                // if it ends with exit or return we're good
-                case Exit(_) => Some(sts) 
-                case Return(_) => Some(sts)
-                // recursive call if the last statement is an if
-                case If(p, q, r) => {
-                    val qs: Option[List[Stmt]] = returningBody(Some(q)) 
-                    val rs: Option[List[Stmt]] = returningBody(Some(r))
-                    (qs, rs) match 
-                        case (Some(_), Some(_)) => Some(sts)
-                        case _ => None
-                }
-                // mixingTypesInArrays.wacc ends a function with a returning Codeblock and this is apparently valid?
-                case CodeBlock(sts2) => {
-                    returningBody(Some(sts2)) match
-                        case Some(_) => Some(sts)
-                        case None => None
-                }
-                // if it ends with anything else its not a returning body
-                case _ => None
+                case Exit(_)         => true 
+                case Return(_)       => true
+                case If(p, q, r)     => returningBody(q) && returningBody(r)
+                case CodeBlock(sts2) => returningBody(sts2) 
+                case _               => false
         }
 }
