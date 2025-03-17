@@ -5,6 +5,10 @@ import scala.io.Source
 
 trait semanticErr
 
+/**
+  * An object to represent a Scope Error.
+  * @example A variable is accessed outside of it's scope.
+  */
 object ScopeError {
     def apply(msg: String)(using ctx: RenamerContext) = Err(
         ctx.fname,
@@ -17,6 +21,10 @@ object ScopeError {
     )
 }
 
+/**
+  * An object to represent a Type Mismatch Error.
+  * @example An assignment is made between a boolean and an integer
+  */
 object TypeMismatch {
     def apply(unexpected: SemType, expected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -31,6 +39,10 @@ object TypeMismatch {
     )
 }
 
+/**
+  * An object to represent a Non Exitable Error.
+  * @example An exit() call is made with a string argument
+  */
 object NonExitableType {
     def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -45,6 +57,10 @@ object NonExitableType {
     )
 }
 
+/**
+  * An object to represent a Non Freeable Error.
+  * @example A free() call is made for a stack-allocated variable.
+  */
 object NonFreeableType {
     def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -59,6 +75,10 @@ object NonFreeableType {
     )
 }
 
+/**
+  * An object to represent a Non Numeric Type Error.
+  * @example A numerical expression written with boolean/string types
+  */
 object NonNumericType {
     def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -73,6 +93,10 @@ object NonNumericType {
     )
 }
 
+/**
+  * An object to represent a Non Character Type Error.
+  * @example An 'ord' operator is invoked on an integer.
+  */
 object NonCharacterType {
     def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -87,6 +111,10 @@ object NonCharacterType {
     )
 }
 
+/**
+  * An object to represent a Non Numeric nor Character Type Error.
+  * @example A read() call is made with a boolean argument
+  */
 object NonNumericCharacterType {
     def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -101,6 +129,10 @@ object NonNumericCharacterType {
     )
 }
 
+/**
+  * An object to represent a Non Boolean Type Error.
+  * @example An if condition evaluates to be an integer.
+  */
 object NonBooleanType {
     def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -115,6 +147,9 @@ object NonBooleanType {
     )
 }
 
+/**
+  * An object to represent a Non String Type Error.
+  */
 object NonStringType {
     def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -129,6 +164,10 @@ object NonStringType {
     )
 }
 
+/**
+  * An object to represent a Non Readable Type Error.
+  * @example a read() is invoked on a Boolean type.
+  */
 object NonReadableType {
     def apply(unexpected: SemType)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -143,6 +182,10 @@ object NonReadableType {
     )
 }
 
+/**
+  * An object to represent an Invalid Return Error.
+  * @example a 'return' statement is called outside of a function.
+  */
 object InvalidReturn {
     def apply()(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -155,18 +198,10 @@ object InvalidReturn {
     )
 }
 
-object UnknownType {
-    def apply(pTypeIn: SemType)(using ctx: TypeCheckerCtx) = Err(
-        ctx.fname,
-        ctx.pos,
-        SpecializedError(
-            Set("Can't infer type of pair"),
-            getLineFromContext(ctx)
-        ),
-        ErrorType.SemanticError
-    )
-}
-
+/**
+  * An object to represent an Wrong Number of Arguments Error.
+  * @example a function is called on the wrong number of arguments.
+  */
 object WrongNumberOfArgs {
     def apply(unexpected: Int, expected: Int)(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -179,6 +214,10 @@ object WrongNumberOfArgs {
     )
 }
 
+/**
+  * An object to represent an Invalid Index Error.
+  * @example a 2d array is queried with 4 nested indicies.
+  */
 object InvalidIndexing {
     def apply()(using ctx: TypeCheckerCtx) = Err(
         ctx.fname,
@@ -191,36 +230,47 @@ object InvalidIndexing {
     )
 }
 
-def getLineFromContext(ctx: ErrContext): String = {
-    ctx.fname match
-        case Some(filename) => {
-            val f: File = File(filename)
-            val contents: Iterator[String] = Source.fromFile(f).getLines()
-            var lineBefore: String = ""
-            if (ctx.pos._1 > 1) {
-                lineBefore = contents.drop(ctx.pos._1 - 2).next()
-            }
+/**
+  * Extracts the error line from the context.
+  * @param ctx the [[ErrContext]], representing the current state of the semantic checking process.
+  * @return the line where the error occurred as a string.
+  */
+def getLineFromContext(ctx: ErrContext): String = ctx.fname match
+    case Some(filename) => 
+        val f: File = File(filename)
+        val contents: Iterator[String] = Source.fromFile(f).getLines()
+        var lineBefore: String = ""
+        if (ctx.pos._1 > 1) 
+            lineBefore = contents.drop(ctx.pos._1 - 2).next()
 
-            val curLine: String = contents.next()
-            var lineAfter: String = ""
-            if (contents.hasNext) {
-                lineAfter = contents.next()
-            }
+        val curLine: String = contents.next()
+        var lineAfter: String = ""
+        if (contents.hasNext) 
+            lineAfter = contents.next()
 
-            genErrorMessageCodeBlock(
-                curLine,
-                List(lineBefore),
-                List(lineAfter),
-                ctx.pos._2 - 1,
-                1
-                )
-        }
-        case None => "give us a file idiot"
-    }
+        genErrorMessageCodeBlock(
+            curLine,
+            List(lineBefore),
+            List(lineAfter),
+            ctx.pos._2 - 1,
+            1
+        )
+        
+    case None => "give us a file boy"
+    
+/**
+  * Helper function that wraps up types into error items.
+  * @param t the type causing an error.
+  * @return a [[NamedItem]] representing the type.
+  */
+private def toErrorItem(t: SemType): ErrorItem = NamedItem(typeToString(t))
 
-def toErrorItem(t: SemType): ErrorItem = NamedItem(typeToString(t))
-
-def typeToString(t: SemType): String = t match
+/**
+  * Helper function that stringifies [[SemType]] objects.
+  * @param t the type.
+  * @return a string representing that type
+  */
+private def typeToString(t: SemType): String = t match
     case KnownType.Ident => "identifier"
     case KnownType.Int => "integer"
     case KnownType.Boolean => "boolean"
