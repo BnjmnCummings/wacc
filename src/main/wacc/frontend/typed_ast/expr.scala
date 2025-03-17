@@ -6,6 +6,7 @@ import wacc.q_ast.Name
 
 sealed trait T_LValue
 sealed trait T_RValue
+sealed trait T_Expr extends T_RValue
 
 /**
   * A typed function call.
@@ -39,10 +40,6 @@ case class T_PairElem(index: PairIndex, v: T_LValue) extends T_Expr, T_LValue
   */
 case class T_NewPair(x1: T_Expr, x2: T_Expr, ty1: SemType, ty2: SemType) extends T_RValue 
 
-/**
-  * Typed Expressions represented in the AST.
-  */
-sealed trait T_Expr extends T_RValue
 
 /**
   * Typed Binary Operator Expressions

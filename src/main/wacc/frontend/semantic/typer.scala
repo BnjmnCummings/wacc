@@ -422,10 +422,10 @@ def checkReturnType(t: Type, stmt: Q_Stmt)(using ctx: TypeCheckerCtx): Option[Se
 }
 
 def check(func: Q_Func, c: Constraint)(using ctx: TypeCheckerCtx): (Option[SemType], T_Func) = {
-    val typedArgs = func.args.map(q_param => T_Param(q_param.t, Name(q_param.v.value, q_param.v.num)))
+    val typedArgs = func.args.map(q_param => T_Param(q_param.t, Name(q_param.name.value, q_param.name.num)))
     val typedBody = func.body.map(check(_, isFunc = true, Constraint.Is(toSemType(func.t))))
 
-    (checkReturnType(func.t, func.body.last), T_Func(func.t, Name(func.v.value, func.v.num), typedArgs, typedBody, func.scoped.map(q_name => Name(q_name.value, q_name.num))))
+    (checkReturnType(func.t, func.body.last), T_Func(func.t, Name(func.name.value, func.name.num), typedArgs, typedBody, func.scoped.map(q_name => Name(q_name.value, q_name.num))))
 }
 
 @targetName("checkStmts")

@@ -40,7 +40,7 @@ object renamer {
         funcs.zip(data).foreach {
             case (func, (v, args)) => {
                 val _func = rename(func, v, args)
-                funcNames += _func.v
+                funcNames += _func.name
                 _funcs += _func
             }
         }
@@ -56,15 +56,15 @@ object renamer {
         val _v: Name = genName(func.v)
         val _args: ListBuffer[Q_Param] = ListBuffer()
         for (arg <- func.args) 
-            val _arg = rename(arg, _args.map(_.v).toSet)
+            val _arg = rename(arg, _args.map(_.name).toSet)
             _args += _arg
         
-        newFunc(_v, func.t, _args.toList.map(_.v))
+        newFunc(_v, func.t, _args.toList.map(_.name))
 
         (_v, _args.toList)
 
     private def rename(func: Func, v: Name, args: List[Q_Param])(using ctx: RenamerContext): Q_Func =
-        val (body, scoped) = rename(func.body, args.map(_.v).toSet, Set())
+        val (body, scoped) = rename(func.body, args.map(_.name).toSet, Set())
         Q_Func(func.t, v, args, body, scoped, func.pos)
     
     
