@@ -3,6 +3,9 @@ package wacc.semantic
 import wacc.*
 import wacc.KnownType.Pair
 
+/**
+  * An Enum representing the types of constraints/conditions we want to hold our AST to.
+  */
 enum Constraint {
     case Is(refTy: SemType)
     case IsExactly(refTy: SemType)
@@ -18,12 +21,21 @@ enum Constraint {
     case IsPairNoError
 }
 
+/**
+  * Companion object for storing some useful macros.
+  */
 object Constraint {
     val Unconstrained = Is(?) // Always passes
     val IsArray = Is(KnownType.Array(?))
     val IsPair = Is(KnownType.Pair(?, ?))
 }
 
+/**
+  * An extension method for [[SemType]]. 
+  * Checks if a type 'satisfies' a given constraint.
+  * @param c the constraint.
+  * @return either a semtype or None if the constraint is not satisfied.
+  */
 extension (ty: SemType) def satisfies (c: Constraint)(using ctx: TypeCheckerCtx): Option[SemType] = (ty, c) match 
     case (Pair(?, ?), Constraint.Is(KnownType.Pair(_, _))) => Some(Pair(?, ?))
     case (ty, Constraint.Is(refTy)) => (ty ~ refTy).orElse {
