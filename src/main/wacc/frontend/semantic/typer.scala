@@ -27,7 +27,7 @@ def typeCheck(prog: Q_Prog, tyInfo: TypeInfo, fname: Option[String] = None): Eit
     val typedStmts = progStmts.map(check(_, isFuncBody = false, Constraint.Unconstrained))
     val typedScoped = progScoped.map(q_name => Name(q_name.value, q_name.num))
 
-    ctx.errors.match
+    ctx.getErrors.match
         case err :: errs => Left(err :: errs)
         case Nil         => Right(T_Prog(typedFuncs, typedStmts, typedScoped))
     
