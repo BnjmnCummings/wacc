@@ -1,7 +1,7 @@
 package wacc.codeGen
 
 import wacc.t_ast.* 
-import wacc.TypeInfo
+import wacc.semantic.TypeInfo
 import wacc.q_ast.Name
 
 import scala.collection.mutable

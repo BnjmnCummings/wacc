@@ -1,7 +1,7 @@
 package wacc.t_ast
 
 import wacc.ast.PairIndex
-import wacc.SemType
+import wacc.semantic.SemType
 import wacc.q_ast.Name
 
 sealed trait T_LValue

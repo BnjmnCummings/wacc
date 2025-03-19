@@ -1,12 +1,11 @@
 package wacc.semantic
 
+import wacc.ast.*
+import wacc.q_ast.*
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 
-import wacc.*
-import wacc.ast.*
-import wacc.q_ast.*
-import wacc.renamer.*
 
 class rename_prog_test extends AnyFlatSpec {
     "rename" should "be able to rename basic programs" in {
@@ -15,7 +14,7 @@ class rename_prog_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(Q_Skip()),
             Set()
@@ -33,7 +32,7 @@ class rename_prog_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, Name("fun", 0), List(), // int fun/0()
@@ -58,7 +57,7 @@ class rename_prog_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, Name("fun", 0), List(Q_Param(BaseType.Int, Name("x", 0))), // int fun/0(int x/0)

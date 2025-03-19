@@ -1,4 +1,4 @@
-package wacc
+package wacc.error
 
 import parsley.errors.ErrorBuilder
 

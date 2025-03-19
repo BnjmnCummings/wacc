@@ -1,6 +1,7 @@
 package wacc
 
 import wacc.ast.*
+import wacc.error.*
 
 import parsley.{Parsley, Result}
 import parsley.quick.*

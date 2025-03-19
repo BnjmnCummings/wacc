@@ -4,10 +4,10 @@ import wacc.t_ast.*
 import wacc.q_ast.Name
 import wacc.assemblyIR.*
 import wacc.ast.PairIndex
-import wacc.SemType
-import wacc.?
-import wacc.X
-import wacc.KnownType
+import wacc.semantic.SemType
+import wacc.semantic.?
+import wacc.semantic.X
+import wacc.semantic.KnownType
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable

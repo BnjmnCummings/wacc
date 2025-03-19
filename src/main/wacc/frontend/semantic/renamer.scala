@@ -1,7 +1,8 @@
-package wacc
+package wacc.semantic
 
 import wacc.ast.*
 import wacc.q_ast.*
+import wacc.error.*
 
 import collection.immutable.Set as Set
 import collection.immutable.Map as Map

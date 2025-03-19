@@ -2,7 +2,7 @@ package wacc.codeGen
 
 import wacc.assemblyIR.*
 import wacc.q_ast.Name
-import wacc.TypeInfo
+import wacc.semantic.TypeInfo
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable

@@ -1,5 +1,7 @@
 package wacc
 
+import wacc.error.*
+
 import parsley.Parsley
 import parsley.Parsley.atomic
 import parsley.character.{string}

@@ -1,6 +1,6 @@
 package wacc.t_ast
 
-import wacc.SemType
+import wacc.semantic.SemType
 import wacc.q_ast.Name
 
 /**

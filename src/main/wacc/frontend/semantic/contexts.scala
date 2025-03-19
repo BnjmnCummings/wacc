@@ -1,6 +1,7 @@
-package wacc
+package wacc.semantic
 
 import wacc.q_ast.Name
+import wacc.error.Err
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable

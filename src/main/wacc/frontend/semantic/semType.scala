@@ -1,9 +1,9 @@
-package wacc
+package wacc.semantic
 
 import wacc.ast.*
 import wacc.q_ast.*
 
-sealed abstract class SemType
+sealed trait SemType
 
 /**
   * [[?]] represents an unknown type

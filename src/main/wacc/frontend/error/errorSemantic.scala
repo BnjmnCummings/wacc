@@ -1,5 +1,6 @@
-package wacc
+package wacc.error
 
+import wacc.semantic.*
 import java.io.File
 import scala.io.Source
 

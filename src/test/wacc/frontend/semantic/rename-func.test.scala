@@ -1,13 +1,11 @@
 package wacc.semantic
 
+import wacc.ast.*
+import wacc.error.ScopeException
+import wacc.q_ast.*
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
-
-import wacc.ast.*
-import wacc.q_ast.*
-import wacc.renamer.*
-import wacc.*
-
 
 class rename_func_test extends AnyFlatSpec {
 
@@ -23,7 +21,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, Name("fun", 0), List(), // int fun/0()
@@ -49,7 +47,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -83,7 +81,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -127,7 +125,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -167,7 +165,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -209,7 +207,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -255,7 +253,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -302,7 +300,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        a [ScopeException] should be thrownBy rename(prog)
+        a [ScopeException] should be thrownBy renamer.rename(prog)
     }
 
     it should "fail clashing variable names inside functions" in {
@@ -334,7 +332,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        a [ScopeException] should be thrownBy rename(prog)
+        a [ScopeException] should be thrownBy renamer.rename(prog)
     }
 
     it should "fail to access func variables from inside the program body" in {
@@ -362,7 +360,7 @@ class rename_func_test extends AnyFlatSpec {
             )
         )
 
-        a [ScopeException] should be thrownBy rename(prog)
+        a [ScopeException] should be thrownBy renamer.rename(prog)
     }
 
     it should "be able to have a parameter with the same name as a function" in {
@@ -378,7 +376,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
                 Q_Func(
                     BaseType.Int, 
@@ -414,7 +412,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
             Q_Func(
                 BaseType.Int, 
@@ -456,7 +454,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
             Q_Func(
                 BaseType.Int, 
@@ -498,7 +496,7 @@ class rename_func_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(
             Q_Func(
                 BaseType.Int, 

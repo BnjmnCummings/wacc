@@ -1,7 +1,9 @@
 package wacc.semantic
 
 import wacc.*
-import wacc.KnownType.Pair
+import wacc.semantic.KnownType.Pair
+import wacc.error.*
+
 
 /**
   * An Enum representing the types of constraints/conditions we want to hold our AST to.

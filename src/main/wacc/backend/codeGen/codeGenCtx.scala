@@ -1,7 +1,7 @@
 package wacc.codeGen
 
 import wacc.assemblyIR.*
-import wacc.TypeInfo
+import wacc.semantic.TypeInfo
 
 import scala.collection.mutable.Set as MutableSet
 

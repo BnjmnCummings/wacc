@@ -3,11 +3,11 @@ package wacc.codeGen
 import wacc.t_ast.*
 import wacc.q_ast.Name
 import wacc.assemblyIR.*
-import wacc.TypeInfo
-import wacc.SemType
-import wacc.?
-import wacc.X
-import wacc.KnownType
+import wacc.semantic.TypeInfo
+import wacc.semantic.SemType
+import wacc.semantic.?
+import wacc.semantic.X
+import wacc.semantic.KnownType
 import wacc.EXIT_SUCCESS
 
 import scala.collection.mutable.ListBuffer

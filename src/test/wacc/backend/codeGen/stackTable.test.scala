@@ -2,8 +2,8 @@ package wacc.codeGen
 
 import wacc.testUtils.*
 import wacc.q_ast.Name
-import wacc.TypeInfo
-import wacc.KnownType
+import wacc.semantic.TypeInfo
+import wacc.semantic.KnownType
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*

@@ -1,18 +1,14 @@
 package wacc.semantic
 
 import wacc.parser
-import wacc.renamer
-import wacc.ScopeException
-
+import wacc.error.ScopeException
 import wacc.testUtils.searchDir
-
-import org.scalatest.flatspec.AnyFlatSpec
 
 import parsley.Success
 
-import collection.mutable.ListBuffer
-
 import java.io.File
+import scala.collection.mutable.ListBuffer
+import org.scalatest.flatspec.AnyFlatSpec
 
 class integration_test extends AnyFlatSpec {
     val validPaths: List[String] = getValidPaths()

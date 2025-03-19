@@ -1,12 +1,11 @@
 package wacc.semantic
 
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers.*
-
 import wacc.ast.*
 import wacc.q_ast.*
-import wacc.renamer.*
 import wacc.*
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers.*
 
 class rename_codeblock_test extends AnyFlatSpec{
   "rename-codeblocks" should "be able to rename basic codeblocks and scopes should be confined" in {
@@ -25,7 +24,7 @@ class rename_codeblock_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_CodeBlock(
@@ -70,7 +69,7 @@ class rename_codeblock_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
@@ -122,7 +121,7 @@ class rename_codeblock_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
@@ -174,7 +173,7 @@ class rename_codeblock_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
@@ -226,7 +225,7 @@ class rename_codeblock_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(

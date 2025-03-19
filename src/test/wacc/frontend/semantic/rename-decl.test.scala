@@ -1,12 +1,13 @@
 package wacc.semantic
 
+import wacc.*
+import wacc.ast.*
+import wacc.error.ScopeException
+import wacc.q_ast.*
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 
-import wacc.*
-import wacc.ast.*
-import wacc.q_ast.*
-import wacc.renamer.*
 
 class rename_decl_test extends AnyFlatSpec {
     /* control */
@@ -16,7 +17,7 @@ class rename_decl_test extends AnyFlatSpec {
             List(Skip.instance())
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(Q_Skip()),
             Set()
@@ -36,7 +37,7 @@ class rename_decl_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
@@ -70,7 +71,7 @@ class rename_decl_test extends AnyFlatSpec {
             )
         )
 
-        a [ScopeException] should be thrownBy rename(prog)
+        a [ScopeException] should be thrownBy renamer.rename(prog)
     }
 
     it should "fail duplicate declarations regardless of type" in {
@@ -90,11 +91,11 @@ class rename_decl_test extends AnyFlatSpec {
             )
         )
 
-        a [ScopeException] should be thrownBy rename(prog)
+        a [ScopeException] should be thrownBy renamer.rename(prog)
     }
 
     it should "fail to retrieve a vairable that hasn't been declared" in {
-        a [ScopeException] should be thrownBy rename(
+        a [ScopeException] should be thrownBy renamer.rename(
             Prog(
                 List(),
                 List(
@@ -111,7 +112,7 @@ class rename_decl_test extends AnyFlatSpec {
             )
         )
 
-        a [ScopeException] should be thrownBy rename(
+        a [ScopeException] should be thrownBy renamer.rename(
             Prog(
                 List(),
                 List(
@@ -130,25 +131,6 @@ class rename_decl_test extends AnyFlatSpec {
         )
     }
 
-    // it should "fail to change the type of a variable in scope" in {
-    //     val prog = Prog(
-    //         List(),
-    //         List(
-    //             Decl(
-    //                 BaseType.Int,
-    //                 Ident("x"),
-    //                 IntLiteral(5)
-    //             ),
-    //             Asgn(
-    //                 Ident("x"),
-    //                 StringLiteral("string")
-    //             )
-    //         )
-    //     )
-
-    //     a [ScopeException] should be thrownBy rename(prog)
-    // }
-
     it should "be able to use in-scope identities declarations" in {
         val prog = Prog(
             List(),
@@ -166,7 +148,7 @@ class rename_decl_test extends AnyFlatSpec {
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
@@ -192,7 +174,7 @@ class rename_decl_test extends AnyFlatSpec {
     }
 
     it should "fail to declare a variable to itself" in {
-        a [ScopeException] should be thrownBy rename(
+        a [ScopeException] should be thrownBy renamer.rename(
             Prog(
                 List(),
                 List(
@@ -205,7 +187,7 @@ class rename_decl_test extends AnyFlatSpec {
             )
         )
 
-        a [ScopeException] should be thrownBy rename(
+        a [ScopeException] should be thrownBy renamer.rename(
             Prog(
                 List(),
                 List(
@@ -235,7 +217,7 @@ class rename_decl_test extends AnyFlatSpec {
                 ),
             )
         )
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(

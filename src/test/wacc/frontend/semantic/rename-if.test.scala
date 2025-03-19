@@ -1,12 +1,11 @@
 package wacc.semantic
 
+import wacc.ast.*
+import wacc.error.ScopeException
+import wacc.q_ast.*
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
-
-import wacc.ast.*
-import wacc.q_ast.*
-import wacc.renamer.*
-import wacc.*
 
 class rename_if_test extends AnyFlatSpec{
     "rename-if" should "be able to rename basic if statements" in {
@@ -25,7 +24,7 @@ class rename_if_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_If(
@@ -72,7 +71,7 @@ class rename_if_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_If(
@@ -136,7 +135,7 @@ class rename_if_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
@@ -179,7 +178,7 @@ class rename_if_test extends AnyFlatSpec{
     }
 
     it should "fail to access a variable declared in 'if' clause from 'else' clause" in {
-        a [ScopeException] should be thrownBy rename(
+        a [ScopeException] should be thrownBy renamer.rename(
             Prog(
                 List(),
                 List(
@@ -233,7 +232,7 @@ class rename_if_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
@@ -304,7 +303,7 @@ class rename_if_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(

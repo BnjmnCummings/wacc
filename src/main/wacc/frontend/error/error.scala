@@ -1,4 +1,4 @@
-package wacc
+package wacc.error
 
 private inline def CODE_INDENT: String = " ".repeat(2)
 

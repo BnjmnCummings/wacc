@@ -1,12 +1,13 @@
 package wacc
 
-import parsley.{Success, Failure}
-
 import wacc.semantic.*
+import wacc.error.*
 import wacc.t_ast.T_Prog
 import wacc.assemblyIR.A_Prog
 import wacc.codeGen.*
 import wacc.formatting.*
+
+import parsley.{Success, Failure}
 
 import java.io.File
 import java.io.FileNotFoundException
