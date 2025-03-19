@@ -116,7 +116,7 @@ private def gen(rvalue: T_RValue, stackTable: StackTables)(using ctx: CodeGenCtx
     case T_FuncCall(v, args)            => genFuncCall(v, args, stackTable)
     case T_ArrayLiteral(xs, ty, length) => genArrayLiteral(xs, ty, length, stackTable)
     case T_NewPair(x1, x2, ty1, ty2)    => genNewPair(x1, x2, ty1, ty2, stackTable)
-    case _                              => gen(rvalue.asInstanceOf[T_Expr], stackTable) //TODO: explicitly match this expression case
+    case expr: T_Expr                   => gen(expr, stackTable)
 
 /**
   * Generates the assembly instructions for a given function.

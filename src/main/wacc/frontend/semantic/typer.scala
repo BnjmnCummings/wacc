@@ -453,7 +453,6 @@ def checkBooleanExpr(x: Q_Expr, y: Q_Expr, c: Constraint, result_expr: (T_Expr, 
     (mostSpecific(xTy, yTy).satisfies(c), result_expr(xTyped, yTyped))
 
 /**
-  * TODO: fix
   * Checks that a pair elem call is a pair type.
   * @param index the pair index.
   * @param v the l-value to be queried.
