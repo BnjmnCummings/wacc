@@ -57,6 +57,7 @@ object renamer {
 
     /**
       * A helper function for generating the function names and scope checking the arguments.
+      * @note This needs to be done before renaming occurs.
       * @param func the function.
       * @return (renamed function, list of qualified parameters).
       */

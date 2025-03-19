@@ -26,7 +26,7 @@ def genFuncCall(funcName: Name, args: List[T_Expr], stackTable: StackTables)(usi
 
     builder += A_Sub(A_Reg(A_RegName.StackPtr), A_Imm(funcStackTable.paramsSize), PTR_SIZE)
 
-    (argNames.zip(args)).zip(funcStackTable.argStoreInstrs(argNames)).foreach {  // TODO: Refactor
+    (argNames.zip(args)).zip(funcStackTable.argStoreInstrs(argNames)).foreach {
         (namesExprs, instr) => {
             builder ++= gen(namesExprs._2, stackTable)
             builder += instr
