@@ -2,32 +2,62 @@ package wacc.formatting
 
 import wacc.assemblyIR.*
 
+/**
+ * Formats an instruction operand to a string.
+ * @param op the operand to format.
+ * @param opSize the size of the corresponding operand.
+ * @return The formatted string of the operand.
+ */
 def formatOperand(op: A_Operand, opSize: A_OperandSize): String = op match
     case A_Imm(n) => n.toString
     case A_RegDeref(mem) => formatRegDeref(op.asInstanceOf[A_RegDeref], opSize)
     case A_MemOffset(reg, offset) => formatMemOffset(op.asInstanceOf[A_MemOffset])
     case A_Reg(regName) => formatReg(op.asInstanceOf[A_Reg], opSize)
 
+/**
+ * Formats a register dereference to a string.
+ * qword ptr '[reg + offset]'
+ * @param op the [A_RegDeref] operand to format.
+ * @param opSize the size of the corresponding operand.
+ * @return The formatted string of the operand.
+ */
 def formatRegDeref(op: A_RegDeref, opSize: A_OperandSize): String = opSize match
     case A_OperandSize.A_8 => s"byte ptr ${formatMemOffset(op.mem)}"
     case A_OperandSize.A_16 => s"word ptr ${formatMemOffset(op.mem)}"
     case A_OperandSize.A_32 => s"dword ptr ${formatMemOffset(op.mem)}"
     case A_OperandSize.A_64 => s"qword ptr ${formatMemOffset(op.mem)}"
 
-def formatMemOffset(op: A_MemOffset): String = s"[${formatReg(op.reg, PTR_SIZE)} ${formatOffset(op.offset)}]"
+/**
+ * Formats the inner part of a register dereference to a string.
+ * '[reg + offset]'
+ * @param op the operand to format.
+ * @return The formatted string of the operand.
+ */
+def formatMemOffset(op: A_MemOffset): String = 
+    s"[${formatReg(op.reg, PTR_SIZE)} ${formatOffset(op.offset)}]"
 
-def formatOffset(op: A_Offset): String = op match
+/**
+ * Formats a register offset.
+ * @param offset the offset to format.
+ * @return The formatted string of the offset.
+ */
+def formatOffset(offset: A_Offset): String = offset match
     case A_OffsetImm(n) => {
         if (n >= 0) 
             s"+ $n"
         else
             s"- ${-n}"
     }
-    case A_OffsetReg(reg) => s"+ ${formatReg(reg, PTR_SIZE)}"
     case A_OffsetLbl(lbl) => s"+ ${lbl.name}"
 
-def formatReg(op: A_Reg, opSize: A_OperandSize): String = opSize match
-    case A_OperandSize.A_8 => op.regName match
+/**
+ * Formats a register operand to a string.
+ * @param reg the register to format.
+ * @param regSize the size of the corresponding register.
+ * @return The formatted string of the register.
+ */
+def formatReg(reg: A_Reg, regSize: A_OperandSize): String = regSize match
+    case A_OperandSize.A_8 => reg.regName match
         case A_RegName.RetReg => "al"
         case A_RegName.Arg1 => "dil"
         case A_RegName.Arg2 => "sil"
@@ -45,9 +75,9 @@ def formatReg(op: A_Reg, opSize: A_OperandSize): String = opSize match
         case A_RegName.StackPtr => "spl"
         case A_RegName.BasePtr => "bpl"
         case A_RegName.InstrPtr => 
-            throw UnsupportedOperationException("ILL TELL YOU WHAT LAD THERE FOKIN NO SUCH THING AS AN 8 BIT INSTRUCTION BLOODEH POINTEH") 
+            throw UnsupportedOperationException("ILL TELL YOU WHAT LAD THERES NO SUCH THING AS AN 8 BIT INSTRUCTION POINTEH") 
     
-    case A_OperandSize.A_16 => op.regName match
+    case A_OperandSize.A_16 => reg.regName match
         case A_RegName.RetReg => "ax"
         case A_RegName.Arg1 => "di"
         case A_RegName.Arg2 => "si"
@@ -66,7 +96,7 @@ def formatReg(op: A_Reg, opSize: A_OperandSize): String = opSize match
         case A_RegName.BasePtr => "bp"
         case A_RegName.InstrPtr => "ip"
 
-    case A_OperandSize.A_32 => op.regName match
+    case A_OperandSize.A_32 => reg.regName match
         case A_RegName.RetReg => "eax"
         case A_RegName.Arg1 => "edi"
         case A_RegName.Arg2 => "esi"
@@ -86,7 +116,7 @@ def formatReg(op: A_Reg, opSize: A_OperandSize): String = opSize match
         case A_RegName.InstrPtr => "eip"
 
 
-    case A_OperandSize.A_64 => op.regName match
+    case A_OperandSize.A_64 => reg.regName match
         case A_RegName.RetReg => "rax"
         case A_RegName.Arg1 => "rdi"
         case A_RegName.Arg2 => "rsi"

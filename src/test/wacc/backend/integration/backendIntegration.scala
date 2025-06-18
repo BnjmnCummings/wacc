@@ -193,7 +193,7 @@ class backend_integration_test extends ConditionalRun {
 
                 if ( actualExitCode == expExitCode && actualOutput == expOutput)
                     successes += filePath
-                    s"./wipeAss $progName" .!
+                    s"./wipeAss.sh $progName" .!
                 else 
                     outputFailures += filePath
                     if (input.nonEmpty) {
@@ -259,7 +259,7 @@ class backend_integration_test extends ConditionalRun {
     */
     def runAssembly(progName: String, input: String): (Int, List[String]) = {
         val fileName = "assembly/" + progName
-        val buildExitStatus = s"./buildAss $fileName" .!
+        val buildExitStatus = s"./buildAss.sh $fileName" .!
 
         if (buildExitStatus == 0) {
             val output: ListBuffer[String] = ListBuffer()
@@ -275,7 +275,7 @@ class backend_integration_test extends ConditionalRun {
             val exitStatus = process.exitValue()
 
             /* clean up after ourselves and return */
-            s"./wipeObj $fileName" .!
+            s"./wipeObj.sh $fileName" .!
 
             /* filter output */
             val cleanOutput = output.toList
@@ -290,7 +290,7 @@ class backend_integration_test extends ConditionalRun {
             return (exitStatus, cleanOutput)
 
         } else {
-            s"./wipeObj $fileName" .!
+            s"./wipeObj.sh $fileName" .!
             throw InstantiationException(s"Build command failed with exit status: $buildExitStatus")
         }
     }

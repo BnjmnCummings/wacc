@@ -1,12 +1,10 @@
 package wacc.semantic
 
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers.*
-
 import wacc.ast.*
 import wacc.q_ast.*
-import wacc.renamer.*
-import wacc.*
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers.*
 
 class rename_while_test extends AnyFlatSpec{
   "rename-while" should "be able to rename basic codeblocks and scopes should be confined" in {
@@ -20,7 +18,7 @@ class rename_while_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_While(
@@ -55,7 +53,7 @@ class rename_while_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_While(
@@ -112,7 +110,7 @@ class rename_while_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
@@ -178,7 +176,7 @@ class rename_while_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
             Q_Decl(
@@ -233,7 +231,7 @@ class rename_while_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
             Q_While(
@@ -292,7 +290,7 @@ class rename_while_test extends AnyFlatSpec{
                 )
             )
 
-            rename(prog) shouldBe (Q_Prog(
+            renamer.rename(prog) shouldBe (Q_Prog(
                 List(),
                 List(
                     Q_Decl(
@@ -354,7 +352,7 @@ class rename_while_test extends AnyFlatSpec{
                 )
             )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
                 List(),
                 List(
                     Q_Decl(
@@ -411,7 +409,7 @@ class rename_while_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(
@@ -471,7 +469,7 @@ class rename_while_test extends AnyFlatSpec{
             )
         )
 
-        rename(prog) shouldBe (Q_Prog(
+        renamer.rename(prog) shouldBe (Q_Prog(
             List(),
             List(
                 Q_Decl(

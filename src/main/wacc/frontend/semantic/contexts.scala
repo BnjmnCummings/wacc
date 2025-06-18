@@ -1,46 +1,66 @@
-package wacc
+package wacc.semantic
 
-import collection.mutable.ListBuffer
-import collection.mutable
+import wacc.q_ast.Name
+import wacc.error.Err
 
-import q_ast.Name
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 
+/**
+  * A context for keeping track of error information.
+  */
 trait ErrContext {
     def fname: Option[String]
     def pos: (Int, Int)
 }
 
-
+/**
+  * A context for keeping track of scope error information.
+  * @param errors list of errors collected.
+  * @param fnameIn the filename of the .wacc program.
+  * @param posVal the position in .wacc program we reached.
+  */
 class RenamerContext(val errors: ListBuffer[Err] = ListBuffer[Err](), fnameIn: Option[String] = None, var posVal: (Int, Int) = (1, 1)) extends ErrContext {
-    def fname: Option[String] = fnameIn
+    def fname: Option[String] = 
+        fnameIn
 
-    def pos: (Int, Int) = posVal
+    def pos: (Int, Int) = 
+        posVal
 
-    def setPos(newPos: (Int, Int)) = {
+    def setPos(newPos: (Int, Int)) = 
         posVal = newPos
-    }
     
-    def getErrors: List[Err] = errors.toList
+    def getErrors: List[Err] = 
+        errors.toList
 }
 
-class TypeCheckerCtx(tyInfo: TypeInfo, errs: ListBuffer[Err], fnameIn: Option[String] = None, var posVal: (Int, Int) = (1, 1)) extends ErrContext{
-    def errors: List[Err] = errs.toList
+/**
+  * A context for keeping track of type error information.
+  * @param tyInfo type information about the functions and variables.
+  * @param errors list of errors collected.
+  * @param fnameInthe filename of the .wacc program.
+  * @param posValthe position in .wacc program we reached.
+  */
+class TypeCheckerCtx(tyInfo: TypeInfo, errors: ListBuffer[Err], fnameIn: Option[String] = None, var posVal: (Int, Int) = (1, 1)) extends ErrContext{
+    def getErrors: List[Err] = 
+        errors.toList
 
-    def fname: Option[String] = fnameIn
+    def fname: Option[String] = 
+        fnameIn
 
-    def pos: (Int, Int) = posVal
+    def pos: (Int, Int) = 
+        posVal
 
-    def setPos(newPos: (Int, Int)) = {
+    def setPos(newPos: (Int, Int)): Unit = 
         posVal = newPos
-    }
+    
+    def typeOf(id: Name): KnownType = 
+        tyInfo.varTys(id)
+    
+    def typeOfFunc(id: Name): (KnownType, List[Name]) = 
+        tyInfo.funcTys(id)
 
-    // This will get the type of variables
-    def typeOf(id: Name): KnownType = tyInfo.varTys(id)
-    def typeOfFunc(id: Name): (KnownType, List[Name]) = tyInfo.funcTys(id)
-
-    def error(err: Err) = {
-        errs += err
+    def error(err: Err) =
+        errors += err
         None
-    }
 }
-    

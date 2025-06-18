@@ -1,15 +1,11 @@
 package wacc.semantic
 
 import wacc.parser
+import wacc.error.Err
+import wacc.error.ScopeException
+import wacc.t_ast.T_Prog
 
 import parsley.{Failure, Success}
-
-import wacc.Err
-
-import wacc.renamer
-import wacc.ScopeException
-
-import wacc.t_ast.T_Prog
 
 def parseAndTypeCheckStr(inpString: String): Either[List[Err], T_Prog] = {
     parser.parse(inpString) match

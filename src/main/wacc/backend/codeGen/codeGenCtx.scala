@@ -1,52 +1,84 @@
 package wacc.codeGen
 
 import wacc.assemblyIR.*
-import wacc.TypeInfo
+import wacc.semantic.TypeInfo
 
-import scala.collection.mutable
+import scala.collection.mutable.Set as MutableSet
 
+/**
+  * Context class for code generation. Collects information about the program being compiled including:
+     default functions, stored strings and type information.
+  * @param typeInfo
+  * @param stackTables
+  */
 class CodeGenCtx(val typeInfo: TypeInfo, val stackTables: TableCtx) {
-    private val storedStrings: mutable.Set[A_StoredStr] = mutable.Set()
+    private val defaultFuncs: MutableSet[A_Func] = MutableSet()
+    private val storedStrings: MutableSet[A_StoredStr] = MutableSet()
+    private var strLabelCount: Int = 0
+    private var instrLabelCount: Int = 0
 
-    private val defaultFuncs: mutable.Set[A_Func] = mutable.Set()
+    /**
+     * Getter for the stored strings list.
+     * @return the list of stored strings.
+     */
+    def getStoredStrings: List[A_StoredStr] = 
+        storedStrings.toList
 
-    def addDefaultFunc(lbl: A_DefaultLabel): Unit = {
-        defaultFuncs.add(defaultFuncsLabelToFunc(lbl))
-        defaultFuncsFuncDependency(lbl).foreach(addDefaultFunc)
-        defaultFuncsStrDependency(lbl).foreach((dataLabel, errMsg) => addStoredStr(dataLabel, errMsg))
-    }
+    /**
+      * Adds a string to the list of strings in the context.
+      * @param label the unique label of the string.
+      * @param str the string to add.
+      */
+    def addStoredStr(label: A_DataLabel, str: String): Unit = 
+        storedStrings.add(A_StoredStr(label, str))
+    
+    /**
+      * Getter for the default function list.
+      * @return the list of default functions.
+      */
+    def getDefaultFuncs: List[A_Func] = 
+        defaultFuncs.toList
 
-    def defaultFuncsList: List[A_Func] = defaultFuncs.toList
+    /**
+      * Adds a default function and it's dependancies to the context.
+      * @param label the label of the default function to add.
+      */
+    def addDefaultFunc(label: A_DefaultLabel): Unit = 
+        defaultFuncs.add(deFuncMap(label))
+        deFuncDependancyMap(label).foreach { addDefaultFunc }
+        deFuncStringDependancyMap(label).foreach { addStoredStr }
 
-    private var strLabelCount = 0
+    /**
+      * Generates a new unique instruction label.
+      * Incraments the instruction label count.
+      * @return the new label.
+      */
+    def genNextInstrLabel(): A_InstrLabel = 
+        val label = A_InstrLabel(s".L$instrLabelCount")
+        instrLabelCount += 1
+        label
 
-    def genNextStrLabel: A_DataLabel = {
+    /**
+      * Generates a label for a stored string and adds it to the list of stored strings
+      * Checks for if the string has already been stored and returns the label if it has.
+      * @param str the string to store
+      * @return the label of the string.
+      */
+    def storeString(str: String): A_DataLabel =
+        storedStrings.find {_.str == str } match
+            case None => 
+                val label = genNextStrLabel
+                storedStrings.add(A_StoredStr(label, str))
+                label
+            case Some(value) => value.lbl
+    
+    /**
+      * Helper function to generate a new unique label for a stored string.
+      * Increments the string label count.
+      * @return the new label.
+      */
+    private def genNextStrLabel: A_DataLabel = 
         val num = strLabelCount
         strLabelCount += 1
         A_DataLabel(s".S.str${num}")
-    }
-
-    def genStoredStr(str: String): A_DataLabel = {
-        if (storedStrings.exists(_.str == str)) {
-            storedStrings.find(_.str == str).get.lbl
-        } else {
-            val lbl = genNextStrLabel
-            storedStrings.add(A_StoredStr(lbl, str))
-            lbl
-        }
-    }
-
-    def addStoredStr(lbl: A_DataLabel, str: String): Unit = {
-        storedStrings.add(A_StoredStr(lbl, str))
-    }
-
-    def storedStringsList: List[A_StoredStr] = storedStrings.toList
-
-    private var instrLabelCount: Int = 0
-
-    def genNextInstrLabel(): A_InstrLabel = {
-        val lbl = A_InstrLabel(s".L$instrLabelCount")
-        instrLabelCount += 1
-        lbl
-    }
 }
