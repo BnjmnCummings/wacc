@@ -10,6 +10,7 @@ This project is an end-to-end compiler for the **While-like Academy Compiler Con
 - [Building the Compiler](#building-the-compiler)
 - [Running the Compiler](#running-the-compiler)
 - [Project Structure](#project-structure)
+- [Web Frontend](#web-frontend)
 - [Testing](#testing)
 
 ## Introduction
@@ -34,6 +35,45 @@ WACC is a teaching language used at Imperial College London, based on the While 
     ```bash
     scala run . --"<PATH-TO-WACC-PROGRAM>"
     ```
+
+### Example WACC Programs
+
+The interface includes sample code to get you started:
+
+#### Basic Example
+```wacc
+begin
+    int x = 5;
+    println x
+end
+```
+
+#### Array Example
+```wacc
+begin
+    int[] arr = [1, 2, 3, 4, 5];
+    println "Array length: ";
+    println len arr;
+    println "First element: ";
+    println arr[0]
+end
+```
+
+#### Function Example
+```wacc
+begin
+    int add(int x, int y) is
+        return x + y
+    end
+    
+    int result = call add(10, 20);
+    println "Result: ";
+    println result
+end
+```
+
+You can browse even more of these in [wacc-examples](./wacc-examples/).
+
 ## Project Structure
 - **`src/main/`**: Contains the source code for the compiler, organized into various subdirectories based on functionality:
 
@@ -51,6 +91,45 @@ WACC is a teaching language used at Imperial College London, based on the While 
 
 - **`wacc-examples/`**: Provides example WACC programs for testing and demonstration purposes.
 
+- **`web-server/`**: A modern web interface for the WACC compiler.
+    - **`package.json`**: Node.js dependencies and project configuration
+    - **`server.js`**: Express backend server that handles compilation requests
+    - **`public/`**: Frontend static files
+        - **`index.html`**: Main web interface
+        - **`styles.css`**: Modern CSS styling with responsive design
+        - **`script.js`**: JavaScript functionality for the web interface
+    - **`temp/`**: Temporary files created during compilation (auto-generated)
+
+## Web Frontend
+
+This project also includes a web interface which can be run locally. You can write WACC code in your browser and see the compiled x86 assembly output in real-time.
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- WACC compiler properly set up (main project)
+- Scala environment properly configured
+
+### Setup
+
+1. **Navigate to the web frontend directory**:
+   ```bash
+   cd web-server
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Start the server**:
+   ```bash
+   npm start
+   ```
+
+4. **Open your browser** and navigate to `http://localhost:3000`
+
+This uses `nodemon` to automatically restart the server when files change.
 
 ## Testing
 - **Using testSettings.scala**: You can comment / uncomment specific test cases in [testSettings.scala](https://github.com/BnjmnCummings/WACC/blob/main/src/test/wacc/testUtils/testSettings.scala). Then you can run:
@@ -66,4 +145,8 @@ WACC is a teaching language used at Imperial College London, based on the While 
     For example, to run myTest.scala, this is sufficient:
     ```bash
     scala test . --test-only "*myTest*"
+    ```
+- **Using the web server for development**: You can use the local webserver to see your changes in realtime with auto restard by running the node server in dev mode.
+    ```bash
+    npm run dev
     ```
