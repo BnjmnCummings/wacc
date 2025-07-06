@@ -501,7 +501,7 @@ def mostSpecific(ty1: Option[SemType], ty2: Option[SemType]): SemType = (ty1, ty
   * them is. Note we are not using `==` or any kind of overloading of `equals`, that would be abusive
   * (because `?` isn't really "equal" to anything!) and have the wrong type. Using this function we
   * can write a `satisfies` method that checks if a `Constraint` holds:
-  * @param refTy the refined type.
+  * @param refTy the reference type.
   */
 extension (ty: SemType) def ~(refTy: SemType): Option[SemType] = (ty, refTy) match
     case (?, refTy) => Some(refTy)
