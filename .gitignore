@@ -1,27 +1,55 @@
+# Scala/SBT build files
 .metals/
 .bsp/
 .scala-build/
+
+# IDE files
 .vscode/
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test files and output
+*testSettings*
+testSettings.scala
 src/test/wacc/backend/integration/assembly/*.s
 src/test/wacc/backend/integration/output/*
-=======
-*testSettings*
-<<<<<<< HEAD
->>>>>>> 2fc73e9 (refactor - added javadocs to instructions.scala)
-=======
-*testSettings*
-=======
->>>>>>> 02be73d (refactor: fixed import formatting in frontend)
-.DS_Store
->>>>>>> 0890fd1 (fix: added .DS_Store to gitignore)
-=======
-.DS_Store
+
+# Assembly files
 assembly/
-<<<<<<< HEAD
->>>>>>> e48d5ce (chore: added assembly folder to gitignore)
-=======
-testSettings.scala
->>>>>>> 02be73d (refactor: fixed import formatting in frontend)
+*.s
+
+# Web Frontend Dependencies
+web-server/node_modules/
+web-server/temp/
+
+# Web Frontend Logs
+web-server/npm-debug.log*
+web-server/yarn-debug.log*
+web-server/yarn-error.log*
+
+# Web Frontend Runtime data
+web-server/pids
+web-server/*.pid
+web-server/*.seed
+web-server/*.pid.lock
+
+# Web Frontend Coverage
+web-server/coverage/
+web-server/.nyc_output
+
+# Web Frontend Environment variables
+web-server/.env
+web-server/.env.local
+web-server/.env.development.local
+web-server/.env.test.local
+web-server/.env.production.local
