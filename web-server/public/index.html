@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WACC Compiler</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>WACC Compiler</h1>
+            <p>Write your WACC code and see the compiled x86 assembly output</p>
+        </header>
+        
+        <div class="editor-container">
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>WACC Code Input</h3>
+                    <button id="compileBtn" class="compile-btn">Compile</button>
+                </div>
+                <textarea 
+                    id="waccInput" 
+                    placeholder="Enter your WACC code here...
+Example:
+begin
+    int x = 5;
+    println x
+end"
+                ></textarea>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>x86 Assembly Output</h3>
+                    <button id="clearBtn" class="clear-btn">Clear</button>
+                </div>
+                <textarea 
+                    id="assemblyOutput" 
+                    readonly 
+                    placeholder="Compiled assembly will appear here..."
+                ></textarea>
+            </div>
+        </div>
+        
+        <div id="statusBar" class="status-bar">
+            <span id="statusText">Ready</span>
+        </div>
+    </div>
+
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Compilation Error</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <pre id="errorText"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
